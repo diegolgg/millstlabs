@@ -22,10 +22,10 @@ For the larger CPU experiment, open **[notebooks/overnight_cpu.ipynb](notebooks/
 
 ```bash
 bash scripts/overnight.sh --mode benchmark
-bash scripts/overnight.sh --mode run --hours 10 --seed 11
+bash scripts/overnight.sh --mode run --hours 10
 ```
 
-Start with the first three-method cohort: the longer warm-start check has not yet beaten random survival. Remove `--seed 11` to expand to all three paired seeds after reviewing learning and reproduction. The serial runner reuses a shared warm start per seed and resumes from the same output directory. See [the saved-results review and overnight design](docs/overnight-cpu.md) for timing, measurements and interpretation. The notebook defaults to displaying the plan; training is explicitly enabled in its settings cell.
+The CPU pilot compares **four profiles × three methods on shared seed 11** (12 runs), using one common warm start. It writes to `runs/overnight-profiles`, separate from the earlier seed-sweep outputs. Expect roughly 9–14 hours on the development Mac; the ten-hour limit pauses and the same command resumes. See [the saved-results review and overnight design](docs/overnight-cpu.md) for measurements and interpretation. The notebook defaults to displaying the plan; training is explicitly enabled in its settings cell.
 
 Python 3.11+; a NVIDIA GPU is recommended for the full 120-million-decision study. The smaller SmolLM2 pilot runs on CPU.
 

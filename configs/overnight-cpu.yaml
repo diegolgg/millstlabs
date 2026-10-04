@@ -1,5 +1,5 @@
 # CPU engineering pilot, not the confirmatory 60-run experiment.
-# Three methods, one fixed profile, three paired seeds. Run serially.
+# Three methods, four profiles, one shared seed. Run serially.
 environment:
   founders: 8
   population_cap: 16
@@ -25,6 +25,9 @@ training:
   newborn_evaluation_maps: 1
   newborn_evaluation_horizon: 128
 profiles:
+  individual: {social_preference: 0.0, vigilance_bias: 0.0}
   prosocial: {social_preference: 0.5, vigilance_bias: 0.0}
-seeds: [11, 22, 33]
-methods: [iteration, r_adult, r_initial]
+  competitive: {social_preference: -0.5, vigilance_bias: 0.0}
+  vigilance: {social_preference: 0.0, vigilance_bias: 1.0}
+seeds: [11]
+methods: [r_adult, r_initial, iteration]

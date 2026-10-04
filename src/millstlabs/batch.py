@@ -19,11 +19,12 @@ def plan(cfg, seeds=None):
         raise ValueError("Requested seed is not in the frozen configuration")
     rows = []
     for seed in seeds:
-        # Balance method order across seeds; finish a paired cohort before the next.
+        # Visit every profile for each method before moving to the next method.
+        # Rotate method order when a configuration includes additional seeds.
         offset = cfg.seeds.index(seed) % len(cfg.methods)
         methods = cfg.methods[offset:] + cfg.methods[:offset]
-        for profile in cfg.profiles:
-            rows.extend({"profile": profile, "method": method, "seed": seed} for method in methods)
+        for method in methods:
+            rows.extend({"profile": profile, "method": method, "seed": seed} for profile in cfg.profiles)
     return {"config_digest": cfg.digest(), "runs": rows,
             "training_decisions": len(rows) * cfg.training.decisions,
             "warmstart_demonstrations": len(seeds) * cfg.training.warmstart_transitions,
@@ -121,7 +122,7 @@ def report(cfg, root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/overnight-cpu.yaml")
-    parser.add_argument("--output", default="runs/overnight-cpu")
+    parser.add_argument("--output", default="runs/overnight-profiles")
     parser.add_argument("--mode", choices=["plan", "benchmark", "run", "report"], default="plan")
     parser.add_argument("--hours", type=float, default=10)
     parser.add_argument("--seed", type=int, nargs="+", default=None)

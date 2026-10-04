@@ -11,12 +11,14 @@ from millstlabs.experiments import evaluate_baselines
 def test_overnight_budget_and_pair_order():
     cfg = load_config("configs/overnight-cpu.yaml")
     proposal = plan(cfg)
-    assert len(proposal["runs"]) == 9
-    assert proposal["training_decisions"] == 147456
-    assert proposal["warmstart_demonstrations"] == 12288
-    assert [r["method"] for r in proposal["runs"][:3]] == cfg.methods
-    assert proposal["runs"][3]["method"] == "r_adult"
-    assert len(plan(cfg, [22])["runs"]) == 3
+    assert len(proposal["runs"]) == 12
+    assert proposal["training_decisions"] == 196608
+    assert proposal["warmstart_demonstrations"] == 4096
+    assert {r["seed"] for r in proposal["runs"]} == {11}
+    assert [r["profile"] for r in proposal["runs"][:4]] == list(cfg.profiles)
+    assert {r["method"] for r in proposal["runs"][:4]} == {"r_adult"}
+    assert {(r["profile"], r["method"]) for r in proposal["runs"]} == {
+        (profile, method) for profile in cfg.profiles for method in cfg.methods}
     with pytest.raises(ValueError):
         plan(cfg, [99])
 
