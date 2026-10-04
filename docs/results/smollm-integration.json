@@ -1,0 +1,21 @@
+{
+  "finished": true,
+  "decisions": 128,
+  "budget": 128,
+  "unused_decisions": 0,
+  "world_ticks": 16,
+  "restarts": 0,
+  "elapsed_seconds": 32.873598458012566,
+  "evaluation_decisions": 32,
+  "births": 0,
+  "pending_dead_social_updates": 0,
+  "resources": {
+    "processed_tokens": 84192,
+    "encoder_forwards": 752,
+    "gradient_updates": 64,
+    "inference_seconds": 9.226761487079784,
+    "observations_at_token_cap": 0,
+    "cuda_model_stream_seconds": 0.0,
+    "cuda_peak_bytes": 0
+  }
+}

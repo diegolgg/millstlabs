@@ -1,0 +1,18 @@
+# Short integration check with actual SmolLM2; no claim of useful learned behavior.
+environment:
+  max_individuals: 2000
+training:
+  backend: smollm
+  device: cpu
+  decisions: 128
+  warmstart_transitions: 16
+  rollout_ticks: 8
+  social_window: 16
+  sequence_length: 4
+  checkpoints: [128]
+  evaluation_maps: 1
+  final_evaluation_maps: 1
+  evaluation_horizon: 4
+  cpu_threads: 4
+  newborn_evaluation_every: 0
+seeds: [11]

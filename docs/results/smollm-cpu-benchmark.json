@@ -1,0 +1,21 @@
+{
+  "backend": "smollm",
+  "device": "cpu",
+  "decisions": 128,
+  "resolved_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+  "seconds": 16.457762792007998,
+  "decisions_per_second_with_ppo": 7.777484802621999,
+  "private_trainable_parameters_per_agent": 93194,
+  "resources": {
+    "processed_tokens": 43596,
+    "encoder_forwards": 384,
+    "gradient_updates": 16,
+    "inference_seconds": 6.354160500573926,
+    "observations_at_token_cap": 0,
+    "cuda_peak_bytes": 0
+  },
+  "estimated_training_hours_per_run": 71.43126211809027,
+  "estimated_training_hours_sweep": 4285.875727085417,
+  "evaluation_decision_upper_bound_per_run": 917504,
+  "caveat": "Short sample estimate; excludes evaluation, warm starts, inheritance probes and I/O. Benchmark on target GPU."
+}

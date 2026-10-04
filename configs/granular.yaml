@@ -1,0 +1,11 @@
+# Optional exploratory sweep. Freeze this independently from the main comparison.
+profiles:
+  strongly_competitive: {social_preference: -1.0, vigilance_bias: 0}
+  competitive: {social_preference: -0.5, vigilance_bias: 0}
+  mildly_competitive: {social_preference: -0.25, vigilance_bias: 0}
+  individual: {social_preference: 0, vigilance_bias: 0}
+  mildly_prosocial: {social_preference: 0.25, vigilance_bias: 0}
+  prosocial: {social_preference: 0.5, vigilance_bias: 0}
+  strongly_prosocial: {social_preference: 1.0, vigilance_bias: 0}
+  mild_vigilance: {social_preference: 0, vigilance_bias: 0.5}
+  vigilance: {social_preference: 0, vigilance_bias: 1.0}
