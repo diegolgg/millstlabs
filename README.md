@@ -6,6 +6,16 @@ This is an experimental platform. The included smoke runs and heuristic pilot ve
 
 ## Run locally
 
+For an interactive CPU walkthrough, open **[notebooks/local_sandbox.ipynb](notebooks/local_sandbox.ipynb)**. It includes an animated heuristic demo, editable run settings, actual SmolLM2 training, and plots of ecology, evaluation, and behavioral probes:
+
+```bash
+source .venv/bin/activate
+pip install -e '.[train,notebook]'
+python -m jupyterlab notebooks/local_sandbox.ipynb
+```
+
+Choose **Run → Run All Cells**, or execute cells with Shift+Enter. The default is a short CPU run; switch `BACKEND` to `"tiny"` in the settings cell for a faster plumbing check. Outputs go to a new timestamped directory under `runs/notebook/`. The notebook calls the same production trainer as the CLI.
+
 Python 3.11+; a NVIDIA GPU is recommended for the SmolLM2 experiment. A CPU can run the simulator and offline training tests.
 
 ```bash
