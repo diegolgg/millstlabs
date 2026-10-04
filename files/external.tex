@@ -1,0 +1,80 @@
+\documentclass[12pt,letterpaper]{article} 
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+
+%--- Page layout
+\usepackage[margin=0.6in]{geometry}
+\pagestyle{empty}                  % no page number on a one-pager
+\setlength{\parindent}{0pt}        % no paragraph indents
+\setlength{\parskip}{4pt}          % small gap between paragraphs instead
+
+%--- Colours 
+\usepackage{xcolor}
+\definecolor{accent}{RGB}{28,55,94}    % navy: name, section labels, bullets
+\definecolor{muted}{RGB}{105,112,122}  % grey: secondary text
+
+%--- Lists
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=1.1em, itemsep=2pt, topsep=2pt, parsep=0pt, label={\color{accent}\textbullet}}  % compact lists, navy bullets
+
+%--- Section labels
+\newcommand{\sect}[2][]{
+\par\vspace{8pt}
+{\color{accent}\small\bfseries\MakeUppercase{#2}}\hfill{\color{muted}\small#1}\par
+\vspace{2pt}\nointerlineskip\vspace{2pt}
+{\color{accent!35}\rule{\linewidth}{0.5pt}}
+\par\vspace{-1pt}
+}
+
+% PDF metadata
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Mill Street Labs}, pdfauthor={Mill Street Labs}}
+
+\begin{document}
+
+{\fontsize{26}{28}\selectfont\bfseries\color{accent} Mill Street Labs}\par
+\vspace{2pt}{\color{accent}\rule{\linewidth}{1.2pt}}\par
+\vspace{4pt}
+
+\textbf{We envision frictionless intelligence transfer and accumulation among people and agents.} We are building long-running agent populations that discover, share, and build on useful knowledge.
+
+\sect[Team of 4, Harvard Class of '27]{Team}
+  Diego Luca Gonzalez Gauss (Math 55 CA, Susquehanna, Kempner \& statistics research), Kevin Matthew Liu (Jump Trading, ex-Optiver, Kempner research), Enrico Yao-Bate (Math 55 Head CA, statistics research), Haozhe Yang (Math 55 CA, Jane Street, IMO Medalist, Putnam Honorable Mentions)
+
+\sect{Thesis}
+\textbf{Long-running agent populations can improve collectively through adaptive social dynamics and intelligence transfer.}
+
+Human innovation is an emergent property of long-running social dynamics; new ideas build on knowledge accumulated over generations through teaching, cooperation, and competition between groups.
+
+\begin{itemize}
+  \item \textbf{Adaptive social dynamics:} have groups compete for finite resources, so that helping one's group is rewarded even if doing so costs an agent resources. Let agents revise how they cooperate, enter and leave swarms, and migrate between groups.
+  \item \textbf{Intelligence transfer:} credit agents for the improvement of those they teach so that it is in their interest to spread useful knowledge; use teaching to combine discoveries from different lineages and have agents verify what they are taught before they adopt it.
+\end{itemize}
+
+\sect{Research} % I don't think research is the right title for this but edge also maybe isn't; agree but I think research sounds nicer lol
+\textbf{Our focus is swarm improvement itself.}
+
+Agent swarms have been observed to spontaneously develop social dynamics, but most existing swarms are one-shot, built for a short-horizon objective, or otherwise evolve independently and have a fixed search space.  We let populations run continually, perturb organization and incentives, and measure how these affect what they discover, retain, and improve on, to identify what sustains collective improvement.
+
+\sect{Sandboxes}
+
+\textbf{Sandbox 1}: strategy development in skillful games
+
+Skillful games provide clear credit assignment, counterfactuals, and metrics for agent interaction.
+
+\begin{itemize}
+  \item Our swarms (xxx)
+  \item developed a prior for the emergence of agent social dynamics and efficient organization under long time horizon games (e.g.\ Civilization 6). DO THIS DO THIS DO THIS
+\end{itemize}
+
+\textbf{Sandbox 2}: autonomous research in market making
+
+Market making lets swarms explore, exchange findings, compete for market share, and adapt to dynamic multivariate settings. We have domain knowledge to evaluate valuable problems and candidate strategies.
+
+\begin{itemize}
+  \item 3--4\,ms roundtrip execution with the Kalshi matching engine
+  \item deployable positive expectancy strategies for market making
+\end{itemize}
+
+\end{document}
+s
