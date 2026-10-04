@@ -1,0 +1,27 @@
+{
+  "backend": "smollm",
+  "device": "cpu",
+  "decisions": 673,
+  "config_digest": "67e539659b8ea8598b83684ce801aeb1d04e06d355eb4a9e8cb3afedbf83f49a",
+  "benchmark_ticks": 106,
+  "cpu_threads": 4,
+  "platform": "macOS-15.3.2-arm64-arm-64bit-Mach-O",
+  "peak_process_rss_bytes": 1568374784,
+  "resolved_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+  "seconds": 92.90369775006548,
+  "decisions_per_second_with_ppo": 7.244060422767464,
+  "private_trainable_parameters_per_agent": 93194,
+  "resources": {
+    "processed_tokens": 230586,
+    "encoder_forwards": 2019,
+    "gradient_updates": 48,
+    "inference_seconds": 34.27917730563786,
+    "observations_at_token_cap": 0,
+    "cuda_model_stream_seconds": 0.0,
+    "cuda_peak_bytes": 0
+  },
+  "estimated_training_hours_per_run": 0.6282541621004922,
+  "estimated_training_hours_sweep": 1.884762486301477,
+  "evaluation_decision_upper_bound_per_run": 32768,
+  "caveat": "Short sample estimate; excludes evaluation, warm starts, inheritance probes and I/O. Benchmark on target hardware."
+}

@@ -19,6 +19,8 @@ def main():
     p.add_argument("--output", default="runs/calibration.json")
     p = sub.add_parser("matrix")
     p.add_argument("--output", default="runs/matrix.jsonl")
+    p = sub.add_parser("baselines", help="Evaluate observation-limited heuristics on matched held-out maps")
+    p.add_argument("--output", default="runs/baselines.json")
     p = sub.add_parser("warmstart")
     p.add_argument("--seed", type=int, required=True)
     p.add_argument("--output", required=True)
@@ -70,12 +72,16 @@ def main():
     elif args.command == "calibrate":
         from .experiments import calibrate
         result = calibrate(cfg, args.seeds, args.ticks, args.output)
+    elif args.command == "baselines":
+        from .experiments import evaluate_baselines
+        result = evaluate_baselines(cfg, args.output)
     elif args.command == "warmstart":
         from .trainer import warmstart
         if Path(args.output).exists():
             parser.error("Warm-start checkpoint already exists; use a new filename to preserve pairing")
         p = warmstart(cfg, args.seed, args.output)
-        result = {"path": args.output, "transitions": p["transitions"], "resources": p["resources"]}
+        result = {"path": args.output, "transitions": p["transitions"], "resources": p["resources"],
+                  "elapsed_seconds": p["elapsed_seconds"]}
     elif args.command == "train":
         from .trainer import Trainer
         runner = Trainer(cfg, args.profile, args.method, args.seed, args.output, args.warmstart, args.resume)

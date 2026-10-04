@@ -1,11 +1,14 @@
 import json
 import math
+import platform
+import resource
+import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
-from .env import WATCH, PopulationEnv
+from .env import FEED, WATCH, PopulationEnv
 from .observations import Heuristic
 
 
@@ -123,6 +126,10 @@ def benchmark(cfg, ticks, output):
     seconds = time.perf_counter() - start
     n_runs = len(cfg.profiles) * len(cfg.methods) * len(cfg.seeds)
     result = {"backend": cfg.training.backend, "device": str(bank.device), "decisions": decisions,
+              "config_digest": cfg.digest(), "benchmark_ticks": env.tick,
+              "cpu_threads": cfg.training.cpu_threads, "platform": platform.platform(),
+              "peak_process_rss_bytes": int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                                            * (1 if sys.platform == "darwin" else 1024)),
               "resolved_revision": bank.resolved_revision,
               "seconds": seconds, "decisions_per_second_with_ppo": decisions / seconds,
               "private_trainable_parameters_per_agent": private, "resources": bank.resource_metrics(),
@@ -131,7 +138,50 @@ def benchmark(cfg, ticks, output):
               "evaluation_decision_upper_bound_per_run": cfg.training.evaluation_policies * cfg.training.evaluation_horizon * (
                   cfg.training.evaluation_maps * len([c for c in cfg.training.checkpoints if c < cfg.training.decisions])
                   + cfg.training.final_evaluation_maps),
-              "caveat": "Short sample estimate; excludes evaluation, warm starts, inheritance probes and I/O. Benchmark on target GPU."}
+              "caveat": "Short sample estimate; excludes evaluation, warm starts, inheritance probes and I/O. Benchmark on target hardware."}
+    Path(output).parent.mkdir(parents=True, exist_ok=True)
+    Path(output).write_text(json.dumps(result, indent=2))
+    return result
+
+
+def evaluate_baselines(cfg, output):
+    """Non-learning baselines on exactly the pilot's final evaluation seeds/horizon."""
+    from dataclasses import replace
+
+    t = cfg.training
+    rows = []
+    for mode in ["random", "food", "vigilant"]:
+        for episode in range(t.final_evaluation_maps):
+            seed = t.evaluation_seed + episode
+            env = PopulationEnv(replace(cfg.environment, founders=t.evaluation_policies), reproduction=False)
+            obs, _ = env.reset(seed=seed)
+            helpers = {i: Heuristic(seed * 100 + j, vigilance=mode == "vigilant")
+                       for j, i in enumerate(env.agents)}
+            rng = np.random.default_rng(seed + 7)
+            lifetimes = dict.fromkeys(env.agents, t.evaluation_horizon)
+            watch = feed = decisions = 0
+            for _ in range(t.evaluation_horizon):
+                if not env.agents:
+                    break
+                actions = {i: int(rng.choice(np.flatnonzero(obs[i]["action_mask"]))) if mode == "random"
+                           else helpers[i].act(obs[i]) for i in env.agents}
+                decisions += len(actions)
+                watch += sum(a == WATCH for a in actions.values())
+                feed += sum(a == FEED for a in actions.values())
+                obs, *_ = env.step(actions)
+                for event in env.events:
+                    if event["type"] == "death":
+                        lifetimes[event["id"]] = env.tick
+            rows.append({"mode": mode, "map_seed": seed,
+                         "restricted_mean_lifetime": float(np.mean(list(lifetimes.values()))),
+                         "survival_fraction": len(env.agents) / t.evaluation_policies,
+                         "starvation": env.deaths["starvation"], "predation": env.deaths["predation"],
+                         "watch_rate": watch / max(1, decisions), "feed_rate": feed / max(1, decisions)})
+    result = {"config_digest": cfg.digest(), "evaluation_horizon": t.evaluation_horizon,
+              "maps": t.final_evaluation_maps, "episodes": rows,
+              "scores": {m: float(np.mean([r["restricted_mean_lifetime"] for r in rows if r["mode"] == m]))
+                         for m in ["random", "food", "vigilant"]},
+              "note": "Matched evaluation conditions; heuristic results are not independent training replicates."}
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(result, indent=2))
     return result

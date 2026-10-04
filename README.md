@@ -18,7 +18,16 @@ The launcher creates `.venv` if needed, installs missing dependencies (CPU PyTor
 
 Choose **Run → Run All Cells**, or execute cells with Shift+Enter. The default is a short CPU run; switch `BACKEND` to `"tiny"` in the settings cell for a faster plumbing check. Outputs go to a new timestamped directory under `runs/notebook/`. The notebook calls the same production trainer as the CLI.
 
-Python 3.11+; a NVIDIA GPU is recommended for the SmolLM2 experiment. A CPU can run the simulator and offline training tests.
+For the larger CPU experiment, open **[notebooks/overnight_cpu.ipynb](notebooks/overnight_cpu.ipynb)** or run:
+
+```bash
+bash scripts/overnight.sh --mode benchmark
+bash scripts/overnight.sh --mode run --hours 10 --seed 11
+```
+
+Start with the first three-method cohort: the longer warm-start check has not yet beaten random survival. Remove `--seed 11` to expand to all three paired seeds after reviewing learning and reproduction. The serial runner reuses a shared warm start per seed and resumes from the same output directory. See [the saved-results review and overnight design](docs/overnight-cpu.md) for timing, measurements and interpretation. The notebook defaults to displaying the plan; training is explicitly enabled in its settings cell.
+
+Python 3.11+; a NVIDIA GPU is recommended for the full 120-million-decision study. The smaller SmolLM2 pilot runs on CPU.
 
 ```bash
 python3 -m venv .venv

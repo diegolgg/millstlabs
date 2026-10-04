@@ -1,0 +1,152 @@
+{
+  "note": "One seed, before PPO, after 4096 demonstrations; not evidence of reinforcement learning or inheritance.",
+  "matched_heuristic_lifetimes": {
+    "random": 83.1875,
+    "food": 171.0,
+    "vigilant": 216.875
+  },
+  "warmstart_demonstrations": 4096,
+  "evaluation": {
+    "decisions": 0,
+    "trial": 0,
+    "checkpoint": 0,
+    "sampled_policies": [
+      "prey_3",
+      "prey_4",
+      "prey_2",
+      "prey_0",
+      "prey_6",
+      "prey_5",
+      "prey_1",
+      "prey_7"
+    ],
+    "episodes": [
+      {
+        "map_seed": 2000000,
+        "restricted_mean_lifetime": 88.125,
+        "survival_fraction": 0.0,
+        "lifetimes": {
+          "prey_0": 109,
+          "prey_1": 94,
+          "prey_2": 5,
+          "prey_3": 93,
+          "prey_4": 125,
+          "prey_5": 117,
+          "prey_6": 93,
+          "prey_7": 69
+        },
+        "starvation": 2,
+        "predation": 6,
+        "decisions": 705,
+        "watch_rate": 0.1148936170212766,
+        "feed_rate": 0.10070921985815603
+      },
+      {
+        "map_seed": 2000001,
+        "restricted_mean_lifetime": 64.375,
+        "survival_fraction": 0.0,
+        "lifetimes": {
+          "prey_0": 33,
+          "prey_1": 97,
+          "prey_2": 96,
+          "prey_3": 17,
+          "prey_4": 57,
+          "prey_5": 91,
+          "prey_6": 83,
+          "prey_7": 41
+        },
+        "starvation": 3,
+        "predation": 5,
+        "decisions": 515,
+        "watch_rate": 0.13009708737864079,
+        "feed_rate": 0.019417475728155338
+      }
+    ],
+    "restricted_mean_lifetime": 76.25,
+    "survival_fraction": 0.0,
+    "population": 8,
+    "ages": [
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128
+    ]
+  },
+  "probes": {
+    "decisions": 0,
+    "trial": 0,
+    "checkpoint": 0,
+    "probabilities": {
+      "self_threat": [
+        0.050349123775959015,
+        0.09678321331739426,
+        0.13692043721675873,
+        0.057580526918172836,
+        0.35620200634002686,
+        0.08118688315153122,
+        0.22097787261009216
+      ],
+      "companion_threat": [
+        0.05023663863539696,
+        0.0971418097615242,
+        0.13718555867671967,
+        0.058031562715768814,
+        0.35545995831489563,
+        0.08077507466077805,
+        0.2211693525314331
+      ],
+      "scarce_food_weak_peer": [
+        0.05022696033120155,
+        0.09729332476854324,
+        0.13759000599384308,
+        0.05776241049170494,
+        0.35464146733283997,
+        0.08067160844802856,
+        0.2218141406774521
+      ],
+      "others_watching": [
+        0.05024004727602005,
+        0.09727370738983154,
+        0.13729648292064667,
+        0.0580022856593132,
+        0.35525086522102356,
+        0.08067364245653152,
+        0.22126302123069763
+      ],
+      "safe_abundance": [
+        0.050388336181640625,
+        0.09690891951322556,
+        0.13723720610141754,
+        0.05734080821275711,
+        0.35542452335357666,
+        0.08103933185338974,
+        0.22166086733341217
+      ]
+    }
+  },
+  "summary": {
+    "finished": false,
+    "decisions": 0,
+    "budget": 16384,
+    "unused_decisions": 16384,
+    "world_ticks": 0,
+    "restarts": 0,
+    "elapsed_seconds": 74.17389579105657,
+    "evaluation_decisions": 1220,
+    "births": 0,
+    "pending_dead_social_updates": 0,
+    "resources": {
+      "processed_tokens": 174875,
+      "encoder_forwards": 1540,
+      "gradient_updates": 0,
+      "inference_seconds": 62.47877467982471,
+      "observations_at_token_cap": 0,
+      "cuda_model_stream_seconds": 0.0,
+      "cuda_peak_bytes": 0
+    }
+  }
+}

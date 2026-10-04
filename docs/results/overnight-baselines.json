@@ -1,0 +1,133 @@
+{
+  "config_digest": "f96350dbb80a59ee494a01f339e2430d49e0617dc05038f656024ca5544c672f",
+  "evaluation_horizon": 512,
+  "maps": 4,
+  "episodes": [
+    {
+      "mode": "random",
+      "map_seed": 2000000,
+      "restricted_mean_lifetime": 91.75,
+      "survival_fraction": 0.0,
+      "starvation": 5,
+      "predation": 3,
+      "watch_rate": 0.1893732970027248,
+      "feed_rate": 0.01907356948228883
+    },
+    {
+      "mode": "random",
+      "map_seed": 2000001,
+      "restricted_mean_lifetime": 74.625,
+      "survival_fraction": 0.0,
+      "starvation": 3,
+      "predation": 5,
+      "watch_rate": 0.17922948073701842,
+      "feed_rate": 0.02512562814070352
+    },
+    {
+      "mode": "random",
+      "map_seed": 2000002,
+      "restricted_mean_lifetime": 67.5,
+      "survival_fraction": 0.0,
+      "starvation": 4,
+      "predation": 4,
+      "watch_rate": 0.17962962962962964,
+      "feed_rate": 0.014814814814814815
+    },
+    {
+      "mode": "random",
+      "map_seed": 2000003,
+      "restricted_mean_lifetime": 86.75,
+      "survival_fraction": 0.0,
+      "starvation": 5,
+      "predation": 3,
+      "watch_rate": 0.2017291066282421,
+      "feed_rate": 0.005763688760806916
+    },
+    {
+      "mode": "food",
+      "map_seed": 2000000,
+      "restricted_mean_lifetime": 154.875,
+      "survival_fraction": 0.0,
+      "starvation": 1,
+      "predation": 7,
+      "watch_rate": 0.0,
+      "feed_rate": 0.3139628732849072
+    },
+    {
+      "mode": "food",
+      "map_seed": 2000001,
+      "restricted_mean_lifetime": 187.125,
+      "survival_fraction": 0.0,
+      "starvation": 0,
+      "predation": 8,
+      "watch_rate": 0.0,
+      "feed_rate": 0.44288577154308617
+    },
+    {
+      "mode": "food",
+      "map_seed": 2000002,
+      "restricted_mean_lifetime": 105.25,
+      "survival_fraction": 0.0,
+      "starvation": 1,
+      "predation": 7,
+      "watch_rate": 0.0,
+      "feed_rate": 0.5106888361045131
+    },
+    {
+      "mode": "food",
+      "map_seed": 2000003,
+      "restricted_mean_lifetime": 246.375,
+      "survival_fraction": 0.125,
+      "starvation": 2,
+      "predation": 5,
+      "watch_rate": 0.0,
+      "feed_rate": 0.528158295281583
+    },
+    {
+      "mode": "vigilant",
+      "map_seed": 2000000,
+      "restricted_mean_lifetime": 176.5,
+      "survival_fraction": 0.0,
+      "starvation": 3,
+      "predation": 5,
+      "watch_rate": 0.10977337110481586,
+      "feed_rate": 0.4468838526912181
+    },
+    {
+      "mode": "vigilant",
+      "map_seed": 2000001,
+      "restricted_mean_lifetime": 257.25,
+      "survival_fraction": 0.0,
+      "starvation": 1,
+      "predation": 7,
+      "watch_rate": 0.11078717201166181,
+      "feed_rate": 0.5383867832847424
+    },
+    {
+      "mode": "vigilant",
+      "map_seed": 2000002,
+      "restricted_mean_lifetime": 219.875,
+      "survival_fraction": 0.0,
+      "starvation": 0,
+      "predation": 8,
+      "watch_rate": 0.10233086981239341,
+      "feed_rate": 0.45707788516202386
+    },
+    {
+      "mode": "vigilant",
+      "map_seed": 2000003,
+      "restricted_mean_lifetime": 200.875,
+      "survival_fraction": 0.0,
+      "starvation": 1,
+      "predation": 7,
+      "watch_rate": 0.0939639079029247,
+      "feed_rate": 0.5532047293092719
+    }
+  ],
+  "scores": {
+    "random": 80.15625,
+    "food": 173.40625,
+    "vigilant": 213.625
+  },
+  "note": "Matched evaluation conditions; heuristic results are not independent training replicates."
+}

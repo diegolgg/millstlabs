@@ -1,4 +1,5 @@
 import copy
+import json
 from dataclasses import replace
 
 import pytest
@@ -136,6 +137,24 @@ def test_all_methods_end_to_end(tmp_path):
         assert 0 <= summary["unused_decisions"] < cfg.environment.population_cap
         assert (tmp_path / method / "evaluation.jsonl").exists()
         assert trainer.bank.gradient_updates > 0
+
+
+def test_initial_evaluation_precedes_training_and_is_not_repeated_on_resume(tmp_path):
+    cfg = config()
+    cfg.training.checkpoints = [0, 128]
+    warm = tmp_path / "warm.pt"
+    output = tmp_path / "run"
+    warmstart(cfg, 11, warm)
+    trainer = Trainer(cfg, "prosocial", "r_adult", 11, output, warm)
+    paused = trainer.run(max_wall_seconds=1e-9)
+    assert paused["decisions"] == 0 and not paused["finished"]
+    assert trainer.bank.gradient_updates == 0
+    initial = torch.load(output / "checkpoint-0.pt", weights_only=False)
+    assert initial["decisions"] == 0
+    resumed = Trainer(cfg, "prosocial", "r_adult", 11, output, warm, output / "latest.pt")
+    assert resumed.run()["finished"]
+    rows = [json.loads(line) for line in (output / "evaluation.jsonl").read_text().splitlines()]
+    assert [row["checkpoint"] for row in rows] == [0, 128]
 
 
 @pytest.mark.parametrize("method", ["r_adult", "r_initial"])

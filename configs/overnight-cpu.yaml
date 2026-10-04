@@ -1,0 +1,30 @@
+# CPU engineering pilot, not the confirmatory 60-run experiment.
+# Three methods, one fixed profile, three paired seeds. Run serially.
+environment:
+  founders: 8
+  population_cap: 16
+  social_denominator: 16
+training:
+  backend: smollm
+  device: cpu
+  cpu_threads: 4
+  decisions: 16384
+  warmstart_transitions: 4096
+  rollout_ticks: 128
+  social_window: 256
+  sequence_length: 32
+  epochs: 2
+  checkpoints: [0, 8192, 16384]
+  evaluation_maps: 2
+  final_evaluation_maps: 4
+  evaluation_horizon: 512
+  evaluation_policies: 8
+  # Distinct from the main study's 1,000,000-series evaluation maps.
+  evaluation_seed: 2000000
+  newborn_evaluation_every: 8
+  newborn_evaluation_maps: 1
+  newborn_evaluation_horizon: 128
+profiles:
+  prosocial: {social_preference: 0.5, vigilance_bias: 0.0}
+seeds: [11, 22, 33]
+methods: [iteration, r_adult, r_initial]

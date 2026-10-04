@@ -38,6 +38,7 @@ def seed_all(seed):
 
 def warmstart(cfg, seed, path):
     """Behavior cloning from observation-limited demonstrations; one checkpoint/seed."""
+    started = time.perf_counter()
     seed_all(seed)
     env = PopulationEnv(cfg.environment, reproduction=False)
     obs, _ = env.reset(seed=seed)
@@ -47,6 +48,7 @@ def warmstart(cfg, seed, path):
     hidden = {i: bank.zero_hidden() for i in env.agents}
     buffers = defaultdict(list)
     decisions, trial = 0, 0
+    next_progress = 512
 
     def train_sequence(i):
         seq = buffers.pop(i, [])
@@ -74,6 +76,10 @@ def warmstart(cfg, seed, path):
                 if len(buffers[i]) == cfg.training.sequence_length:
                     train_sequence(i)
         obs, _, terms, _, _ = env.step(actions)
+        if decisions >= next_progress:
+            print(json.dumps({"phase": "warmstart", "seed": seed, "demonstrations": decisions,
+                              "elapsed_seconds": round(time.perf_counter() - started, 2)}), flush=True)
+            next_progress = (decisions // 512 + 1) * 512
         for i, dead in terms.items():
             if dead:
                 train_sequence(i)
@@ -86,7 +92,8 @@ def warmstart(cfg, seed, path):
         train_sequence(i)
     payload = {"format": 1, "state": bank.state("warm"), "seed": seed,
                "config": asdict(cfg), "config_digest": cfg.digest(), "transitions": decisions,
-               "resolved_revision": bank.resolved_revision, "resources": bank.resource_metrics()}
+               "resolved_revision": bank.resolved_revision, "resources": bank.resource_metrics(),
+               "elapsed_seconds": time.perf_counter() - started}
     if cfg.training.backend == "tiny":
         payload["tiny_base"] = cpu_state(bank.base.state_dict())
     save_atomic(path, payload)
@@ -330,6 +337,13 @@ class Trainer:
         initial_elapsed = self.elapsed_seconds
         cfg = self.cfg.training
         wall_limit = cfg.max_wall_seconds if max_wall_seconds is None else max_wall_seconds
+        # Evaluate the actual starting cohort before any collection or PPO update.
+        if 0 in cfg.checkpoints and 0 not in self.completed_evaluations:
+            if self.decisions != 0:
+                raise ValueError("Cannot create a missing initial evaluation after training has started")
+            self.assess(0)
+            self.elapsed_seconds = initial_elapsed + time.perf_counter() - start
+            self.checkpoint()
         while self.decisions + len(self.env.agents) <= cfg.decisions:
             if wall_limit and time.perf_counter() - start >= wall_limit:
                 break
