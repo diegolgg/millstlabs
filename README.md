@@ -9,10 +9,12 @@ This is an experimental platform. The included smoke runs and heuristic pilot ve
 For an interactive CPU walkthrough, open **[notebooks/local_sandbox.ipynb](notebooks/local_sandbox.ipynb)**. It includes an animated heuristic demo, editable run settings, actual SmolLM2 training, and plots of ecology, evaluation, and behavioral probes:
 
 ```bash
-source .venv/bin/activate
-pip install -e '.[train,notebook]'
-python -m jupyterlab notebooks/local_sandbox.ipynb
+bash scripts/notebook.sh
 ```
+
+The launcher creates `.venv` if needed, installs missing dependencies (CPU PyTorch on fresh Linux installs), and serves Jupyter from the repository root using that environment. No activation or Mac-specific path is needed. First launch includes package/model downloads; the approximately one-minute notebook timing was measured **after installation on the development Mac**, not on a fresh Codespace.
+
+**GitHub Codespaces:** run the command from `/workspaces/millstlabs`. Open port **8888** using **Ports → Open in Browser**, leaving its visibility **Private**. If Jupyter asks for a token, paste the one it prints in that terminal. Open `notebooks/local_sandbox.ipynb` and choose **Run → Run All Cells**. See [GitHub's port-forwarding documentation](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace). Keep the server terminal running; Ctrl+C twice stops it. If an earlier Jupyter server is already running, stop it first, or use `PORT=8889 bash scripts/notebook.sh`.
 
 Choose **Run → Run All Cells**, or execute cells with Shift+Enter. The default is a short CPU run; switch `BACKEND` to `"tiny"` in the settings cell for a faster plumbing check. Outputs go to a new timestamped directory under `runs/notebook/`. The notebook calls the same production trainer as the CLI.
 
