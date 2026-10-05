@@ -85,8 +85,8 @@ def report(root):
                         "restricted_mean_lifetime": e["restricted_mean_lifetime"],
                         "survival_fraction": e["survival_fraction"],
                         "mean_food_consumed": float(np.mean([r["food_consumed"] for r in e["episodes"]])),
-                        "hungry_feed_opportunities": sum(r["hungry_feed_opportunities"] for r in e["episodes"]),
-                        "hungry_feed_actions": sum(r["hungry_feed_actions"] for r in e["episodes"])}
+                        "hungry_feed_opportunities": sum(int(r["hungry_feed_opportunities"]) for r in e["episodes"]),
+                        "hungry_feed_actions": sum(int(r["hungry_feed_actions"]) for r in e["episodes"])}
                         for c, e in evaluations.items()},
                     "peer_access_benefit": {str(c): paired(e, private[c]) for c, e in evaluations.items() if c in private}}
             last = max(evaluations, default=0)

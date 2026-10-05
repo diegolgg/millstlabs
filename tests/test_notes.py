@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 
 import numpy as np
@@ -147,6 +148,9 @@ def test_notes_resume_replays_exactly_and_evaluates_withheld_access(tmp_path):
     assert (tmp_path/"a/note_probe.jsonl").exists()
     assert (tmp_path/"a/evaluation_private_corpus.jsonl").exists()
     assert (tmp_path/"a/corpus-checkpoint-128.json").exists()
+    evaluated = json.loads((tmp_path/"a/evaluation.jsonl").read_text().splitlines()[-1])
+    assert all(type(r["hungry_feed_opportunities"]) is int and type(r["hungry_feed_actions"]) is int
+               for r in evaluated["episodes"])
 
 
 def test_direct_actor_grounding_does_not_expose_corpus_numbers():
@@ -154,6 +158,22 @@ def test_direct_actor_grounding_does_not_expose_corpus_numbers():
     a, b = cue_pair(obs[author])
     np.testing.assert_array_equal(PolicyBank.physical_features(a), PolicyBank.physical_features(b))
     assert observation_text(a) != observation_text(b)
+
+
+def test_report_accepts_existing_string_counters(tmp_path):
+    from millstlabs.batch import freeze
+    from millstlabs.corpus_experiment import report
+    freeze(config(), tmp_path)
+    (tmp_path/"deployment.json").write_text(json.dumps({"styles": ["grounded"]}))
+    output = tmp_path/"grounded/prosocial-r_adult-s11"
+    output.mkdir(parents=True)
+    evaluation = {"checkpoint": 0, "restricted_mean_lifetime": 110.25, "survival_fraction": 0.,
+                  "episodes": [{"food_consumed": 224.25, "hungry_feed_opportunities": "30", "hungry_feed_actions": "21"},
+                               {"food_consumed": 309.25, "hungry_feed_opportunities": "44", "hungry_feed_actions": "32"}]}
+    (output/"evaluation.jsonl").write_text(json.dumps(evaluation)+"\n")
+    row = report(tmp_path)["runs"][0]["evaluations"]["0"]
+    assert row["hungry_feed_opportunities"] == 74
+    assert row["hungry_feed_actions"] == 53
 
 
 def test_http_notes_interface_validates_whole_batch_and_does_not_mutate_on_get():

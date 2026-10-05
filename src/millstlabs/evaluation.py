@@ -66,7 +66,7 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, delive
                 actions[i] = a
                 watch_count += a % 7 == WATCH
                 feed_count += a % 7 == FEED
-                opportunity = observations[i]["self"][0] < 80 and bool(observations[i]["action_mask"][FEED])
+                opportunity = bool(observations[i]["self"][0] < 80 and observations[i]["action_mask"][FEED])
                 hungry_opportunities += opportunity
                 hungry_feeds += opportunity and a % 7 == FEED
             decisions += len(actions)
