@@ -2,6 +2,8 @@
 
 The default remains an **LLM experiment**. Each agent uses the pinned SmolLM2-135M-Instruct transformer, its own trainable LoRA adapter, and its own recurrent action controller. There is no hosted API or external GPU requirement. The optional `numeric` phase is a separate diagnostic baseline; its speed is not the speed of the LLM experiment.
 
+The subsequent [corpus deployment](discovery.md) implements explicit verified-fact deposit/retrieval, a decaying novelty bonus with its own value head, and a fixed 4-to-1 predator curriculum in separate paired conditions. The focused cooperative configuration described here remains unchanged.
+
 ## Why change this architecture?
 
 The old policy already uses actor–critic PPO. The problem is how its objectives interact. A survival value error can be hundreds of times larger than the action-learning signal. When both losses change the same recurrent representation and LLM adapter, value fitting can overwhelm useful distinctions between observations. The earlier audit found projection saturation and a much larger critic gradient in one inspected minibatch. That is evidence for testing isolation, not proof of the cause of poor learning.

@@ -1,0 +1,259 @@
+{
+  "backend": "smollm",
+  "device": "cpu",
+  "cpu_threads": 1,
+  "model_id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "warmstart_demonstrations": 64,
+  "total_training_decisions": 512,
+  "total_evaluation_decisions": 640,
+  "common_warmstart": true,
+  "all_completed": true,
+  "rows": [
+    {
+      "condition": "private_guided",
+      "model_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+      "config_digest": "611fa6f44b968c49e0712e8ebca66d490a83cf4feabc16bf97869669c054cb22",
+      "warmstart_sha256": "dc41a86a7c6734d3de632ceee528b7cb2a9c1901481decdd105a818b19b38974",
+      "summary": {
+        "finished": true,
+        "decisions": 128,
+        "budget": 128,
+        "unused_decisions": 0,
+        "world_ticks": 16,
+        "restarts": 0,
+        "elapsed_seconds": 85.55882799997926,
+        "evaluation_decisions": 128,
+        "births": 0,
+        "pending_dead_social_updates": 0,
+        "resources": {
+          "processed_tokens": 174590,
+          "encoder_forwards": 1168,
+          "gradient_updates": 64,
+          "inference_seconds": 18.779135829187,
+          "observations_at_token_cap": 0,
+          "cuda_model_stream_seconds": 0.0,
+          "cuda_peak_bytes": 0
+        }
+      },
+      "final_training_corpus_counters": {
+        "decisions": 128,
+        "trial": 0,
+        "tick": 16,
+        "deposit_calls": 41,
+        "retrieve_calls": 58,
+        "accepted_records": 125,
+        "rejected_records": 0,
+        "returned_records": 61,
+        "peer_records": 0,
+        "empty_retrievals": 34,
+        "unique_observed_facts": 164,
+        "initial_observed_facts": 101,
+        "new_observed_facts": 63,
+        "unique_deposited_facts": 89,
+        "distinct_peer_imports": 0,
+        "peer_terrain_reconfirmations": 0
+      },
+      "weighted_intrinsic_reward_sum": 1.7178670922452879,
+      "maximum_lora_change_from_warmstart": 0.0007921657525002956,
+      "final_evaluation": {
+        "new_observed_facts": 49,
+        "deposit_calls": 25,
+        "retrieve_calls": 29,
+        "peer_records": 0,
+        "restricted_mean_lifetime": 8.0
+      },
+      "curriculum_changes": [
+        {
+          "decisions": 0,
+          "trial": 0,
+          "predator_temperature": 4.0,
+          "world_ticks": 0
+        },
+        {
+          "decisions": 64,
+          "trial": 0,
+          "predator_temperature": 1.0,
+          "world_ticks": 8
+        }
+      ]
+    },
+    {
+      "condition": "private_plain",
+      "model_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+      "config_digest": "952a2181793620ced2a3c215f64325e721e3bf179767627a5cd435c407d06747",
+      "warmstart_sha256": "dc41a86a7c6734d3de632ceee528b7cb2a9c1901481decdd105a818b19b38974",
+      "summary": {
+        "finished": true,
+        "decisions": 128,
+        "budget": 128,
+        "unused_decisions": 0,
+        "world_ticks": 16,
+        "restarts": 0,
+        "elapsed_seconds": 81.02028845902532,
+        "evaluation_decisions": 128,
+        "births": 0,
+        "pending_dead_social_updates": 0,
+        "resources": {
+          "processed_tokens": 174590,
+          "encoder_forwards": 1168,
+          "gradient_updates": 64,
+          "inference_seconds": 16.758101163781248,
+          "observations_at_token_cap": 0,
+          "cuda_model_stream_seconds": 0.0,
+          "cuda_peak_bytes": 0
+        }
+      },
+      "final_training_corpus_counters": {
+        "decisions": 128,
+        "trial": 0,
+        "tick": 16,
+        "deposit_calls": 41,
+        "retrieve_calls": 58,
+        "accepted_records": 125,
+        "rejected_records": 0,
+        "returned_records": 61,
+        "peer_records": 0,
+        "empty_retrievals": 34,
+        "unique_observed_facts": 164,
+        "initial_observed_facts": 101,
+        "new_observed_facts": 63,
+        "unique_deposited_facts": 89,
+        "distinct_peer_imports": 0,
+        "peer_terrain_reconfirmations": 0
+      },
+      "weighted_intrinsic_reward_sum": 0.0,
+      "maximum_lora_change_from_warmstart": 0.0007920999778434634,
+      "final_evaluation": {
+        "new_observed_facts": 49,
+        "deposit_calls": 25,
+        "retrieve_calls": 29,
+        "peer_records": 0,
+        "restricted_mean_lifetime": 8.0
+      }
+    },
+    {
+      "condition": "shared_guided",
+      "model_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+      "config_digest": "8874fbbbd3adec16b2a348ed2a08a2046bf3687773c8292374ea7914a65b9aa2",
+      "warmstart_sha256": "dc41a86a7c6734d3de632ceee528b7cb2a9c1901481decdd105a818b19b38974",
+      "summary": {
+        "finished": true,
+        "decisions": 128,
+        "budget": 128,
+        "unused_decisions": 0,
+        "world_ticks": 16,
+        "restarts": 0,
+        "elapsed_seconds": 94.99805358296726,
+        "evaluation_decisions": 192,
+        "births": 0,
+        "pending_dead_social_updates": 0,
+        "resources": {
+          "processed_tokens": 189035,
+          "encoder_forwards": 1232,
+          "gradient_updates": 64,
+          "inference_seconds": 24.57429457968101,
+          "observations_at_token_cap": 0,
+          "cuda_model_stream_seconds": 0.0,
+          "cuda_peak_bytes": 0
+        }
+      },
+      "final_training_corpus_counters": {
+        "decisions": 128,
+        "trial": 0,
+        "tick": 16,
+        "deposit_calls": 41,
+        "retrieve_calls": 58,
+        "accepted_records": 125,
+        "rejected_records": 0,
+        "returned_records": 137,
+        "peer_records": 128,
+        "empty_retrievals": 8,
+        "unique_observed_facts": 164,
+        "initial_observed_facts": 101,
+        "new_observed_facts": 63,
+        "unique_deposited_facts": 89,
+        "distinct_peer_imports": 52,
+        "peer_terrain_reconfirmations": 6
+      },
+      "weighted_intrinsic_reward_sum": 1.7178670922452879,
+      "maximum_lora_change_from_warmstart": 0.0007893507136031985,
+      "final_evaluation": {
+        "new_observed_facts": 49,
+        "deposit_calls": 25,
+        "retrieve_calls": 29,
+        "peer_records": 74,
+        "restricted_mean_lifetime": 8.0
+      },
+      "curriculum_changes": [
+        {
+          "decisions": 0,
+          "trial": 0,
+          "predator_temperature": 4.0,
+          "world_ticks": 0
+        },
+        {
+          "decisions": 64,
+          "trial": 0,
+          "predator_temperature": 1.0,
+          "world_ticks": 8
+        }
+      ]
+    },
+    {
+      "condition": "shared_plain",
+      "model_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+      "config_digest": "c77b5f7d9073fca1cf2f3f769c375c97625d3c217373de171549ba986b57a3cc",
+      "warmstart_sha256": "dc41a86a7c6734d3de632ceee528b7cb2a9c1901481decdd105a818b19b38974",
+      "summary": {
+        "finished": true,
+        "decisions": 128,
+        "budget": 128,
+        "unused_decisions": 0,
+        "world_ticks": 16,
+        "restarts": 0,
+        "elapsed_seconds": 84.3546324580675,
+        "evaluation_decisions": 192,
+        "births": 0,
+        "pending_dead_social_updates": 0,
+        "resources": {
+          "processed_tokens": 189035,
+          "encoder_forwards": 1232,
+          "gradient_updates": 64,
+          "inference_seconds": 21.807046625646763,
+          "observations_at_token_cap": 0,
+          "cuda_model_stream_seconds": 0.0,
+          "cuda_peak_bytes": 0
+        }
+      },
+      "final_training_corpus_counters": {
+        "decisions": 128,
+        "trial": 0,
+        "tick": 16,
+        "deposit_calls": 41,
+        "retrieve_calls": 58,
+        "accepted_records": 125,
+        "rejected_records": 0,
+        "returned_records": 137,
+        "peer_records": 128,
+        "empty_retrievals": 8,
+        "unique_observed_facts": 164,
+        "initial_observed_facts": 101,
+        "new_observed_facts": 63,
+        "unique_deposited_facts": 89,
+        "distinct_peer_imports": 52,
+        "peer_terrain_reconfirmations": 6
+      },
+      "weighted_intrinsic_reward_sum": 0.0,
+      "maximum_lora_change_from_warmstart": 0.0007893139263615012,
+      "final_evaluation": {
+        "new_observed_facts": 49,
+        "deposit_calls": 25,
+        "retrieve_calls": 29,
+        "peer_records": 74,
+        "restricted_mean_lifetime": 8.0
+      }
+    }
+  ],
+  "interpretation": "Operational validation only. All four arms had the same short-horizon discovery and survival. Shared tools delivered peer records; private tools did not. This is not evidence of learning or a corpus performance benefit.",
+  "caveat": "Timings overlap a separate cooperative CPU job. Eight-tick evaluation cannot measure sustained food acquisition or survival. Time-averaged discovery and warmstart-contrast reporting were added after this smoke and are covered by the integration tests."
+}

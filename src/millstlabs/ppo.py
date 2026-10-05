@@ -18,6 +18,8 @@ class Transition:
     personal_terminal: bool
     social_terminal: bool
     temperature: float = 1.0
+    intrinsic_value: float = 0.0
+    intrinsic_reward: float = 0.0
 
 
 def advantages(transitions, cfg, personal_bootstrap=0.0, social_bootstrap=0.0):
@@ -41,17 +43,32 @@ def advantages(transitions, cfg, personal_bootstrap=0.0, social_bootstrap=0.0):
     return ap, ass
 
 
-def update(bank, i, transitions, preference, personal_bootstrap=0.0, social_bootstrap=0.0):
+def intrinsic_advantages(transitions, cfg, bootstrap=0.0):
+    result = np.zeros(len(transitions))
+    gae, next_value = 0., bootstrap
+    for k in reversed(range(len(transitions))):
+        row = transitions[k]
+        live = 1 - int(row.personal_terminal)
+        delta = row.intrinsic_reward + cfg.gamma*live*next_value - row.intrinsic_value
+        gae = delta + cfg.gamma*cfg.gae_lambda*live*gae
+        result[k] = gae
+        next_value = row.intrinsic_value
+    return result
+
+
+def update(bank, i, transitions, preference, personal_bootstrap=0.0, social_bootstrap=0.0, intrinsic_bootstrap=0.0):
     if not transitions:
         return {}
     cfg = bank.cfg
     ap, ass = advantages(transitions, cfg, personal_bootstrap, social_bootstrap)
-    actor = torch.tensor(ap + preference * ass, dtype=torch.float32, device=bank.device)
+    ai = intrinsic_advantages(transitions, cfg, intrinsic_bootstrap) if cfg.intrinsic_critic else np.zeros(len(transitions))
+    actor = torch.tensor(ap + preference * ass + ai, dtype=torch.float32, device=bank.device)
     # Normalization is within one individual's experience only.
     if len(actor) > 1:
         actor = (actor - actor.mean()) / actor.std(unbiased=False).clamp_min(1e-6)
     tp = torch.tensor(ap + np.array([r.personal_value for r in transitions]), dtype=torch.float32, device=bank.device)
     ts = torch.tensor(ass + np.array([r.social_value for r in transitions]), dtype=torch.float32, device=bank.device)
+    ti = torch.tensor(ai + np.array([r.intrinsic_value for r in transitions]), dtype=torch.float32, device=bank.device)
     metrics = []
     # Each transition is reused exactly `epochs` times; no agent shares a buffer.
     for _ in range(cfg.epochs):
@@ -71,6 +88,9 @@ def update(bank, i, transitions, preference, personal_bootstrap=0.0, social_boot
             if cfg.split_controller:
                 value_loss = (torch.nn.functional.smooth_l1_loss(vp / cfg.value_scale, tp[start:start+len(seq)] / cfg.value_scale)
                               + torch.nn.functional.smooth_l1_loss(vs / cfg.value_scale, ts[start:start+len(seq)] / cfg.value_scale))
+            if cfg.intrinsic_critic:
+                vi = torch.cat([o[3] for o in outputs])
+                value_loss = value_loss + torch.nn.functional.smooth_l1_loss(vi, ti[start:start+len(seq)])
             entropy = torch.cat([o[0].entropy() for o in outputs]).mean()
             loss = policy_loss + cfg.value_coefficient * value_loss - cfg.entropy * entropy
             optimizer = bank.optimizers[i]
@@ -99,4 +119,5 @@ def update(bank, i, transitions, preference, personal_bootstrap=0.0, social_boot
                                       ("social", ts, [r.social_value for r in transitions])]:
         y = target.cpu().numpy()
         result[f"{name}_explained_variance"] = float(1 - np.var(y - prediction) / np.var(y)) if np.var(y) > 1e-8 else None
+    result["intrinsic_reward_sum"] = sum(r.intrinsic_reward for r in transitions)
     return result

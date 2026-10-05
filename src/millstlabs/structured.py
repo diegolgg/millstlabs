@@ -26,7 +26,12 @@ def features(obs):
         # Eight bounded categories reserve the same feature layout for all vocabularies.
         messages.extend([(x-s[2])/size, (y-s[3])/size, 1, *np.eye(8)[int(symbol)]]
                         if symbol > 0 else [0]*11)
-    return np.concatenate([own, local, food, peers, threats, obs["action_mask"][:7], messages]).astype(np.float32)
+    corpus = []
+    for kind, x, y, value, age, peer, valid in obs.get("corpus", []):
+        corpus.extend([kind, (x-s[2])/size, (y-s[3])/size, value/(60 if kind == 1 else 1),
+                       min(age/32, 4), peer, 1] if valid == 1 else [0]*7)
+    return np.concatenate([own, local, food, peers, threats, obs["action_mask"][:7], messages,
+                           corpus, np.asarray(obs.get("corpus_status", []))/4]).astype(np.float32)
 
 
 class StructuredController(nn.Module):
@@ -48,9 +53,10 @@ class StructuredController(nn.Module):
         self.critic_gru = nn.GRUCell(64, 64) if self.separate else None
         self.personal_value = nn.Linear(64, 1)
         self.social_value = nn.Linear(64, 1)
+        self.intrinsic_value = nn.Linear(64, 1) if cfg.intrinsic_critic else None
         nn.init.orthogonal_(self.action.weight, gain=0.01)
         nn.init.zeros_(self.action.bias)
-        for head in [self.personal_value, self.social_value]:
+        for head in [self.personal_value, self.social_value] + ([self.intrinsic_value] if cfg.intrinsic_critic else []):
             nn.init.zeros_(head.weight)
             nn.init.zeros_(head.bias)
         if self.message is not None:
@@ -59,11 +65,11 @@ class StructuredController(nn.Module):
 
     def actor_parameters(self):
         return [p for n, p in self.named_parameters()
-                if not n.startswith(("critic_", "personal_value.", "social_value."))]
+                if not n.startswith(("critic_", "personal_value.", "social_value.", "intrinsic_value."))]
 
     def critic_parameters(self):
         return [p for n, p in self.named_parameters()
-                if n.startswith(("critic_", "personal_value.", "social_value."))]
+                if n.startswith(("critic_", "personal_value.", "social_value.", "intrinsic_value."))]
 
     def forward(self, inputs, hidden, mask, temperature=1.0, critic_inputs=None):
         ha = self.actor_gru(self.actor_encoder(inputs), hidden[:, :64])
@@ -74,6 +80,7 @@ class StructuredController(nn.Module):
         if self.message is not None:
             logits = (logits[:, None, :] + self.message(ha)[:, :, None]).flatten(1)
         logits = (logits / temperature).masked_fill(~mask.bool(), -1e9)
-        return (Categorical(logits=logits), self.personal_value(hc).squeeze(-1)*self.value_scale,
+        result = (Categorical(logits=logits), self.personal_value(hc).squeeze(-1)*self.value_scale,
                 self.social_value(hc).squeeze(-1)*self.value_scale,
                 torch.cat([ha, hc], -1) if self.separate else ha)
+        return result + (self.intrinsic_value(hc).squeeze(-1),) if self.intrinsic_value is not None else result

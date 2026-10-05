@@ -105,6 +105,15 @@ class TrainingConfig:
     evaluation_ablations: bool = False
     predator_evaluation_temperatures: list[float] = field(default_factory=list)
     controller_architecture: str = "legacy"
+    corpus_mode: str = "off"
+    corpus_slots: int = 4
+    corpus_food_ttl: int = 16
+    corpus_tool_cost: float = 0.05
+    intrinsic_critic: bool = False
+    novelty_beta_start: float = 0.0
+    novelty_beta_end: float = 0.0
+    novelty_decay_decisions: int = 32768
+    predator_curriculum: list[dict] = field(default_factory=list)
 
     @property
     def split_controller(self):
@@ -145,6 +154,14 @@ class ExperimentConfig:
         assert t.controller_architecture != "split" or t.backend == "smollm"
         assert self.environment.message_symbols == 1 or t.split_controller
         assert all(x >= 0 for x in t.predator_evaluation_temperatures)
+        assert t.corpus_mode in {"off", "private", "shared"}
+        assert t.corpus_slots > 0 and t.corpus_food_ttl > 0 and t.corpus_tool_cost >= 0
+        assert t.corpus_mode == "off" or (t.split_controller and self.environment.message_symbols == 1)
+        assert not t.intrinsic_critic or t.split_controller
+        assert min(t.novelty_beta_start, t.novelty_beta_end) >= 0 and t.novelty_decay_decisions > 0
+        assert not (t.novelty_beta_start or t.novelty_beta_end) or t.intrinsic_critic
+        assert all(s["decisions"] >= 0 and s["temperature"] >= 0 for s in t.predator_curriculum)
+        assert [s["decisions"] for s in t.predator_curriculum] == sorted({s["decisions"] for s in t.predator_curriculum})
 
     def digest(self):
         # Default extensions do not invalidate already-running v1 checkpoints.
@@ -154,7 +171,8 @@ class ExperimentConfig:
             "training": ["separate_critic", "value_scale", "critic_lr", "temperature_start", "temperature_end",
                          "temperature_decay_decisions", "evaluation_temperature", "deliver_messages",
                          "development_maps", "development_seed", "evaluation_ablations", "predator_evaluation_temperatures",
-                         "controller_architecture"],
+                         "controller_architecture", "corpus_mode", "corpus_slots", "corpus_food_ttl", "corpus_tool_cost",
+                         "intrinsic_critic", "novelty_beta_start", "novelty_beta_end", "novelty_decay_decisions", "predator_curriculum"],
         }
         for section, names in extensions.items():
             defaults = EnvironmentConfig() if section == "environment" else TrainingConfig()

@@ -87,12 +87,14 @@ def calibrate(cfg, seeds, ticks, output):
 def benchmark(cfg, ticks, output):
     import torch
 
+    from .knowledge import execute_tools, make_corpus, next_observations
     from .policy import PolicyBank
     from .ppo import Transition, update
     from .trainer import seed_all
     seed_all(101)
     env = PopulationEnv(cfg.environment, reproduction=False)
     obs, _ = env.reset(seed=101)
+    corpus, obs = make_corpus(cfg.training, obs)
     bank = PolicyBank(cfg.training, next(iter(obs.values())))
     hidden, buffers = {}, {}
     for i in env.agents:
@@ -115,7 +117,11 @@ def benchmark(cfg, ticks, output):
             a, lp, vp, vs, hidden[i] = bank.act(i, obs[i], h)
             actions[i] = a
             records[i] = (obs[i], h.cpu(), a, lp, vp, vs)
-        obs, _, terms, _, info = env.step(actions)
+        physical = execute_tools(corpus, actions, obs, env, cfg.training)
+        obs, _, terms, _, info = env.step(physical)
+        obs = next_observations(corpus, obs, env.agents)
+        if corpus is not None:
+            corpus.events.clear()
         decisions += len(actions)
         for i, record in records.items():
             buffers[i].append(Transition(*record, info[i]["personal_reward"], info[i]["social_reward"], terms[i], False))
@@ -132,6 +138,8 @@ def benchmark(cfg, ticks, output):
         eval_maps *= 2
     eval_maps += t.development_maps * (intermediate + 1)
     eval_maps += len(t.predator_evaluation_temperatures) * t.final_evaluation_maps
+    if t.corpus_mode == "shared":
+        eval_maps += t.final_evaluation_maps
     result = {"backend": cfg.training.backend, "device": str(bank.device), "decisions": decisions,
               "config_digest": cfg.digest(), "benchmark_ticks": env.tick,
               "cpu_threads": cfg.training.cpu_threads, "platform": platform.platform(),
@@ -188,7 +196,7 @@ def evaluate_baselines(cfg, output):
               "maps": t.final_evaluation_maps, "episodes": rows,
               "scores": {m: float(np.mean([r["restricted_mean_lifetime"] for r in rows if r["mode"] == m]))
                          for m in ["random", "food", "vigilant"]},
-              "note": "Matched evaluation conditions; heuristic results are not independent training replicates."}
+              "note": "Matched physical evaluation conditions. Heuristics do not use corpus tools; the trained private-corpus arm is the corpus control. Heuristics are not independent training replicates."}
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(result, indent=2))
     return result

@@ -201,20 +201,22 @@ class PolicyBank:
             mask = torch.as_tensor(obs["action_mask"], device=self.device).unsqueeze(0)
             temp = temperature[j] if isinstance(temperature, (list, tuple)) else temperature
             kwargs = {"critic_inputs": critic_inputs[j:j+1]} if critic_inputs is not None else {}
-            dist, vp, vs, hidden = self.controllers[i](features[j:j+1], hidden, mask, temp, **kwargs)
-            output.append((dist, vp, vs))
+            result = self.controllers[i](features[j:j+1], hidden, mask, temp, **kwargs)
+            dist, vp, vs, hidden = result[:4]
+            output.append((dist, vp, vs) + result[4:])
         return output, hidden
 
     @torch.no_grad()
-    def act(self, i, obs, hidden, generator=None, temperature=1.0):
+    def act(self, i, obs, hidden, generator=None, temperature=1.0, include_intrinsic=False):
         start = time.perf_counter()
         out, next_hidden = self.sequence(i, [obs], hidden, temperature)
-        dist, vp, vs = out[0]
+        dist, vp, vs = out[0][:3]
         # Dedicated RNG keeps evaluation independent from collection randomness.
         action = torch.multinomial(dist.probs.cpu(), 1, generator=generator).squeeze()
         logp = dist.log_prob(action.to(self.device))
         self.inference_seconds += time.perf_counter() - start
-        return int(action), float(logp), float(vp), float(vs), next_hidden.detach()
+        result = (int(action), float(logp), float(vp), float(vs), next_hidden.detach())
+        return result + (float(out[0][3]) if len(out[0]) > 3 else 0.0,) if include_intrinsic else result
 
     def zero_hidden(self):
         width = 128 if self.cfg.split_controller and self.cfg.separate_critic else 64

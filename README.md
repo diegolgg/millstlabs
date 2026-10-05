@@ -6,6 +6,16 @@ This is an experimental platform. The included smoke runs and heuristic pilot ve
 
 ## Run locally
 
+**Communal knowledge experiment:** [explicit LLM deposit/retrieval tools and a matched private-memory control](docs/discovery.md), with optional exploration guidance, discovery-rate evaluation and a frozen-policy access ablation:
+
+```bash
+bash scripts/discovery.sh --mode plan
+bash scripts/discovery.sh --mode run --hours 12
+bash scripts/discovery.sh --mode report
+```
+
+The default runs four conditions serially (32,768 decisions each; 131,072 total) using the real local LLM. Repeat the run command to resume; evaluation can make this a multi-night job. Outputs go to `runs/discovery-proof`. The [discovery notebook](notebooks/discovery.ipynb) opens with training disabled. Use `--mode smoke` for a short four-condition LLM check in a separate directory.
+
 **Next LLM experiment:** the new [LLM actor / separate critic design](docs/next-experiment.md) retains SmolLM2 and private LoRA, adds shorter PPO rollouts, measurable predator diffusion temperature, and paired communication controls. Run from this checkout:
 
 ```bash

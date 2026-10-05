@@ -18,6 +18,7 @@ import yaml
 from .config import EnvironmentConfig, TrainingConfig
 from .env import PopulationEnv
 from .evaluation import calibration_histories, evaluate, probe
+from .knowledge import CountNovelty, execute_tools, make_corpus, next_observations, novelty_beta, teacher_tool
 from .observations import Heuristic
 from .policy import PolicyBank, cpu_state
 from .ppo import Transition, update
@@ -43,6 +44,7 @@ def warmstart(cfg, seed, path):
     seed_all(seed)
     env = PopulationEnv(cfg.environment, reproduction=False)
     obs, _ = env.reset(seed=seed)
+    corpus, obs = make_corpus(cfg.training, obs, "private" if cfg.training.corpus_mode != "off" else "off")
     bank = PolicyBank(cfg.training, next(iter(obs.values())))
     bank.add("warm")
     helpers = {i: Heuristic(seed + j) for j, i in enumerate(env.agents)}
@@ -75,6 +77,8 @@ def warmstart(cfg, seed, path):
 
     while decisions < cfg.training.warmstart_transitions:
         actions = {i: helpers[i].act(obs[i]) for i in env.agents}
+        if corpus is not None:
+            actions = {i: a + 7*teacher_tool(corpus, i, obs[i], j) for j, (i, a) in enumerate(actions.items())}
         for i in env.agents:
             # Exactly the requested demonstration count (unused final tick actions aren't trained).
             if decisions < cfg.training.warmstart_transitions:
@@ -84,7 +88,9 @@ def warmstart(cfg, seed, path):
                 decisions += 1
                 if len(buffers[i]) == cfg.training.sequence_length:
                     train_sequence(i)
-        obs, _, terms, _, _ = env.step(actions)
+        physical = execute_tools(corpus, actions, obs, env, cfg.training)
+        obs, _, terms, _, _ = env.step(physical)
+        obs = next_observations(corpus, obs, env.agents)
         if decisions >= next_progress:
             print(json.dumps({"phase": "warmstart", "seed": seed, "demonstrations": decisions,
                               "elapsed_seconds": round(time.perf_counter() - started, 2)}), flush=True)
@@ -95,6 +101,7 @@ def warmstart(cfg, seed, path):
         if not env.agents:
             trial += 1
             obs, _ = env.reset(seed=seed + trial * 1009)
+            corpus, obs = make_corpus(cfg.training, obs, "private" if cfg.training.corpus_mode != "off" else "off")
             helpers = {i: Heuristic(seed + trial * 1009 + j) for j, i in enumerate(env.agents)}
             hidden = {i: bank.zero_hidden() for i in env.agents}
     for i in list(buffers):
@@ -120,9 +127,11 @@ class Trainer:
             raise FileExistsError("Run exists; use --resume rather than mixing log histories")
         seed_all(seed)
         self.preference = cfg.profiles[profile]["social_preference"]
-        self.env = PopulationEnv(cfg.environment, reproduction=method != "iteration", social_preference=self.preference,
+        self.env = PopulationEnv(replace(cfg.environment), reproduction=method != "iteration", social_preference=self.preference,
                                  deliver_messages=cfg.training.deliver_messages)
         self.obs, _ = self.env.reset(seed=seed)
+        self.corpus, self.obs = make_corpus(cfg.training, self.obs)
+        self.novelty = CountNovelty()
         self.bank = PolicyBank(cfg.training, next(iter(self.obs.values())))
         # Load only locally generated/trusted torch checkpoints (pickle contains simulator state).
         warm = torch.load(warm_path, map_location="cpu", weights_only=False)
@@ -138,15 +147,17 @@ class Trainer:
         if prior.controller_architecture != cfg.training.controller_architecture:
             raise ValueError("Warm-start controller architecture differs")
         if cfg.training.split_controller:
-            for field in ["separate_critic", "value_scale"]:
+            for field in ["separate_critic", "value_scale", "intrinsic_critic", "corpus_slots"]:
                 if getattr(prior, field) != getattr(cfg.training, field):
                     raise ValueError(f"Warm-start architecture mismatch: {field}")
+        if (prior.corpus_mode == "off") != (cfg.training.corpus_mode == "off"):
+            raise ValueError("Warm-start corpus observation layout differs")
         if cfg.training.backend == "tiny":
             self.bank.base.load_state_dict(warm["tiny_base"])
         self.initial = copy.deepcopy(warm["state"])
         # Profile prior applied only after the shared warm start.
         self.initial["controller"]["watch_bias"] = torch.tensor(float(cfg.profiles[profile]["vigilance_bias"]))
-        self.histories = calibration_histories(cfg.environment)
+        self.histories = calibration_histories(cfg.environment, training=cfg.training)
         self.hidden, self.buffers, self.dead, self.archive = {}, defaultdict(list), {}, []
         self.death_serial = 0
         self.decisions = self.trial = self.world_ticks = self.restarts = 0
@@ -180,6 +191,7 @@ class Trainer:
         payload = {"format": 1, "config_digest": self.cfg.digest(), "profile": self.profile, "method": self.method,
                    "warmstart_sha256": self.warmstart_sha256,
                    "seed": self.seed, "env": self.env, "obs": self.obs, "initial": self.initial,
+                   "corpus": self.corpus, "novelty": self.novelty,
                    "policies": {i: self.bank.state(i) for i in self.bank.controllers},
                    "optimizers": {i: copy.deepcopy(o.state_dict()) for i, o in self.bank.optimizers.items()},
                    "hidden": {i: h.cpu() for i, h in self.hidden.items()}, "buffers": self.buffers,
@@ -225,6 +237,8 @@ class Trainer:
                     "world_ticks", "restarts", "completed_evaluations", "elapsed_seconds", "newborn_tracking",
                     "births_total", "evaluation_decisions"]:
             setattr(self, key, p[key])
+        self.corpus = p.get("corpus")
+        self.novelty = p.get("novelty", CountNovelty())
         if "tiny_base" in p:
             self.bank.base.load_state_dict(p["tiny_base"])
         for i, state in p["policies"].items():
@@ -262,8 +276,9 @@ class Trainer:
             elif self.buffers[i]:
                 with torch.no_grad():
                     outputs, _ = self.bank.sequence(i, [self.obs[i]], self.hidden[i])
-                    _, vp, vs = outputs[0]
-                result = update(self.bank, i, self.buffers[i], self.preference, float(vp), 0.0 if close_window else float(vs))
+                    _, vp, vs = outputs[0][:3]
+                    vi = float(outputs[0][3]) if self.cfg.training.intrinsic_critic else 0.
+                result = update(self.bank, i, self.buffers[i], self.preference, float(vp), 0.0 if close_window else float(vs), vi)
                 if i in self.newborn_tracking:
                     self.log("newborn", {"id": i, **self.newborn_tracking.pop(i), "alive_at_first_update": True})
                 self.log("updates", {"id": i, "samples": len(self.buffers[i]), **result})
@@ -276,6 +291,7 @@ class Trainer:
         self.trial += 1
         self.restarts += 1
         self.obs, _ = self.env.reset(seed=self.seed + self.trial * 1009)
+        self.corpus, self.obs = make_corpus(self.cfg.training, self.obs)
         for i, archived in zip(self.env.agents, self.archive):
             self.bank.add(i, archived["state"])
             self.hidden[i] = self.bank.zero_hidden()
@@ -285,15 +301,27 @@ class Trainer:
 
     def step(self):
         actions, records = {}, {}
+        for stage in self.cfg.training.predator_curriculum:
+            if self.decisions >= stage["decisions"]:
+                target = stage["temperature"]
+        if self.cfg.training.predator_curriculum and self.decisions >= self.cfg.training.predator_curriculum[0]["decisions"]:
+            if self.env.cfg.predator_temperature != target:
+                self.env.cfg = replace(self.env.cfg, predator_temperature=target)
+                self.log("curriculum", {"predator_temperature": target, "world_ticks": self.world_ticks})
         temperature = self.bank.training_temperature(self.decisions)
+        beta = novelty_beta(self.cfg.training, self.decisions)
+        intrinsic_values = {}
         # All actions collected before any environmental effect or policy update.
         for i in self.env.agents:
             h = self.hidden[i]
-            action, logp, vp, vs, self.hidden[i] = self.bank.act(i, self.obs[i], h, self.action_rng, temperature)
+            action, logp, vp, vs, self.hidden[i], intrinsic_values[i] = self.bank.act(
+                i, self.obs[i], h, self.action_rng, temperature, include_intrinsic=True)
             actions[i] = action
             records[i] = (copy.deepcopy(self.obs[i]), h.cpu(), action, logp, vp, vs)
         prior_metadata = {i: {"lineage": p.lineage, "generation": p.generation} for i, p in self.env.prey.items()}
-        self.obs, _, terms, _, infos = self.env.step(actions)
+        physical = execute_tools(self.corpus, actions, self.obs, self.env, self.cfg.training)
+        self.obs, _, terms, _, infos = self.env.step(physical)
+        self.obs = next_observations(self.corpus, self.obs, self.env.agents)
         self.decisions += len(actions)
         self.world_ticks += 1
         close = self.env.tick % self.cfg.training.social_window == 0
@@ -302,8 +330,9 @@ class Trainer:
             entry["tail"] += entry["discount"] * len(self.env.agents) / self.cfg.environment.social_denominator
             entry["discount"] *= self.cfg.training.gamma
         for i, record in records.items():
+            raw_novelty = self.novelty.reward(prior_metadata[i]["lineage"], self.obs[i]) if beta > 0 and not terms[i] else 0.
             self.buffers[i].append(Transition(*record, infos[i]["personal_reward"], infos[i]["social_reward"], terms[i], close,
-                                             temperature))
+                                             temperature, intrinsic_values[i], beta*raw_novelty))
             if i in self.newborn_tracking:
                 self.newborn_tracking[i]["ticks_before_first_update"] += 1
             if terms[i]:
@@ -335,7 +364,13 @@ class Trainer:
                                                    "birth_index": self.births_total, **assay})
             self.log("events", event)
         self.log("ecology", {**self.env.metrics(), "world_ticks": self.world_ticks, "policy_temperature": temperature,
+                             "novelty_beta": beta,
                              "actions": {str(a): sum(v % 7 == a for v in actions.values()) for a in range(7)}})
+        if self.corpus is not None:
+            self.log("knowledge", {"tick": self.env.tick, **self.corpus.metrics()})
+            for event in self.corpus.events:
+                self.log("corpus_events", event)
+            self.corpus.events.clear()
         if self.env.tick % self.cfg.training.rollout_ticks == 0 or not self.env.agents:
             self._learn(close_window=close, extinction=not self.env.agents)
         if not self.env.agents:
@@ -355,6 +390,8 @@ class Trainer:
         if t.evaluation_ablations and self.cfg.environment.message_symbols > 1:
             assays.append(("evaluation_muted", self.cfg.environment, t, final, False))
         if final:
+            if t.corpus_mode == "shared":
+                assays.append(("evaluation_private_corpus", self.cfg.environment, replace(t, corpus_mode="private"), True, None))
             for temperature in t.predator_evaluation_temperatures:
                 assays.append(("predator_evaluation", replace(self.cfg.environment, predator_temperature=temperature),
                                t, True, None))
@@ -363,6 +400,11 @@ class Trainer:
             self.evaluation_decisions += sum(r["decisions"] for r in assay["episodes"])
             self.log(kind, assay)
         self.log("probes", {"checkpoint": threshold, "probabilities": probe(self.bank, self.env.agents, self.histories)})
+        if self.corpus is not None:
+            stores = {"shared": self.corpus.shared} if t.corpus_mode == "shared" else self.corpus.private
+            snapshot = {"trial": self.trial, "tick": self.env.tick, "checkpoint": threshold,
+                        "mode": t.corpus_mode, "stores": {name: [vars(f) for f in store.values()] for name, store in stores.items()}}
+            (self.output / f"corpus-checkpoint-{threshold}.json").write_text(json.dumps(snapshot, indent=2))
         self.completed_evaluations.append(threshold)
         self.checkpoint(f"checkpoint-{threshold}.pt")
 

@@ -20,6 +20,12 @@ def observation_text(obs):
     if "messages" in obs:
         packets = ";".join(f"{x},{y}:{int(symbol)}" for x, y, symbol in obs["messages"] if symbol > 0) or "none"
         radio = f"radio_xy_symbol={packets} "
+    if "corpus" in obs:
+        rows = [f"{'food' if k == 1 else 'wall' if v == 1 else 'floor'}({int(x)},{int(y)})={v:g}@age{int(age)}:peer{int(peer)}"
+                for k, x, y, v, age, peer, valid in obs["corpus"] if valid == 1]
+        radio += "tools=none,put_terrain,put_food,get_terrain,get_food "
+        radio += "corpus=" + (";".join(rows) or "empty") + " "
+        radio += "tool_result=" + ",".join(str(int(v)) for v in obs["corpus_status"]) + " "
     return (radio + f"energy={s[0]:.1f} age={int(s[1])} xy={int(s[2])},{int(s[3])} "
             f"cooldown={int(s[4])} fertile={int(s[5])} tick={int(s[6])} "
             f"alert={int(s[7])} outcome={int(s[8])} size={int(s[9])} "
