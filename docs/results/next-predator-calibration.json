@@ -1,0 +1,51 @@
+{
+  "rows": [
+    {
+      "temperature": 0.0,
+      "scores": {
+        "random": 86.46875,
+        "food": 137.96875,
+        "vigilant": 190.859375
+      },
+      "mean_heuristic_lifetime": 164.4140625
+    },
+    {
+      "temperature": 0.25,
+      "scores": {
+        "random": 86.46875,
+        "food": 143.40625,
+        "vigilant": 190.859375
+      },
+      "mean_heuristic_lifetime": 167.1328125
+    },
+    {
+      "temperature": 1.0,
+      "scores": {
+        "random": 85.625,
+        "food": 197.546875,
+        "vigilant": 240.421875
+      },
+      "mean_heuristic_lifetime": 218.984375
+    },
+    {
+      "temperature": 4.0,
+      "scores": {
+        "random": 104.484375,
+        "food": 296.640625,
+        "vigilant": 303.625
+      },
+      "mean_heuristic_lifetime": 300.1328125
+    }
+  ],
+  "easier_to_harder_for_these_heuristics": [
+    4.0,
+    1.0,
+    0.25,
+    0.0
+  ],
+  "note": "Development maps only. This ordering is empirical and policy-dependent, not a universal difficulty ranking.",
+  "development_seed": 3000000,
+  "maps_per_temperature": 8,
+  "horizon": 512,
+  "training_performed": false
+}

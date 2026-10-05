@@ -15,6 +15,18 @@ DELTAS = [(0, -1), (0, 1), (1, 0), (-1, 0)]
 ACTION_NAMES = ["north", "south", "east", "west", "feed", "watch", "rest"]
 
 
+def diffusion_probabilities(distances, temperature):
+    """Conditional-on-moving Boltzmann kernel over legal neighboring cells.
+
+    Distances are shortest-path steps to the current target. Zero means greedy,
+    ties uniform; infinity approaches a uniform random walk. Move rate stays 0.9.
+    """
+    costs = np.asarray(distances, dtype=float)
+    costs -= costs.min()
+    weights = (costs == 0).astype(float) if temperature == 0 else np.exp(-costs / temperature)
+    return weights / weights.sum()
+
+
 def distance(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
@@ -35,6 +47,7 @@ class Prey:
     outcome: int = 0
     born_tick: int = 0
     last_action: int = REST
+    messages: list = field(default_factory=list)
 
 
 class PopulationEnv(ParallelEnv):
@@ -46,15 +59,16 @@ class PopulationEnv(ParallelEnv):
 
     metadata = {"name": "millst_population_v0", "render_modes": ["ansi"], "is_parallelizable": True}
 
-    def __init__(self, config=None, reproduction=True, social_preference=0.0, render_mode=None):
+    def __init__(self, config=None, reproduction=True, social_preference=0.0, render_mode=None, deliver_messages=True):
         self.cfg = config or EnvironmentConfig()
         self.cfg.validate()
         self.reproduction = reproduction
         self.social_preference = social_preference
         self.render_mode = render_mode
+        self.deliver_messages = deliver_messages
         self.possible_agents = [f"prey_{i}" for i in range(self.cfg.max_individuals)]
         self.agents = []
-        self._action_space = spaces.Discrete(7)
+        self._action_space = spaces.Discrete(7 * self.cfg.message_symbols)
         n = self.cfg.size
         self._observation_space = spaces.Dict({
             "self": spaces.Box(-1, np.inf, (10,), np.float32),
@@ -62,8 +76,11 @@ class PopulationEnv(ParallelEnv):
             "stations": spaces.Box(-1, np.inf, (self.cfg.stations, 4), np.float32),
             "threats": spaces.Box(-1, n, (self.cfg.predators, 2), np.int16),
             "companions": spaces.Box(-1, np.inf, (24, 4), np.float32),
-            "action_mask": spaces.MultiBinary(7),
+            "action_mask": spaces.MultiBinary(7 * self.cfg.message_symbols),
         })
+        if self.cfg.message_symbols > 1:
+            self._observation_space.spaces["messages"] = spaces.Box(-1, max(n, self.cfg.message_symbols),
+                                                                   (self.cfg.message_capacity, 3), np.int16)
 
     def observation_space(self, agent):
         return self._observation_space
@@ -117,6 +134,8 @@ class PopulationEnv(ParallelEnv):
         self.total_births = 0
         self.total_matured = 0
         self.total_consumption = 0.0
+        self.messages_sent = self.messages_delivered = 0
+        self.predator_entropy_sum = self.predator_kernel_ticks = 0
         self.deaths = {"starvation": 0, "predation": 0}
         n = self.cfg.size
         cells = [(x, y) for x in range(n) for y in range(n)]
@@ -216,10 +235,17 @@ class PopulationEnv(ParallelEnv):
             # Only visible terrain constrains masks; occupancy can change simultaneously.
             mask[k] = self.legal((p.pos[0] + dx, p.pos[1] + dy))
         mask[FEED] = any(distance(p.pos, s) <= 1 for s in self.station_positions)
-        return {"self": np.asarray([p.energy, p.age, *p.pos, p.cooldown, self.reproduction,
+        result = {"self": np.asarray([p.energy, p.age, *p.pos, p.cooldown, self.reproduction,
                                     self.tick, p.alert_until >= self.tick, p.outcome, self.cfg.size], np.float32),
                 "local": local, "stations": np.asarray(station_obs, np.float32),
-                "threats": threat_array, "companions": companions, "action_mask": mask}
+                "threats": threat_array, "companions": companions, "action_mask": np.tile(mask, self.cfg.message_symbols)}
+        if self.cfg.message_symbols > 1:
+            messages = np.full((self.cfg.message_capacity, 3), -1, np.int16)
+            messages[:, 2] = 0
+            for row, packet in zip(messages, p.messages):
+                row[:] = packet
+            result["messages"] = messages
+        return result
 
     def _moves(self, actions):
         occupied = {p.pos: i for i, p in self.prey.items()}
@@ -292,7 +318,8 @@ class PopulationEnv(ParallelEnv):
         legal = self.neighbors(self.predator)
         draw = self.rng.random()
         if legal and draw < 0.9:
-            if draw < 0.7:
+            temperature = self.cfg.predator_temperature
+            if temperature is not None or draw < 0.7:
                 # Shortest path around obstacles, rather than getting stuck on walls.
                 distances = {target: 0}
                 todo = deque([target])
@@ -302,9 +329,17 @@ class PopulationEnv(ParallelEnv):
                         if nxt not in distances:
                             distances[nxt] = distances[cell] + 1
                             todo.append(nxt)
-                best = min(distances[c] for c in legal)
-                legal = [c for c in legal if distances[c] == best]
-            self.predator = legal[int(self.rng.integers(len(legal)))]
+                if temperature is not None:
+                    probs = diffusion_probabilities([distances[c] for c in legal], temperature)
+                    self.predator_entropy_sum += float(-(probs * np.log(probs.clip(1e-20))).sum())
+                    self.predator_kernel_ticks += 1
+                else:
+                    best = min(distances[c] for c in legal)
+                    legal = [c for c in legal if distances[c] == best]
+            if temperature is None:
+                self.predator = legal[int(self.rng.integers(len(legal)))]
+            else:
+                self.predator = legal[int(self.rng.choice(len(legal), p=probs))]
         adjacent = [i for i, p in self.prey.items() if distance(p.pos, self.predator) <= 1]
         if self.tick >= self.attack_ready and adjacent:
             i = str(self.rng.choice(adjacent))
@@ -320,12 +355,26 @@ class PopulationEnv(ParallelEnv):
         if set(actions) != set(self.agents):
             raise ValueError("Supply exactly one action for every current living prey")
         if any(not self._action_space.contains(a) for a in actions.values()):
-            raise ValueError("Actions must be integers 0..6")
+            raise ValueError("Action is outside this environment's discrete action space")
         if not self.agents:
             return {}, {}, {}, {}, {}
         acting = list(self.agents)
         terminal_observations = {i: self.observe(i) for i in acting}
         self.events = []
+        symbols = {i: int(a) // 7 for i, a in actions.items()}
+        actions = {i: int(a) % 7 for i, a in actions.items()}
+        inboxes = {i: [] for i in acting}
+        if self.cfg.message_symbols > 1:
+            for i, symbol in symbols.items():
+                if not symbol:
+                    continue
+                sender = self.prey[i]
+                recipients = [j for j in acting if j != i and distance(sender.pos, self.prey[j].pos) <= self.cfg.message_radius]
+                self.messages_sent += 1
+                if self.deliver_messages:
+                    for j in recipients:
+                        inboxes[j].append([*sender.pos, symbol])
+                self.events.append({"type": "message", "id": i, "symbol": symbol, "tick": self.tick})
         self._moves(actions)
         for p in self.prey.values():
             p.alarms = []
@@ -344,7 +393,8 @@ class PopulationEnv(ParallelEnv):
             p = self.prey[i]
             p.last_action = actions[i]
             p.energy -= (self.cfg.metabolism + self.cfg.movement_cost * (actions[i] < 4)
-                         + self.cfg.watching_cost * (actions[i] == WATCH))
+                         + self.cfg.watching_cost * (actions[i] == WATCH)
+                         + self.cfg.message_cost * (symbols[i] > 0))
             p.age += 1
             p.cooldown = max(0, p.cooldown - 1)
             if p.parent and p.age == self.cfg.maturity:
@@ -375,6 +425,12 @@ class PopulationEnv(ParallelEnv):
         self.stock = np.minimum(self.cfg.stock_cap, self.stock + self.rates)
         self.tick += 1
         self.agents = list(self.prey)
+        if self.cfg.message_symbols > 1:
+            for i, p in self.prey.items():
+                # Positions/range at send time, delivered after the simultaneous turn.
+                origin = terminal_observations[i]["self"][2:4] if i in terminal_observations else p.pos
+                p.messages = sorted(inboxes.get(i, []), key=lambda m: (distance(m[:2], origin), m))[:self.cfg.message_capacity]
+                self.messages_delivered += len(p.messages)
         self._refresh_memories()
         keys = list(dict.fromkeys(acting + self.agents))
         observations = {i: self.observe(i) if i in self.prey else terminal_observations[i] for i in keys}
@@ -391,7 +447,13 @@ class PopulationEnv(ParallelEnv):
     def metrics(self):
         lineages = [p.lineage for p in self.prey.values()]
         counts = [lineages.count(i) for i in set(lineages)]
-        return {"tick": self.tick, "population": len(self.prey), "births": self.total_births,
+        extra = {}
+        if self.cfg.message_symbols > 1:
+            extra.update(messages_sent=self.messages_sent, messages_delivered=self.messages_delivered)
+        if self.cfg.predator_temperature is not None:
+            extra.update(predator_temperature=self.cfg.predator_temperature,
+                         predator_move_entropy=self.predator_entropy_sum / max(1, self.predator_kernel_ticks))
+        return {**extra, "tick": self.tick, "population": len(self.prey), "births": self.total_births,
                 "matured": self.total_matured, "consumption": self.total_consumption, **self.deaths,
                 "at_cap": len(self.prey) == self.cfg.population_cap,
                 "lineages": len(counts), "lineage_entropy": -sum(c / len(lineages) * math.log(c / len(lineages))

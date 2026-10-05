@@ -125,6 +125,13 @@ def benchmark(cfg, ticks, output):
         torch.cuda.synchronize()
     seconds = time.perf_counter() - start
     n_runs = len(cfg.profiles) * len(cfg.methods) * len(cfg.seeds)
+    t = cfg.training
+    intermediate = len([c for c in t.checkpoints if c < t.decisions])
+    eval_maps = t.evaluation_maps * intermediate + t.final_evaluation_maps
+    if t.evaluation_ablations and cfg.environment.message_symbols > 1:
+        eval_maps *= 2
+    eval_maps += t.development_maps * (intermediate + 1)
+    eval_maps += len(t.predator_evaluation_temperatures) * t.final_evaluation_maps
     result = {"backend": cfg.training.backend, "device": str(bank.device), "decisions": decisions,
               "config_digest": cfg.digest(), "benchmark_ticks": env.tick,
               "cpu_threads": cfg.training.cpu_threads, "platform": platform.platform(),
@@ -135,10 +142,8 @@ def benchmark(cfg, ticks, output):
               "private_trainable_parameters_per_agent": private, "resources": bank.resource_metrics(),
               "estimated_training_hours_per_run": cfg.training.decisions / decisions * seconds / 3600,
               "estimated_training_hours_sweep": n_runs * cfg.training.decisions / decisions * seconds / 3600,
-              "evaluation_decision_upper_bound_per_run": cfg.training.evaluation_policies * cfg.training.evaluation_horizon * (
-                  cfg.training.evaluation_maps * len([c for c in cfg.training.checkpoints if c < cfg.training.decisions])
-                  + cfg.training.final_evaluation_maps),
-              "caveat": "Short sample estimate; excludes evaluation, warm starts, inheritance probes and I/O. Benchmark on target hardware."}
+              "evaluation_decision_upper_bound_per_run": t.evaluation_policies * t.evaluation_horizon * eval_maps,
+              "caveat": "Short sample estimate; timing excludes evaluation, warm starts, inheritance probes and I/O. Evaluation bound excludes newborn assays. Benchmark on target hardware."}
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(result, indent=2))
     return result
@@ -166,8 +171,8 @@ def evaluate_baselines(cfg, output):
                 actions = {i: int(rng.choice(np.flatnonzero(obs[i]["action_mask"]))) if mode == "random"
                            else helpers[i].act(obs[i]) for i in env.agents}
                 decisions += len(actions)
-                watch += sum(a == WATCH for a in actions.values())
-                feed += sum(a == FEED for a in actions.values())
+                watch += sum(a % 7 == WATCH for a in actions.values())
+                feed += sum(a % 7 == FEED for a in actions.values())
                 obs, *_ = env.step(actions)
                 for event in env.events:
                     if event["type"] == "death":
@@ -176,7 +181,9 @@ def evaluate_baselines(cfg, output):
                          "restricted_mean_lifetime": float(np.mean(list(lifetimes.values()))),
                          "survival_fraction": len(env.agents) / t.evaluation_policies,
                          "starvation": env.deaths["starvation"], "predation": env.deaths["predation"],
-                         "watch_rate": watch / max(1, decisions), "feed_rate": feed / max(1, decisions)})
+                         "watch_rate": watch / max(1, decisions), "feed_rate": feed / max(1, decisions),
+                         "food_consumed": env.total_consumption, "food_per_alive_decision": env.total_consumption / max(1, decisions),
+                         "predator_move_entropy": env.predator_entropy_sum / max(1, env.predator_kernel_ticks)})
     result = {"config_digest": cfg.digest(), "evaluation_horizon": t.evaluation_horizon,
               "maps": t.final_evaluation_maps, "episodes": rows,
               "scores": {m: float(np.mean([r["restricted_mean_lifetime"] for r in rows if r["mode"] == m]))

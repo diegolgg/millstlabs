@@ -6,6 +6,15 @@ This is an experimental platform. The included smoke runs and heuristic pilot ve
 
 ## Run locally
 
+**Next LLM experiment:** the new [LLM actor / separate critic design](docs/next-experiment.md) retains SmolLM2 and private LoRA, adds shorter PPO rollouts, measurable predator diffusion temperature, and paired communication controls. Run from this checkout:
+
+```bash
+bash scripts/next_experiment.sh --mode benchmark
+bash scripts/next_experiment.sh --mode run --hours 10
+```
+
+Repeat the run command to resume. The default is four profiles × three methods × 65,536 decisions on seed 11, in `runs/next-llm-core`. This is a multi-night CPU study. The [new notebook](notebooks/next_llm_experiment.ipynb) displays its plan and results with training disabled by default. The optional `--phase numeric` is a separate non-LLM diagnostic, never the default.
+
 For an interactive CPU walkthrough, open **[notebooks/local_sandbox.ipynb](notebooks/local_sandbox.ipynb)**. It includes an animated heuristic demo, editable run settings, actual SmolLM2 training, and plots of ecology, evaluation, and behavioral probes:
 
 ```bash

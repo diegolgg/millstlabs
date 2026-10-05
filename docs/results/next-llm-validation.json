@@ -1,0 +1,350 @@
+{
+  "finished": true,
+  "decisions": 512,
+  "budget": 512,
+  "unused_decisions": 0,
+  "world_ticks": 69,
+  "restarts": 0,
+  "elapsed_seconds": 420.0709814999718,
+  "evaluation_decisions": 1536,
+  "births": 0,
+  "pending_dead_social_updates": 2,
+  "resources": {
+    "processed_tokens": 457191,
+    "encoder_forwards": 3584,
+    "gradient_updates": 40,
+    "inference_seconds": 307.7230139711173,
+    "observations_at_token_cap": 0,
+    "cuda_model_stream_seconds": 0.0,
+    "cuda_peak_bytes": 0
+  },
+  "warmstart_seconds": 50.215259707998484,
+  "lora_changed": true,
+  "note": "Bounded real cached SmolLM2 validation with messages: 256 demonstrations, 512 training decisions, 32-tick evaluation. Operational validation only.",
+  "evaluation_rows": [
+    {
+      "decisions": 0,
+      "trial": 0,
+      "checkpoint": 0,
+      "sampled_policies": [
+        "prey_6",
+        "prey_2",
+        "prey_1",
+        "prey_3",
+        "prey_4",
+        "prey_0",
+        "prey_7",
+        "prey_5"
+      ],
+      "episodes": [
+        {
+          "map_seed": 4000000,
+          "restricted_mean_lifetime": 32.0,
+          "survival_fraction": 1.0,
+          "lifetimes": {
+            "prey_0": 32,
+            "prey_1": 32,
+            "prey_2": 32,
+            "prey_3": 32,
+            "prey_4": 32,
+            "prey_5": 32,
+            "prey_6": 32,
+            "prey_7": 32
+          },
+          "starvation": 0,
+          "predation": 0,
+          "decisions": 256,
+          "watch_rate": 0.17578125,
+          "feed_rate": 0.0234375,
+          "food_consumed": 48.0,
+          "food_per_alive_decision": 0.1875,
+          "hungry_feed_opportunities": "23",
+          "hungry_feed_actions": "6",
+          "hungry_feed_fraction": 0.2608695652173913,
+          "messages_sent": 189,
+          "messages_delivered": 593,
+          "predator_move_entropy": 0.9644149106763269
+        }
+      ],
+      "policy_temperature": 1.0,
+      "predator_temperature": 1.0,
+      "deliver_messages": true,
+      "restricted_mean_lifetime": 32.0,
+      "survival_fraction": 1.0,
+      "population": 8,
+      "ages": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128
+      ]
+    },
+    {
+      "decisions": 512,
+      "trial": 0,
+      "checkpoint": 512,
+      "sampled_policies": [
+        "prey_4",
+        "prey_2",
+        "prey_3",
+        "prey_1",
+        "prey_6",
+        "prey_4",
+        "prey_3",
+        "prey_3"
+      ],
+      "episodes": [
+        {
+          "map_seed": 4000000,
+          "restricted_mean_lifetime": 32.0,
+          "survival_fraction": 1.0,
+          "lifetimes": {
+            "prey_0": 32,
+            "prey_1": 32,
+            "prey_2": 32,
+            "prey_3": 32,
+            "prey_4": 32,
+            "prey_5": 32,
+            "prey_6": 32,
+            "prey_7": 32
+          },
+          "starvation": 0,
+          "predation": 0,
+          "decisions": 256,
+          "watch_rate": 0.17578125,
+          "feed_rate": 0.00390625,
+          "food_consumed": 8.0,
+          "food_per_alive_decision": 0.03125,
+          "hungry_feed_opportunities": 7,
+          "hungry_feed_actions": 1,
+          "hungry_feed_fraction": 0.14285714285714285,
+          "messages_sent": 192,
+          "messages_delivered": 549,
+          "predator_move_entropy": 0.9211570521814151
+        }
+      ],
+      "policy_temperature": 1.0,
+      "predator_temperature": 1.0,
+      "deliver_messages": true,
+      "restricted_mean_lifetime": 32.0,
+      "survival_fraction": 1.0,
+      "population": 6,
+      "ages": [
+        197,
+        197,
+        197,
+        197,
+        197,
+        197
+      ]
+    }
+  ],
+  "muted_rows": [
+    {
+      "decisions": 0,
+      "trial": 0,
+      "checkpoint": 0,
+      "sampled_policies": [
+        "prey_6",
+        "prey_2",
+        "prey_1",
+        "prey_3",
+        "prey_4",
+        "prey_0",
+        "prey_7",
+        "prey_5"
+      ],
+      "episodes": [
+        {
+          "map_seed": 4000000,
+          "restricted_mean_lifetime": 32.0,
+          "survival_fraction": 1.0,
+          "lifetimes": {
+            "prey_0": 32,
+            "prey_1": 32,
+            "prey_2": 32,
+            "prey_3": 32,
+            "prey_4": 32,
+            "prey_5": 32,
+            "prey_6": 32,
+            "prey_7": 32
+          },
+          "starvation": 0,
+          "predation": 0,
+          "decisions": 256,
+          "watch_rate": 0.17578125,
+          "feed_rate": 0.0234375,
+          "food_consumed": 48.0,
+          "food_per_alive_decision": 0.1875,
+          "hungry_feed_opportunities": "23",
+          "hungry_feed_actions": "6",
+          "hungry_feed_fraction": 0.2608695652173913,
+          "messages_sent": 189,
+          "messages_delivered": 0,
+          "predator_move_entropy": 0.9644149106763269
+        }
+      ],
+      "policy_temperature": 1.0,
+      "predator_temperature": 1.0,
+      "deliver_messages": false,
+      "restricted_mean_lifetime": 32.0,
+      "survival_fraction": 1.0
+    },
+    {
+      "decisions": 512,
+      "trial": 0,
+      "checkpoint": 512,
+      "sampled_policies": [
+        "prey_4",
+        "prey_2",
+        "prey_3",
+        "prey_1",
+        "prey_6",
+        "prey_4",
+        "prey_3",
+        "prey_3"
+      ],
+      "episodes": [
+        {
+          "map_seed": 4000000,
+          "restricted_mean_lifetime": 32.0,
+          "survival_fraction": 1.0,
+          "lifetimes": {
+            "prey_0": 32,
+            "prey_1": 32,
+            "prey_2": 32,
+            "prey_3": 32,
+            "prey_4": 32,
+            "prey_5": 32,
+            "prey_6": 32,
+            "prey_7": 32
+          },
+          "starvation": 0,
+          "predation": 0,
+          "decisions": 256,
+          "watch_rate": 0.17578125,
+          "feed_rate": 0.00390625,
+          "food_consumed": 8.0,
+          "food_per_alive_decision": 0.03125,
+          "hungry_feed_opportunities": 7,
+          "hungry_feed_actions": 1,
+          "hungry_feed_fraction": 0.14285714285714285,
+          "messages_sent": 192,
+          "messages_delivered": 0,
+          "predator_move_entropy": 0.9211570521814151
+        }
+      ],
+      "policy_temperature": 1.0,
+      "predator_temperature": 1.0,
+      "deliver_messages": false,
+      "restricted_mean_lifetime": 32.0,
+      "survival_fraction": 1.0
+    }
+  ],
+  "predator_rows": [
+    {
+      "decisions": 512,
+      "trial": 0,
+      "checkpoint": 512,
+      "sampled_policies": [
+        "prey_4",
+        "prey_2",
+        "prey_3",
+        "prey_1",
+        "prey_6",
+        "prey_4",
+        "prey_3",
+        "prey_3"
+      ],
+      "episodes": [
+        {
+          "map_seed": 4000000,
+          "restricted_mean_lifetime": 32.0,
+          "survival_fraction": 1.0,
+          "lifetimes": {
+            "prey_0": 32,
+            "prey_1": 32,
+            "prey_2": 32,
+            "prey_3": 32,
+            "prey_4": 32,
+            "prey_5": 32,
+            "prey_6": 32,
+            "prey_7": 32
+          },
+          "starvation": 0,
+          "predation": 0,
+          "decisions": 256,
+          "watch_rate": 0.17578125,
+          "feed_rate": 0.00390625,
+          "food_consumed": 8.0,
+          "food_per_alive_decision": 0.03125,
+          "hungry_feed_opportunities": 7,
+          "hungry_feed_actions": 1,
+          "hungry_feed_fraction": 0.14285714285714285,
+          "messages_sent": 192,
+          "messages_delivered": 549,
+          "predator_move_entropy": 0.47034987252282
+        }
+      ],
+      "policy_temperature": 1.0,
+      "predator_temperature": 0.0,
+      "deliver_messages": true,
+      "restricted_mean_lifetime": 32.0,
+      "survival_fraction": 1.0
+    },
+    {
+      "decisions": 512,
+      "trial": 0,
+      "checkpoint": 512,
+      "sampled_policies": [
+        "prey_4",
+        "prey_2",
+        "prey_3",
+        "prey_1",
+        "prey_6",
+        "prey_4",
+        "prey_3",
+        "prey_3"
+      ],
+      "episodes": [
+        {
+          "map_seed": 4000000,
+          "restricted_mean_lifetime": 32.0,
+          "survival_fraction": 1.0,
+          "lifetimes": {
+            "prey_0": 32,
+            "prey_1": 32,
+            "prey_2": 32,
+            "prey_3": 32,
+            "prey_4": 32,
+            "prey_5": 32,
+            "prey_6": 32,
+            "prey_7": 32
+          },
+          "starvation": 0,
+          "predation": 0,
+          "decisions": 256,
+          "watch_rate": 0.17578125,
+          "feed_rate": 0.00390625,
+          "food_consumed": 8.0,
+          "food_per_alive_decision": 0.03125,
+          "hungry_feed_opportunities": 7,
+          "hungry_feed_actions": 1,
+          "hungry_feed_fraction": 0.14285714285714285,
+          "messages_sent": 192,
+          "messages_delivered": 549,
+          "predator_move_entropy": 1.305069512826763
+        }
+      ],
+      "policy_temperature": 1.0,
+      "predator_temperature": 4.0,
+      "deliver_messages": true,
+      "restricted_mean_lifetime": 32.0,
+      "survival_fraction": 1.0
+    }
+  ]
+}

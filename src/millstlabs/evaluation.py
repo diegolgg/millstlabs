@@ -22,7 +22,7 @@ def calibration_histories(env_cfg, seed=8675309):
     return list(histories.values())
 
 
-def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False):
+def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, deliver_messages=None):
     """Same unseen environments, body resets, and action RNG seeds for all conditions."""
     count = train_cfg.final_evaluation_maps if final else train_cfg.evaluation_maps
     rng = np.random.default_rng(train_cfg.evaluation_seed)
@@ -30,22 +30,29 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False):
     rows = []
     for episode in range(count):
         seed = train_cfg.evaluation_seed + episode
-        env = PopulationEnv(replace(env_cfg, founders=len(selected), max_individuals=1000), reproduction=False)
+        delivery = train_cfg.deliver_messages if deliver_messages is None else deliver_messages
+        env = PopulationEnv(replace(env_cfg, founders=len(selected), max_individuals=1000), reproduction=False,
+                            deliver_messages=delivery)
         observations, _ = env.reset(seed=seed)
         assignment = dict(zip(env.agents, selected))
         hidden = {i: bank.zero_hidden() for i in env.agents}
         generators = {i: torch.Generator().manual_seed(seed * 100 + j) for j, i in enumerate(env.agents)}
         lifetimes = dict.fromkeys(env.agents, train_cfg.evaluation_horizon)
         watch_count = feed_count = decisions = 0
+        hungry_opportunities = hungry_feeds = 0
         for _ in range(train_cfg.evaluation_horizon):
             if not env.agents:
                 break
             actions = {}
             for i in env.agents:
-                a, _, _, _, hidden[i] = bank.act(assignment[i], observations[i], hidden[i], generators[i])
+                a, _, _, _, hidden[i] = bank.act(assignment[i], observations[i], hidden[i], generators[i],
+                                                train_cfg.evaluation_temperature)
                 actions[i] = a
-                watch_count += a == WATCH
-                feed_count += a == FEED
+                watch_count += a % 7 == WATCH
+                feed_count += a % 7 == FEED
+                opportunity = observations[i]["self"][0] < 80 and bool(observations[i]["action_mask"][FEED])
+                hungry_opportunities += opportunity
+                hungry_feeds += opportunity and a % 7 == FEED
             decisions += len(actions)
             observations, _, _, _, _ = env.step(actions)
             for event in env.events:
@@ -55,8 +62,15 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False):
                      "survival_fraction": len(env.agents) / len(selected), "lifetimes": lifetimes,
                      "starvation": env.deaths["starvation"], "predation": env.deaths["predation"],
                      "decisions": decisions, "watch_rate": watch_count / max(decisions, 1),
-                     "feed_rate": feed_count / max(decisions, 1)})
+                     "feed_rate": feed_count / max(decisions, 1), "food_consumed": env.total_consumption,
+                     "food_per_alive_decision": env.total_consumption / max(1, decisions),
+                     "hungry_feed_opportunities": hungry_opportunities, "hungry_feed_actions": hungry_feeds,
+                     "hungry_feed_fraction": hungry_feeds / hungry_opportunities if hungry_opportunities else None,
+                     "messages_sent": env.messages_sent, "messages_delivered": env.messages_delivered,
+                     "predator_move_entropy": env.predator_entropy_sum / max(1, env.predator_kernel_ticks)})
     return {"checkpoint": checkpoint, "sampled_policies": selected, "episodes": rows,
+            "policy_temperature": train_cfg.evaluation_temperature, "predator_temperature": env_cfg.predator_temperature,
+            "deliver_messages": delivery,
             "restricted_mean_lifetime": float(np.mean([r["restricted_mean_lifetime"] for r in rows])),
             "survival_fraction": float(np.mean([r["survival_fraction"] for r in rows]))}
 
@@ -97,5 +111,5 @@ def probe_histories(histories):
 
 def probe(bank, policies, histories):
     variants = probe_histories(histories)
-    return {name: np.mean([bank.probabilities(i, [h])[-1].numpy() for i in policies], axis=0).tolist()
+    return {name: np.mean([bank.probabilities(i, [h])[-1].numpy().reshape(-1, 7).sum(0) for i in policies], axis=0).tolist()
             for name, h in variants.items()}

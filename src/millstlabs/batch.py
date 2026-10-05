@@ -44,7 +44,7 @@ def freeze(cfg, root):
     return frozen
 
 
-def run_batch(cfg, root, frozen, hours, seeds=None):
+def run_batch(cfg, root, frozen, hours, seeds=None, warmstart_dir=None):
     """Use separate processes so each completed condition releases all model memory."""
     deadline = time.monotonic() + hours * 3600
     proposal = plan(cfg, seeds)
@@ -60,7 +60,7 @@ def run_batch(cfg, root, frozen, hours, seeds=None):
             continue
         if time.monotonic() >= deadline:
             break
-        warm = root / f"warm-s{row['seed']}.pt"
+        warm = (Path(warmstart_dir) if warmstart_dir else root) / f"warm-s{row['seed']}.pt"
         if not warm.exists():
             print(f"Preparing shared warm start: seed {row['seed']}", flush=True)
             subprocess.run(command + ["warmstart", "--seed", str(row["seed"]), "--output", str(warm)], check=True)
@@ -126,6 +126,7 @@ def main():
     parser.add_argument("--mode", choices=["plan", "benchmark", "run", "report"], default="plan")
     parser.add_argument("--hours", type=float, default=10)
     parser.add_argument("--seed", type=int, nargs="+", default=None)
+    parser.add_argument("--warmstart-dir", default=None, help="Shared paired warm starts (architecture/environment must match)")
     args = parser.parse_args()
     cfg = load_config(args.config)
     proposal = plan(cfg, args.seed)
@@ -147,7 +148,7 @@ def main():
                 from .experiments import benchmark
                 result = benchmark(cfg, 128, root / "benchmark.json")
             elif args.mode == "run":
-                result = run_batch(cfg, root, frozen, args.hours, args.seed)
+                result = run_batch(cfg, root, frozen, args.hours, args.seed, args.warmstart_dir)
             else:
                 result = report(cfg, root)
     print(json.dumps(result, indent=2))

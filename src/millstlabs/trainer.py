@@ -15,6 +15,7 @@ import numpy as np
 import torch
 import yaml
 
+from .config import EnvironmentConfig, TrainingConfig
 from .env import PopulationEnv
 from .evaluation import calibration_histories, evaluate, probe
 from .observations import Heuristic
@@ -55,10 +56,18 @@ def warmstart(cfg, seed, path):
         if not seq:
             return
         outputs, _ = bank.sequence("warm", [x[0] for x in seq], seq[0][2])
-        loss = -torch.cat([o[0].log_prob(torch.tensor(seq[j][1], device=bank.device)) for j, o in enumerate(outputs)]).mean()
+        # Demonstrations supervise physical movement only, not arbitrary message symbols.
+        loss = -torch.cat([o[0].probs.reshape(1, -1, 7).sum(1)[:, seq[j][1]].clamp_min(1e-12).log()
+                          for j, o in enumerate(outputs)]).mean() if cfg.environment.message_symbols > 1 else -torch.cat([
+                              o[0].log_prob(torch.tensor(seq[j][1], device=bank.device)) for j, o in enumerate(outputs)]).mean()
         bank.optimizers["warm"].zero_grad(set_to_none=True)
         gpu_start = bank.gpu_start()
         loss.backward()
+        if cfg.environment.message_symbols > 1:
+            # The exact marginal has zero message-head gradient; avoid Adam
+            # amplifying floating-point cancellation noise during demonstrations.
+            for parameter in bank.controllers["warm"].message.parameters():
+                parameter.grad = None
         torch.nn.utils.clip_grad_norm_([p for g in bank.optimizers["warm"].param_groups for p in g["params"]], 0.5)
         bank.optimizers["warm"].step()
         bank.gpu_end(gpu_start)
@@ -111,7 +120,8 @@ class Trainer:
             raise FileExistsError("Run exists; use --resume rather than mixing log histories")
         seed_all(seed)
         self.preference = cfg.profiles[profile]["social_preference"]
-        self.env = PopulationEnv(cfg.environment, reproduction=method != "iteration", social_preference=self.preference)
+        self.env = PopulationEnv(cfg.environment, reproduction=method != "iteration", social_preference=self.preference,
+                                 deliver_messages=cfg.training.deliver_messages)
         self.obs, _ = self.env.reset(seed=seed)
         self.bank = PolicyBank(cfg.training, next(iter(self.obs.values())))
         # Load only locally generated/trusted torch checkpoints (pickle contains simulator state).
@@ -122,8 +132,15 @@ class Trainer:
         for field in ["backend", "model_id", "revision", "max_tokens", "warmstart_transitions"]:
             if warm["config"]["training"][field] != getattr(cfg.training, field):
                 raise ValueError(f"Warm-start mismatch: {field}")
-        if warm["config"]["environment"] != asdict(cfg.environment):
+        if asdict(EnvironmentConfig(**warm["config"]["environment"])) != asdict(cfg.environment):
             raise ValueError("Warm-start environment differs from frozen configuration")
+        prior = TrainingConfig(**warm["config"]["training"])
+        if prior.controller_architecture != cfg.training.controller_architecture:
+            raise ValueError("Warm-start controller architecture differs")
+        if cfg.training.split_controller:
+            for field in ["separate_critic", "value_scale"]:
+                if getattr(prior, field) != getattr(cfg.training, field):
+                    raise ValueError(f"Warm-start architecture mismatch: {field}")
         if cfg.training.backend == "tiny":
             self.bank.base.load_state_dict(warm["tiny_base"])
         self.initial = copy.deepcopy(warm["state"])
@@ -268,10 +285,11 @@ class Trainer:
 
     def step(self):
         actions, records = {}, {}
+        temperature = self.bank.training_temperature(self.decisions)
         # All actions collected before any environmental effect or policy update.
         for i in self.env.agents:
             h = self.hidden[i]
-            action, logp, vp, vs, self.hidden[i] = self.bank.act(i, self.obs[i], h, self.action_rng)
+            action, logp, vp, vs, self.hidden[i] = self.bank.act(i, self.obs[i], h, self.action_rng, temperature)
             actions[i] = action
             records[i] = (copy.deepcopy(self.obs[i]), h.cpu(), action, logp, vp, vs)
         prior_metadata = {i: {"lineage": p.lineage, "generation": p.generation} for i, p in self.env.prey.items()}
@@ -284,7 +302,8 @@ class Trainer:
             entry["tail"] += entry["discount"] * len(self.env.agents) / self.cfg.environment.social_denominator
             entry["discount"] *= self.cfg.training.gamma
         for i, record in records.items():
-            self.buffers[i].append(Transition(*record, infos[i]["personal_reward"], infos[i]["social_reward"], terms[i], close))
+            self.buffers[i].append(Transition(*record, infos[i]["personal_reward"], infos[i]["social_reward"], terms[i], close,
+                                             temperature))
             if i in self.newborn_tracking:
                 self.newborn_tracking[i]["ticks_before_first_update"] += 1
             if terms[i]:
@@ -315,8 +334,8 @@ class Trainer:
                     self.log("newborn_evaluation", {"id": i, "generation": event["generation"],
                                                    "birth_index": self.births_total, **assay})
             self.log("events", event)
-        self.log("ecology", {**self.env.metrics(), "world_ticks": self.world_ticks,
-                             "actions": {str(a): sum(v == a for v in actions.values()) for a in range(7)}})
+        self.log("ecology", {**self.env.metrics(), "world_ticks": self.world_ticks, "policy_temperature": temperature,
+                             "actions": {str(a): sum(v % 7 == a for v in actions.values()) for a in range(7)}})
         if self.env.tick % self.cfg.training.rollout_ticks == 0 or not self.env.agents:
             self._learn(close_window=close, extinction=not self.env.agents)
         if not self.env.agents:
@@ -328,6 +347,21 @@ class Trainer:
         metrics["population"] = len(self.env.agents)
         metrics["ages"] = [p.age for p in self.env.prey.values()]
         self.log("evaluation", metrics)
+        t = self.cfg.training
+        assays = []
+        if t.development_maps:
+            assays.append(("development_evaluation", self.cfg.environment,
+                           replace(t, evaluation_maps=t.development_maps, evaluation_seed=t.development_seed), False, None))
+        if t.evaluation_ablations and self.cfg.environment.message_symbols > 1:
+            assays.append(("evaluation_muted", self.cfg.environment, t, final, False))
+        if final:
+            for temperature in t.predator_evaluation_temperatures:
+                assays.append(("predator_evaluation", replace(self.cfg.environment, predator_temperature=temperature),
+                               t, True, None))
+        for kind, environment, training, last, delivery in assays:
+            assay = evaluate(self.bank, self.env.agents, environment, training, threshold, last, delivery)
+            self.evaluation_decisions += sum(r["decisions"] for r in assay["episodes"])
+            self.log(kind, assay)
         self.log("probes", {"checkpoint": threshold, "probabilities": probe(self.bank, self.env.agents, self.histories)})
         self.completed_evaluations.append(threshold)
         self.checkpoint(f"checkpoint-{threshold}.pt")

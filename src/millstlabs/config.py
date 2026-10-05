@@ -36,6 +36,11 @@ class EnvironmentConfig:
     social_denominator: float = 16
     # Resource guard: identities are never recycled within an ecological trial.
     max_individuals: int = 100_000
+    message_symbols: int = 1  # Includes silence. One preserves the original seven actions.
+    message_radius: int = 6
+    message_capacity: int = 4
+    message_cost: float = 0.02
+    predator_temperature: float | None = None  # None preserves the legacy movement kernel.
 
     def validate(self):
         assert self.size >= 12 and 0 <= self.obstacle_fraction < 0.4
@@ -47,6 +52,9 @@ class EnvironmentConfig:
         assert 0 < self.birth_energy <= self.max_energy
         assert self.birth_cooldown > 0 and self.maturity > 0
         assert self.replenishment_rates and min(self.replenishment_rates) >= 0
+        assert 1 <= self.message_symbols <= 8 and self.message_radius > 0
+        assert self.message_capacity > 0 and self.message_cost >= 0
+        assert self.predator_temperature is None or self.predator_temperature >= 0
 
 
 @dataclass
@@ -84,6 +92,23 @@ class TrainingConfig:
     newborn_evaluation_every: int = 16
     newborn_evaluation_maps: int = 2
     newborn_evaluation_horizon: int = 128
+    separate_critic: bool = True
+    value_scale: float = 100.0
+    critic_lr: float = 1e-3
+    temperature_start: float = 1.0
+    temperature_end: float = 1.0
+    temperature_decay_decisions: int = 0
+    evaluation_temperature: float = 1.0
+    deliver_messages: bool = True
+    development_maps: int = 0
+    development_seed: int = 3_000_000
+    evaluation_ablations: bool = False
+    predator_evaluation_temperatures: list[float] = field(default_factory=list)
+    controller_architecture: str = "legacy"
+
+    @property
+    def split_controller(self):
+        return self.backend == "structured" or self.controller_architecture == "split"
 
 
 @dataclass
@@ -103,7 +128,7 @@ class ExperimentConfig:
     def validate(self):
         self.environment.validate()
         t = self.training
-        assert t.backend in {"tiny", "smollm"}
+        assert t.backend in {"tiny", "smollm", "structured"}
         assert t.decisions > 0 and t.warmstart_transitions >= 0
         assert 0 < t.sequence_length <= t.rollout_ticks
         assert t.social_window % t.rollout_ticks == 0
@@ -113,9 +138,30 @@ class ExperimentConfig:
         assert set(self.methods) <= {"iteration", "r_adult", "r_initial"}
         assert 0 <= t.mutation_kl and 0 < t.gamma <= 1
         assert self.profiles and self.seeds
+        assert t.value_scale > 0 and t.critic_lr > 0
+        assert min(t.temperature_start, t.temperature_end, t.evaluation_temperature) > 0
+        assert t.temperature_decay_decisions >= 0 and t.development_maps >= 0
+        assert t.controller_architecture in {"legacy", "split"}
+        assert t.controller_architecture != "split" or t.backend == "smollm"
+        assert self.environment.message_symbols == 1 or t.split_controller
+        assert all(x >= 0 for x in t.predator_evaluation_temperatures)
 
     def digest(self):
-        return hashlib.sha256(json.dumps(asdict(self), sort_keys=True).encode()).hexdigest()
+        # Default extensions do not invalidate already-running v1 checkpoints.
+        data = asdict(self)
+        extensions = {
+            "environment": ["message_symbols", "message_radius", "message_capacity", "message_cost", "predator_temperature"],
+            "training": ["separate_critic", "value_scale", "critic_lr", "temperature_start", "temperature_end",
+                         "temperature_decay_decisions", "evaluation_temperature", "deliver_messages",
+                         "development_maps", "development_seed", "evaluation_ablations", "predator_evaluation_temperatures",
+                         "controller_architecture"],
+        }
+        for section, names in extensions.items():
+            defaults = EnvironmentConfig() if section == "environment" else TrainingConfig()
+            for name in names:
+                if data[section][name] == getattr(defaults, name):
+                    del data[section][name]
+        return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
 def load_config(path=None):

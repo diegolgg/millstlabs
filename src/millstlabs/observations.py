@@ -16,13 +16,17 @@ def observation_text(obs):
     # Local grid carries all positions; energy of nearest/weakest peer and watch
     # count retain the probe-relevant information within a 256-token budget.
     weakest = min(peers, key=lambda p: p[2]) if len(peers) else [-1, -1, -1, 0]
-    return (f"energy={s[0]:.1f} age={int(s[1])} xy={int(s[2])},{int(s[3])} "
+    radio = ""
+    if "messages" in obs:
+        packets = ";".join(f"{x},{y}:{int(symbol)}" for x, y, symbol in obs["messages"] if symbol > 0) or "none"
+        radio = f"radio_xy_symbol={packets} "
+    return (radio + f"energy={s[0]:.1f} age={int(s[1])} xy={int(s[2])},{int(s[3])} "
             f"cooldown={int(s[4])} fertile={int(s[5])} tick={int(s[6])} "
             f"alert={int(s[7])} outcome={int(s[8])} size={int(s[9])} "
             f"grid={terrain} food_xy_stock_seen={food} predator={threats} "
             f"peers={len(peers)} watchers={int(peers[:, 3].sum()) if len(peers) else 0} "
             f"weakest={int(weakest[0])},{int(weakest[1])},{int(weakest[2])} "
-            f"legal={''.join(str(int(v)) for v in obs['action_mask'])}")
+            f"legal={''.join(str(int(v)) for v in obs['action_mask'][:7])}")
 
 
 def vector_observation(obs):

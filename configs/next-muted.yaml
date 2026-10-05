@@ -1,0 +1,59 @@
+# LLM actor with private LoRA; numeric critic; fixed training task.
+environment:
+  founders: 8
+  population_cap: 16
+  social_denominator: 16
+  predator_temperature: 1.0
+  message_symbols: 4
+  message_radius: 6
+  message_capacity: 4
+  message_cost: 0.02
+training:
+  backend: smollm
+  device: cpu
+  cpu_threads: 4
+  decisions: 65536
+  warmstart_transitions: 8192
+  rollout_ticks: 32
+  social_window: 256
+  sequence_length: 32
+  separate_critic: true
+  value_scale: 100.0
+  controller_lr: 0.0003
+  critic_lr: 0.001
+  checkpoints:
+  - 0
+  - 16384
+  - 32768
+  - 65536
+  evaluation_maps: 2
+  final_evaluation_maps: 4
+  evaluation_horizon: 512
+  evaluation_policies: 8
+  evaluation_seed: 4000000
+  development_maps: 2
+  development_seed: 3000000
+  temperature_start: 1.0
+  temperature_end: 1.0
+  evaluation_temperature: 1.0
+  predator_evaluation_temperatures:
+  - 0.0
+  - 1.0
+  - 4.0
+  newborn_evaluation_every: 64
+  newborn_evaluation_maps: 1
+  newborn_evaluation_horizon: 128
+  deliver_messages: false
+  evaluation_ablations: true
+  controller_architecture: split
+profiles:
+  individual:
+    social_preference: 0.0
+    vigilance_bias: 0.0
+  prosocial:
+    social_preference: 0.5
+    vigilance_bias: 0.0
+methods:
+- r_adult
+seeds:
+- 11

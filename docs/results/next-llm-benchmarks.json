@@ -1,0 +1,59 @@
+{
+  "four_threads": {
+    "backend": "smollm",
+    "device": "cpu",
+    "decisions": 655,
+    "config_digest": "1e2b64239ecc7870e5f1e6a2ec49dda842273de3a35eac9defd5d283f4abce0e",
+    "benchmark_ticks": 128,
+    "cpu_threads": 4,
+    "platform": "macOS-15.3.2-arm64-arm-64bit-Mach-O",
+    "peak_process_rss_bytes": 1657733120,
+    "resolved_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "seconds": 138.01423429208808,
+    "decisions_per_second_with_ppo": 4.745887287348803,
+    "private_trainable_parameters_per_agent": 215882,
+    "resources": {
+      "processed_tokens": 223641,
+      "encoder_forwards": 1965,
+      "gradient_updates": 46,
+      "inference_seconds": 58.743088170769624,
+      "observations_at_token_cap": 0,
+      "cuda_model_stream_seconds": 0.0,
+      "cuda_peak_bytes": 0
+    },
+    "estimated_training_hours_per_run": 3.835835817882224,
+    "estimated_training_hours_sweep": 46.03002981458669,
+    "evaluation_decision_upper_bound_per_run": 40960,
+    "caveat": "Short sample estimate; excludes evaluation, warm starts, inheritance probes and I/O. Benchmark on target hardware.",
+    "measurement_note": "128 ticks; other validation work overlapped part of this measurement. Stored evaluation bound predates the additional-assay accounting fix.",
+    "corrected_evaluation_decision_upper_bound_per_run": 122880
+  },
+  "one_thread": {
+    "backend": "smollm",
+    "device": "cpu",
+    "decisions": 459,
+    "config_digest": "83a58d3202b5b6a37db56c9bd68dd44c4bfd4fd2a50eeacbd50ab5c8a9b123fc",
+    "benchmark_ticks": 64,
+    "cpu_threads": 1,
+    "platform": "macOS-15.3.2-arm64-arm-64bit-Mach-O",
+    "peak_process_rss_bytes": 1578991616,
+    "resolved_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "seconds": 85.49153787503019,
+    "decisions_per_second_with_ppo": 5.368952429782664,
+    "private_trainable_parameters_per_agent": 215882,
+    "resources": {
+      "processed_tokens": 156906,
+      "encoder_forwards": 1377,
+      "gradient_updates": 30,
+      "inference_seconds": 23.49417709244881,
+      "observations_at_token_cap": 0,
+      "cuda_model_stream_seconds": 0.0,
+      "cuda_peak_bytes": 0
+    },
+    "estimated_training_hours_per_run": 3.3906883479653707,
+    "estimated_training_hours_sweep": 40.68826017558445,
+    "evaluation_decision_upper_bound_per_run": 122880,
+    "caveat": "Short sample estimate; timing excludes evaluation, warm starts, inheritance probes and I/O. Evaluation bound excludes newborn assays. Benchmark on target hardware.",
+    "measurement_note": "64 ticks, after other LLM jobs completed. Different sample length; thread-count comparison is indicative only."
+  }
+}

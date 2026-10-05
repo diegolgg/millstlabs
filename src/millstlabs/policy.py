@@ -8,6 +8,8 @@ from torch import nn
 from torch.distributions import Categorical
 
 from .observations import observation_text, vector_observation
+from .structured import StructuredController
+from .structured import features as structured_features
 
 
 def cpu_state(state):
@@ -24,11 +26,11 @@ class Controller(nn.Module):
         self.personal_value = nn.Linear(64, 1)
         self.social_value = nn.Linear(64, 1)
 
-    def forward(self, features, hidden, mask):
+    def forward(self, features, hidden, mask, temperature=1.0):
         hidden = self.gru(torch.tanh(self.projection(features.float())), hidden)
         logits = self.action(hidden)
         logits = logits + torch.nn.functional.one_hot(torch.tensor(5, device=logits.device), 7) * self.watch_bias
-        logits = logits.masked_fill(~mask.bool(), -1e9)
+        logits = (logits / temperature).masked_fill(~mask.bool(), -1e9)
         return Categorical(logits=logits), self.personal_value(hidden).squeeze(-1), self.social_value(hidden).squeeze(-1), hidden
 
 
@@ -49,7 +51,11 @@ class PolicyBank:
         self.cuda_events = []
         self.resolved_revision = None
         self.width = 64
-        if cfg.backend == "tiny":
+        self.critic_width = len(structured_features(example_observation))
+        self.message_symbols = len(example_observation["action_mask"]) // 7
+        if cfg.backend == "structured":
+            self.width = len(structured_features(example_observation))
+        elif cfg.backend == "tiny":
             dim = len(vector_observation(example_observation))
             self.base = nn.Sequential(nn.Linear(dim, 64), nn.Tanh()).to(self.device)
             self.base.requires_grad_(False)
@@ -80,11 +86,15 @@ class PolicyBank:
             self.base.set_adapter(i)
 
     def _adapter_parameters(self, i):
+        if self.cfg.backend == "structured":
+            return []
         if self.cfg.backend == "tiny":
             return list(self.adapters[i].parameters())
         return [p for name, p in self.base.named_parameters() if f".{i}." in name and "lora_" in name]
 
     def _adapter_state(self, i):
+        if self.cfg.backend == "structured":
+            return {}
         if self.cfg.backend == "tiny":
             return cpu_state(self.adapters[i].state_dict())
         from peft import get_peft_model_state_dict
@@ -96,15 +106,27 @@ class PolicyBank:
         if self.cfg.backend == "tiny":
             self.adapters[i] = nn.Sequential(nn.Linear(64, 4, bias=False), nn.Linear(4, 64, bias=False)).to(self.device)
             nn.init.zeros_(self.adapters[i][1].weight)
-        else:
+        elif self.cfg.backend == "smollm":
             self.base.add_adapter(i, copy.deepcopy(self.lora_config))
-        self.controllers[i] = Controller(self.width).to(self.device)
+        self.controllers[i] = (StructuredController(self.width, self.cfg, self.message_symbols, self.critic_width,
+                                                    language=self.cfg.backend == "smollm")
+                               if self.cfg.split_controller else Controller(self.width)).to(self.device)
         if state:
             self.load_state(i, state)
         elif self.cfg.backend == "smollm":
             from peft import set_peft_model_state_dict
             set_peft_model_state_dict(self.base, self.template, adapter_name=i)
         self._activate(i)
+        if self.cfg.split_controller:
+            controller = self.controllers[i]
+            groups = [
+                {"params": controller.actor_parameters(), "lr": self.cfg.controller_lr},
+                {"params": controller.critic_parameters(), "lr": self.cfg.critic_lr},
+            ]
+            if self.cfg.backend == "smollm":
+                groups.insert(0, {"params": self._adapter_parameters(i), "lr": self.cfg.adapter_lr})
+            self.optimizers[i] = torch.optim.Adam(groups)
+            return
         params = self._adapter_parameters(i)
         assert params, "adapter target selection matched no parameters"
         self.optimizers[i] = torch.optim.Adam([
@@ -116,7 +138,7 @@ class PolicyBank:
         self.controllers[i].load_state_dict(state["controller"])
         if self.cfg.backend == "tiny":
             self.adapters[i].load_state_dict(state["adapter"])
-        else:
+        elif self.cfg.backend == "smollm":
             from peft import set_peft_model_state_dict
             set_peft_model_state_dict(self.base, state["adapter"], adapter_name=i)
 
@@ -128,13 +150,15 @@ class PolicyBank:
         del self.controllers[i]
         if self.cfg.backend == "tiny":
             del self.adapters[i]
-        else:
+        elif self.cfg.backend == "smollm":
             self.base.set_adapter("template")
             self.base.delete_adapter(i)
 
     def encode(self, i, observations):
         self._activate(i)
         self.encoder_forwards += len(observations)
+        if self.cfg.backend == "structured":
+            return torch.as_tensor(np.stack([structured_features(o) for o in observations]), device=self.device)
         if self.cfg.backend == "tiny":
             v = torch.as_tensor(np.stack([vector_observation(o) for o in observations]), device=self.device)
             start = self.gpu_start()
@@ -168,19 +192,23 @@ class PolicyBank:
             end.record()
             self.cuda_events.append((start, end))
 
-    def sequence(self, i, observations, hidden):
+    def sequence(self, i, observations, hidden, temperature=1.0):
         features = self.encode(i, observations)
+        critic_inputs = torch.as_tensor(np.stack([structured_features(o) for o in observations]), device=self.device) if (
+            self.cfg.backend == "smollm" and self.cfg.split_controller) else None
         output = []
         for j, obs in enumerate(observations):
             mask = torch.as_tensor(obs["action_mask"], device=self.device).unsqueeze(0)
-            dist, vp, vs, hidden = self.controllers[i](features[j:j+1], hidden, mask)
+            temp = temperature[j] if isinstance(temperature, (list, tuple)) else temperature
+            kwargs = {"critic_inputs": critic_inputs[j:j+1]} if critic_inputs is not None else {}
+            dist, vp, vs, hidden = self.controllers[i](features[j:j+1], hidden, mask, temp, **kwargs)
             output.append((dist, vp, vs))
         return output, hidden
 
     @torch.no_grad()
-    def act(self, i, obs, hidden, generator=None):
+    def act(self, i, obs, hidden, generator=None, temperature=1.0):
         start = time.perf_counter()
-        out, next_hidden = self.sequence(i, [obs], hidden)
+        out, next_hidden = self.sequence(i, [obs], hidden, temperature)
         dist, vp, vs = out[0]
         # Dedicated RNG keeps evaluation independent from collection randomness.
         action = torch.multinomial(dist.probs.cpu(), 1, generator=generator).squeeze()
@@ -189,15 +217,21 @@ class PolicyBank:
         return int(action), float(logp), float(vp), float(vs), next_hidden.detach()
 
     def zero_hidden(self):
-        return torch.zeros(1, 64, device=self.device)
+        width = 128 if self.cfg.split_controller and self.cfg.separate_critic else 64
+        return torch.zeros(1, width, device=self.device)
 
     @torch.no_grad()
     def probabilities(self, i, histories):
         rows = []
         for history in histories:
-            outputs, _ = self.sequence(i, history, self.zero_hidden())
+            outputs, _ = self.sequence(i, history, self.zero_hidden(), self.cfg.evaluation_temperature)
             rows.extend(o[0].probs.squeeze(0).cpu() for o in outputs)
         return torch.stack(rows)
+
+    def training_temperature(self, decisions):
+        t = self.cfg
+        fraction = min(1.0, decisions / t.temperature_decay_decisions) if t.temperature_decay_decisions else 0.0
+        return t.temperature_start + fraction * (t.temperature_end - t.temperature_start)
 
     @torch.no_grad()
     def inherit(self, child, source, histories, generator):
