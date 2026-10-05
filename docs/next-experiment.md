@@ -75,6 +75,36 @@ For a later language-swarm test, I recommend occasional short grounded reports�
 
 ## Run the LLM experiment
 
+### Focused cooperative R-adult run
+
+`configs/next-cooperative.yaml` narrows the study to **prosocial (+0.5), R-adult, seed 11**, and doubles the original 65,536-decision recommendation to **131,072 population-wide decisions**. This is not 131,072 decisions per agent. It keeps the LLM actor, separate critic, reward, predator temperature 1, and learning hyperparameters unchanged. The learned message channel remains off; WATCH alarms remain available.
+
+```bash
+bash scripts/next_experiment.sh --phase cooperative --mode plan
+bash scripts/next_experiment.sh --phase cooperative --mode run --hours 12
+bash scripts/next_experiment.sh --phase cooperative --mode report
+```
+
+The output is `runs/next-llm-cooperative`. Repeat the run command to resume after the soft 12-hour invocation limit. Expect approximately 6.8–7.7 hours for training alone at measured throughput; allow roughly 9–14 hours including warm start, evaluation, probes and checkpoint I/O, with substantial hardware/trajectory uncertainty. This is a planning estimate, not a completion deadline.
+
+Checkpoints are 0, 16,384, 32,768, 65,536, 98,304, and 131,072. Each uses eight common held-out maps and four separate development maps, with a 512-tick horizon; final predator-temperature assays retain 0, 1 and 4. Increasing evaluation coverage provides a more interpretable before/after comparison than the core pilot's two intermediate maps. All eight final maps therefore have a corresponding initial score. Repeated test inspection can still encourage tuning to these maps; choose subsequent variants using development results and reserve a fresh final map bank for confirmation.
+
+Predeclare the primary descriptive success criterion as **at least 20% higher restricted mean lifetime at the final checkpoint versus the initial warm policy on the same eight maps**, supported by improved food intake per living decision and without the aggregate gain depending on a single map. Report all eight paired differences, survival at 512 ticks, and both death causes. The 20% bar is a chosen practical effect size, not a statistical significance threshold. Check intermediate/development trends to distinguish a sustained improvement from a final fluctuation. One trained seed cannot establish reproducibility; without R-initial or an individual-profile control this run cannot identify the benefit of inheritance or prosociality.
+
+My prior is cautious: modest learned behavior is plausible, but strong sustained survival is not yet the outcome I would bet on. There is no empirical basis for a calibrated probability. More decisions increase opportunities for successful behavior, but most agents still have short lives and independent parameters. Survival rewards do not directly identify food-seeking actions. At the existing gamma and GAE lambda, a TD residual 50 steps away receives about 0.073 weight and one 100 steps away about 0.005; a good critic can bridge this gap, but an immature critic cannot be assumed to do so. These are estimator weights, not a hard planning horizon ([GAE](https://arxiv.org/abs/1506.02438)).
+
+Recommended follow-up permutations, in priority order, remain separate from this frozen run:
+
+1. **Demonstration competence:** compare 8,192 with 32,768 warm-start demonstrations. Measure warm-policy food acquisition and development survival before paying for a long RL run. Cover hungry-near-food, blocked navigation and threat situations. If RL erases demonstrated competence, test a small decaying imitation/KL anchor in a separate arm, recognizing that it can also inhibit improvement beyond the teacher.
+2. **Credit assignment:** test GAE lambda 0.99 versus 0.95 while holding the critic and budget fixed. Higher lambda propagates more distant TD residuals but increases variance; 32-tick rollout boundaries still rely on value bootstrapping. A separate 64-tick rollout arm tests longer observed sequences at the cost of fewer updates before death. Do not change both together initially.
+3. **Acquire food before strong pursuit:** test training at predator temperature 4, evaluating at both 4 and the common temperature 1. The calibration suggests this allows more survival time to experience feeding. A gain only at temperature 4 is easier-task performance, not demonstrated robustness. A staged 4-to-1 curriculum needs an explicit weight-transfer protocol and remains a later implementation.
+4. **More informative training feedback:** a separate potential-based shaping arm could add `beta * (gamma * Phi(next) - Phi(now))`, using bounded observation-based energy/navigation potential with correct terminal treatment. Evaluate on the original survival/food metrics. The classic policy-invariance result has assumptions; it does not guarantee multi-agent PPO convergence, and a direct food bonus can change the objective or encourage food monopolization ([reward shaping](https://people.eecs.berkeley.edu/~russell/papers/icml99-shaping.pdf)).
+5. **Adaptation stability:** if KL spikes or warm competence deteriorates, compare a lower LoRA rate (1e-4 to 3e-5), or an initial phase that trains the action head while keeping the LLM adapter fixed. The LLM still supplies actor features. If KL and state sensitivity are negligible, reducing learning rates further is the wrong response. Use the diagnostics to select the intervention.
+
+Increasing the cooperation weight or adding conversation first would make the credit problem more complicated without fixing basic navigation. Social reward currently pays for others remaining alive, not for the causal benefit of a particular teaching or helping action. Establish individual competence, then test whether communication or social preferences improve a controlled outcome.
+
+### Full matrix
+
 From the repository root with the existing `.venv`:
 
 ```bash

@@ -52,7 +52,7 @@ def promotion_gate(directory):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase", choices=["core", "communication", "muted", "shared", "numeric"], default="core")
+    parser.add_argument("--phase", choices=["core", "cooperative", "communication", "muted", "shared", "numeric"], default="core")
     parser.add_argument("--mode", choices=["plan", "benchmark", "calibrate", "run", "report", "gate"], default="plan")
     parser.add_argument("--config", help="Optional custom YAML; output must match its frozen config")
     parser.add_argument("--output")
