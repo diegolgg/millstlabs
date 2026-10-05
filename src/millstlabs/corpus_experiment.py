@@ -74,11 +74,17 @@ def report(root):
             private = {r["checkpoint"]: r for r in read_rows(directory/"evaluation_private_corpus.jsonl")}
             probes = read_rows(directory/"note_probe.jsonl")
             committed = json.loads((directory/"checkpoint-status.json").read_text()) if (directory/"checkpoint-status.json").exists() else None
+            prepared = (0 in evaluations and 0 in private and any(r["checkpoint"] == 0 for r in probes)
+                        and (root/style/f"warm-s{seed}.pt").exists() and committed is not None)
+            collected = ecology[-1]["decisions"] if ecology else (committed or {}).get("decisions", 0)
+            status = ("complete" if summaries.get("finished") else "prepared; PPO not started" if prepared and not collected
+                      else "incomplete; process liveness not inferred")
             item = {"style": style, "seed": seed, "finished": summaries.get("finished", False),
+                    "prepared": prepared,
                     "last_logged_decisions": ecology[-1]["decisions"] if ecology else 0,
                     "budget": base.training.decisions,
                     "committed_checkpoint": committed,
-                    "status": "complete" if summaries.get("finished") else "incomplete; process liveness not inferred",
+                    "status": status,
                     "latest_knowledge": knowledge[-1] if knowledge else None,
                     "latest_cue_probe": probes[-1] if probes else None,
                     "evaluations": {str(c): {
@@ -96,7 +102,8 @@ def report(root):
                 common_final = {**evaluations[last], "episodes": [r for r in evaluations[last]["episodes"] if r["map_seed"] in initial_seeds]}
                 item["change_from_own_warmstart"] = paired(common_final, evaluations[0])
             runs.append(item)
-    return {"runs": runs, "complete": sum(r["finished"] for r in runs), "total": len(runs),
+    return {"runs": runs, "prepared": sum(r["prepared"] for r in runs),
+            "complete": sum(r["finished"] for r in runs), "total": len(runs),
             "interpretation": "Credit measures novel information delivery, not useful teaching. Claim benefit only from food/survival gains and positive frozen-access ablations. One training seed is exploratory; cue sensitivity alone is not competence."}
 
 

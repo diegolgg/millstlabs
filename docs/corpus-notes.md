@@ -127,6 +127,36 @@ prompt tightening. These are execution results, not evidence of learned benefit.
 
 ## Terminal commands
 
+The first full preparation completed both styles (8,192 demonstrations each),
+but neither benefited from peer access on the two evaluation maps. Grounded/prose
+mean lifetime was 110.25/110.94 ticks; both fed on 53/74 hungry opportunities and
+had zero survivors at 512 ticks. These are demonstration-trained baselines, not
+post-PPO outcomes.
+
+An [audit of the grounded demonstrations](results/corpus-notes-demo-audit.json)
+found peer context in 7,194/8,192 examples but **zero changed teacher actions**
+when removing peer information. The check holds physical observations and
+tie-breaking RNG fixed, including a separate helper that never imports peer wall
+memory. This is a label-dependence audit, not a counterfactual survival rollout.
+It exposes insufficient supervision for using notes: simply adding peer text to
+an imitation dataset does not teach a decision that depends on that text.
+
+Reproduce the audit without loading or training an LLM:
+
+```bash
+.venv/bin/python -m millstlabs.demo_audit
+```
+
+The next recommended change is a balanced reader curriculum: pair identical
+local observations with different valid remote food reports that require
+different physical moves; vary locations, direction, obstacles and phrasing;
+test on unseen layouts and withheld/mismatched notes. Establish this prerequisite
+before expanding the existing PPO budget. This targeted curriculum is a proposed
+next experiment, not part of the current runner. Successful imitation would
+establish information use, not autonomous discovery. Subsequent RL should measure
+new strategies through actual food/survival improvement and retain the frozen
+peer-access control; note volume alone is not a discovery objective.
+
 ```bash
 cd /Users/diego/Downloads/millstlabs
 bash scripts/corpus_notes.sh --mode plan

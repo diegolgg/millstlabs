@@ -1,0 +1,21 @@
+{
+  "config_digest": "209929191fad9d6bfd51f9da94cce3623478ac5c3e8d7837cb4b0745150564ba",
+  "seed": 11,
+  "demonstrations": 8192,
+  "counts": {
+    "east": 743,
+    "with_peer_context": 7194,
+    "teacher_action_changed_by_current_peer_note": 0,
+    "teacher_action_changed_by_any_peer_memory": 0,
+    "movement_decisions": 2729,
+    "peer_context_movement_decisions": 2549,
+    "north": 699,
+    "south": 547,
+    "feed": 3535,
+    "west": 740,
+    "watch": 618,
+    "rest": 1310
+  },
+  "example_action_changes": [],
+  "interpretation": "Grounded teacher replay, not an LLM run or separate survival rollout. Immediate removal retains prior imported wall memory; the private-history check excludes all peer wall memory. Both use identical physical observations and tie-breaking RNG. Zero differences expose absent action-dependent supervision on these trajectories, not impossibility of useful communication."
+}

@@ -106,6 +106,27 @@ def test_teacher_changes_direction_only_when_corpus_cue_changes():
     assert Heuristic(0).act(b) == 2
 
 
+def test_demo_audit_detects_action_dependent_peer_cues():
+    from millstlabs.demo_audit import compare_teacher
+    _, _, observations, agent, _ = fixture()
+    pairs = cue_pair(observations[agent])
+    rows = [compare_teacher(Heuristic(0), Heuristic(0), obs, agent) for obs in pairs]
+    assert [r[0] for r in rows] == [3, 2]
+    assert rows[0][1:] == rows[1][1:]  # Identical sensors without either cue.
+    assert sum(a != no_peer for a, _, no_peer in rows) >= 1
+
+
+def test_demo_audit_is_bounded_and_does_not_modify_configuration():
+    from millstlabs.demo_audit import audit
+    from millstlabs.env import ACTION_NAMES
+    cfg = config()
+    digest = cfg.digest()
+    result = audit(cfg, 11, limit=33)
+    assert result["demonstrations"] == 33
+    assert sum(result["counts"].get(a, 0) for a in ACTION_NAMES) == 33
+    assert cfg.digest() == digest
+
+
 def test_publication_reward_learns_gate_without_changing_action_space():
     cfg = config()
     _, _, obs, author, _ = fixture()
@@ -174,6 +195,16 @@ def test_report_accepts_existing_string_counters(tmp_path):
     row = report(tmp_path)["runs"][0]["evaluations"]["0"]
     assert row["hungry_feed_opportunities"] == 74
     assert row["hungry_feed_actions"] == 53
+    for seed, episode in enumerate(evaluation["episodes"]):
+        episode.update(map_seed=seed, restricted_mean_lifetime=110.25, survival_fraction=0., food_per_alive_decision=.3)
+    for name in ["evaluation.jsonl", "evaluation_private_corpus.jsonl"]:
+        (output/name).write_text(json.dumps(evaluation)+"\n")
+    (output/"note_probe.jsonl").write_text('{"checkpoint": 0}\n')
+    (output/"checkpoint-status.json").write_text('{"decisions": 0}')
+    (tmp_path/"grounded/warm-s11.pt").touch()
+    result = report(tmp_path)
+    assert result["prepared"] == 1 and result["complete"] == 0
+    assert result["runs"][0]["status"] == "prepared; PPO not started"
 
 
 def test_http_notes_interface_validates_whole_batch_and_does_not_mutate_on_get():
