@@ -7,6 +7,7 @@ import torch
 
 from .env import FEED, WATCH, PopulationEnv
 from .knowledge import execute_tools, make_corpus, next_observations
+from .notes import publish_notes
 
 
 def calibration_histories(env_cfg, seed=8675309, training=None):
@@ -57,10 +58,11 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, delive
         for _ in range(train_cfg.evaluation_horizon):
             if not env.agents:
                 break
-            actions = {}
+            actions, writes = {}, {}
             for i in env.agents:
-                a, _, _, _, hidden[i] = bank.act(assignment[i], observations[i], hidden[i], generators[i],
-                                                train_cfg.evaluation_temperature)
+                a, _, _, _, hidden[i], publication = bank.act(assignment[i], observations[i], hidden[i], generators[i],
+                                                train_cfg.evaluation_temperature, include_note=True)
+                writes[i] = publication[0]
                 actions[i] = a
                 watch_count += a % 7 == WATCH
                 feed_count += a % 7 == FEED
@@ -68,6 +70,7 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, delive
                 hungry_opportunities += opportunity
                 hungry_feeds += opportunity and a % 7 == FEED
             decisions += len(actions)
+            publish_notes(corpus, writes, observations, bank, env, train_cfg, assignment)
             physical = execute_tools(corpus, actions, observations, env, train_cfg)
             observations, _, _, _, _ = env.step(physical)
             observations = next_observations(corpus, observations, env.agents)

@@ -1,0 +1,46 @@
+# Two note styles, one cooperative adult-inheritance condition; CPU LLM throughout.
+environment:
+  founders: 8
+  population_cap: 16
+  social_denominator: 16
+  predator_temperature: 1.0
+training:
+  backend: smollm
+  controller_architecture: split
+  actor_grounding: true
+  device: cpu
+  cpu_threads: 1
+  max_tokens: 512
+  decisions: 32768
+  warmstart_transitions: 8192
+  rollout_ticks: 32
+  social_window: 256
+  sequence_length: 32
+  entropy: 0.003
+  feed_retention: 0.1
+  separate_critic: true
+  value_scale: 100.0
+  controller_lr: 0.0003
+  critic_lr: 0.001
+  corpus_interface: notes
+  corpus_mode: shared
+  corpus_slots: 4
+  corpus_food_ttl: 16
+  corpus_tool_cost: 0.05
+  note_interval: 16
+  note_max_tokens: 48
+  note_credit: 0.1
+  note_write_penalty: 0.01
+  checkpoints: [0, 16384, 32768]
+  evaluation_maps: 2
+  final_evaluation_maps: 4
+  evaluation_horizon: 512
+  evaluation_seed: 7000000
+  development_maps: 0
+  newborn_evaluation_every: 0
+profiles:
+  prosocial:
+    social_preference: 0.5
+    vigilance_bias: 0.0
+methods: [r_adult]
+seeds: [11]

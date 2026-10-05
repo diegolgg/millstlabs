@@ -114,6 +114,14 @@ class TrainingConfig:
     novelty_beta_end: float = 0.0
     novelty_decay_decisions: int = 32768
     predator_curriculum: list[dict] = field(default_factory=list)
+    corpus_interface: str = "tools"  # Legacy interface remains checkpoint-compatible.
+    note_style: str = "grounded"
+    note_interval: int = 16
+    note_max_tokens: int = 48
+    note_credit: float = 0.1
+    note_write_penalty: float = 0.01
+    actor_grounding: bool = False
+    feed_retention: float = 0.0
 
     @property
     def split_controller(self):
@@ -141,7 +149,7 @@ class ExperimentConfig:
         assert t.decisions > 0 and t.warmstart_transitions >= 0
         assert 0 < t.sequence_length <= t.rollout_ticks
         assert t.social_window % t.rollout_ticks == 0
-        assert t.max_tokens <= 256 and t.max_tokens >= 64
+        assert 64 <= t.max_tokens <= 1024
         assert t.epochs > 0 and t.evaluation_horizon > 0
         assert t.evaluation_policies <= self.environment.population_cap
         assert set(self.methods) <= {"iteration", "r_adult", "r_initial"}
@@ -162,6 +170,14 @@ class ExperimentConfig:
         assert not (t.novelty_beta_start or t.novelty_beta_end) or t.intrinsic_critic
         assert all(s["decisions"] >= 0 and s["temperature"] >= 0 for s in t.predator_curriculum)
         assert [s["decisions"] for s in t.predator_curriculum] == sorted({s["decisions"] for s in t.predator_curriculum})
+        assert t.corpus_interface in {"tools", "notes"}
+        assert t.note_style in {"grounded", "prose"}
+        assert t.note_interval > 0 and 1 <= t.note_max_tokens <= 128
+        assert min(t.note_credit, t.note_write_penalty, t.feed_retention) >= 0
+        assert not t.actor_grounding or t.split_controller
+        if t.corpus_interface == "notes":
+            assert t.corpus_mode != "off" and t.split_controller
+            assert t.note_style != "prose" or t.backend == "smollm"
 
     def digest(self):
         # Default extensions do not invalidate already-running v1 checkpoints.
@@ -172,7 +188,9 @@ class ExperimentConfig:
                          "temperature_decay_decisions", "evaluation_temperature", "deliver_messages",
                          "development_maps", "development_seed", "evaluation_ablations", "predator_evaluation_temperatures",
                          "controller_architecture", "corpus_mode", "corpus_slots", "corpus_food_ttl", "corpus_tool_cost",
-                         "intrinsic_critic", "novelty_beta_start", "novelty_beta_end", "novelty_decay_decisions", "predator_curriculum"],
+                         "intrinsic_critic", "novelty_beta_start", "novelty_beta_end", "novelty_decay_decisions", "predator_curriculum",
+                         "corpus_interface", "note_style", "note_interval", "note_max_tokens", "note_credit",
+                         "note_write_penalty", "actor_grounding", "feed_retention"],
         }
         for section, names in extensions.items():
             defaults = EnvironmentConfig() if section == "environment" else TrainingConfig()

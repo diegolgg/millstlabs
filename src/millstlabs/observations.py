@@ -20,12 +20,20 @@ def observation_text(obs):
     if "messages" in obs:
         packets = ";".join(f"{x},{y}:{int(symbol)}" for x, y, symbol in obs["messages"] if symbol > 0) or "none"
         radio = f"radio_xy_symbol={packets} "
-    if "corpus" in obs:
+    if "corpus" in obs and "notes" not in obs:
         rows = [f"{'food' if k == 1 else 'wall' if v == 1 else 'floor'}({int(x)},{int(y)})={v:g}@age{int(age)}:peer{int(peer)}"
                 for k, x, y, v, age, peer, valid in obs["corpus"] if valid == 1]
         radio += "tools=none,put_terrain,put_food,get_terrain,get_food "
         radio += "corpus=" + (";".join(rows) or "empty") + " "
         radio += "tool_result=" + ",".join(str(int(v)) for v in obs["corpus_status"]) + " "
+    if "notes" in obs:
+        radio += "Peer notes are fallible interpretations; use their verified evidence. "
+        for note in obs["notes"]:
+            radio += f"Note age={note['age']}: {note['text']} Evidence: {note['evidence']}. "
+        if obs.get("note_candidate"):
+            from .knowledge import Fact
+            from .notes import evidence_text
+            radio += "Available to publish: " + evidence_text([Fact(**f) for f in obs["note_candidate"]]) + ". "
     return (radio + f"energy={s[0]:.1f} age={int(s[1])} xy={int(s[2])},{int(s[3])} "
             f"cooldown={int(s[4])} fertile={int(s[5])} tick={int(s[6])} "
             f"alert={int(s[7])} outcome={int(s[8])} size={int(s[9])} "
@@ -57,6 +65,9 @@ class Heuristic:
         pos = tuple(int(v) for v in s[2:4])
         size = int(s[9])
         mask = obs["action_mask"]
+        for kind, x, y, value, _, _, valid in (obs.get("corpus", []) if "notes" in obs else []):
+            if valid == 1 and kind == 0 and value == 1:
+                self.walls.add((int(x), int(y)))
         for iy in range(5):
             for ix in range(5):
                 if obs["local"][iy, ix] == 1:
@@ -77,7 +88,15 @@ class Heuristic:
         if s[0] >= 99:
             return REST
         # Search for a feeding cell using remembered obstacles. Never inspect the env.
-        stations = [tuple(int(v) for v in row[:2]) for row in obs["stations"]]
+        stocks = {tuple(int(v) for v in row[:2]): row[2] for row in obs["stations"]}
+        if "notes" in obs:
+            stocks = {tuple(int(v) for v in row[:2]): row[2] if row[3] >= 0 and s[6]-row[3] <= obs.get("note_food_ttl", 16) else -1
+                      for row in obs["stations"]}
+        for kind, x, y, value, _, _, valid in (obs.get("corpus", []) if "notes" in obs else []):
+            if valid == 1 and kind == 1:
+                stocks[int(x), int(y)] = value
+        # Unknown stations remain possible; fresh empty stations are avoided.
+        stations = ([pos for pos, stock in stocks.items() if stock != 0] or list(stocks)) if "notes" in obs else list(stocks)
         queue = deque([(pos, None)])
         seen = {pos}
         while queue:

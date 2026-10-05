@@ -181,7 +181,11 @@ def make_corpus(training, observations, mode=None):
     mode = training.corpus_mode if mode is None else mode
     if mode == "off":
         return None, observations
-    corpus = KnowledgeCorpus(mode, training.corpus_slots, training.corpus_food_ttl)
+    if training.corpus_interface == "notes":
+        from .notes import NoteCorpus
+        corpus = NoteCorpus(mode, training)
+    else:
+        corpus = KnowledgeCorpus(mode, training.corpus_slots, training.corpus_food_ttl)
     corpus.observe(observations, initial=True)
     return corpus, corpus.augment(observations)
 

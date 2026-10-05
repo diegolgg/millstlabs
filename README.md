@@ -6,6 +6,17 @@ This is an experimental platform. The included smoke runs and heuristic pilot ve
 
 ## Run locally
 
+**Current predator–prey corpus experiment:** [optional grounded and free-form LLM notes](docs/corpus-notes.md), automatic retrieval, seven physical actions, private LoRA learning, and frozen peer-access ablations. One cooperative R-adult condition; two note styles; 32,768 decisions each.
+
+```bash
+bash scripts/corpus_notes.sh --mode plan
+bash scripts/corpus_notes.sh --mode smoke
+caffeinate -i bash scripts/corpus_notes.sh --mode run --hours 12  # macOS; omit caffeinate -i on Linux
+bash scripts/corpus_notes.sh --mode report
+```
+
+The hour budget is resumable. This uses the actual local LLM for both arms and does not resume an older experiment. See the guide for learning, publication incentives, limitations and inspection commands.
+
 **Flag Game extension:** [frozen GPT-4o vision agents with a local RL corpus controller](docs/flag-game.md). It includes a reconstructed paper baseline, private/shared controls, cached API calls and a cumulative spending guard. The authors' exact flag assets and trial settings are not fully specified, so absolute paper-score reproduction is not claimed.
 
 ```bash

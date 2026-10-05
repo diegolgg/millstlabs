@@ -20,6 +20,9 @@ class Transition:
     temperature: float = 1.0
     intrinsic_value: float = 0.0
     intrinsic_reward: float = 0.0
+    publication: int = -1
+    publication_log_probability: float = 0.0
+    publication_reward: float = 0.0
 
 
 def advantages(transitions, cfg, personal_bootstrap=0.0, social_bootstrap=0.0):
@@ -93,6 +96,29 @@ def update(bank, i, transitions, preference, personal_bootstrap=0.0, social_boot
                 value_loss = value_loss + torch.nn.functional.smooth_l1_loss(vi, ti[start:start+len(seq)])
             entropy = torch.cat([o[0].entropy() for o in outputs]).mean()
             loss = policy_loss + cfg.value_coefficient * value_loss - cfg.entropy * entropy
+            publication_losses = []
+            for j, row in enumerate(seq):
+                if row.publication >= 0:
+                    write_dist = outputs[j][-1]
+                    write_logp = write_dist.log_prob(torch.tensor(float(row.publication), device=bank.device))
+                    write_ratio = torch.exp(write_logp-row.publication_log_probability)
+                    # Publishing also bears the task's individual/social outcome,
+                    # with a small immediate information-delivery bonus.
+                    write_advantage = a[j] + row.publication_reward
+                    publication_losses.append(-torch.minimum(write_ratio*write_advantage,
+                        write_ratio.clamp(1-cfg.clip, 1+cfg.clip)*write_advantage)-cfg.entropy*write_dist.entropy())
+            if publication_losses:
+                loss = loss + torch.cat(publication_losses).mean()
+            if cfg.feed_retention:
+                # Preserve a basic demonstrated skill without forcing actions.
+                # No oracle state, path planner, or action override at deployment.
+                eligible = [j for j, r in enumerate(seq) if r.observation["self"][0] < 80
+                            and r.observation["action_mask"][4]
+                            and not (r.observation["threats"][:, 0] >= 0).any()]
+                if eligible:
+                    retention = -torch.cat([outputs[j][0].log_prob(torch.tensor(4, device=bank.device))
+                                            for j in eligible]).mean()
+                    loss = loss + cfg.feed_retention*retention
             optimizer = bank.optimizers[i]
             optimizer.zero_grad(set_to_none=True)
             gpu_start = bank.gpu_start()
@@ -120,4 +146,7 @@ def update(bank, i, transitions, preference, personal_bootstrap=0.0, social_boot
         y = target.cpu().numpy()
         result[f"{name}_explained_variance"] = float(1 - np.var(y - prediction) / np.var(y)) if np.var(y) > 1e-8 else None
     result["intrinsic_reward_sum"] = sum(r.intrinsic_reward for r in transitions)
+    result["publication_opportunities"] = sum(r.publication >= 0 for r in transitions)
+    result["publications"] = sum(r.publication == 1 for r in transitions)
+    result["publication_reward"] = sum(r.publication_reward for r in transitions)
     return result

@@ -19,6 +19,7 @@ from .config import EnvironmentConfig, TrainingConfig
 from .env import PopulationEnv
 from .evaluation import calibration_histories, evaluate, probe
 from .knowledge import CountNovelty, execute_tools, make_corpus, next_observations, novelty_beta, teacher_tool
+from .notes import publish_notes
 from .observations import Heuristic
 from .policy import PolicyBank, cpu_state
 from .ppo import Transition, update
@@ -44,7 +45,8 @@ def warmstart(cfg, seed, path):
     seed_all(seed)
     env = PopulationEnv(cfg.environment, reproduction=False)
     obs, _ = env.reset(seed=seed)
-    corpus, obs = make_corpus(cfg.training, obs, "private" if cfg.training.corpus_mode != "off" else "off")
+    warm_mode = cfg.training.corpus_mode if cfg.training.corpus_interface == "notes" else ("private" if cfg.training.corpus_mode != "off" else "off")
+    corpus, obs = make_corpus(cfg.training, obs, warm_mode)
     bank = PolicyBank(cfg.training, next(iter(obs.values())))
     bank.add("warm")
     helpers = {i: Heuristic(seed + j) for j, i in enumerate(env.agents)}
@@ -77,7 +79,7 @@ def warmstart(cfg, seed, path):
 
     while decisions < cfg.training.warmstart_transitions:
         actions = {i: helpers[i].act(obs[i]) for i in env.agents}
-        if corpus is not None:
+        if corpus is not None and cfg.training.corpus_interface == "tools":
             actions = {i: a + 7*teacher_tool(corpus, i, obs[i], j) for j, (i, a) in enumerate(actions.items())}
         for i in env.agents:
             # Exactly the requested demonstration count (unused final tick actions aren't trained).
@@ -88,6 +90,9 @@ def warmstart(cfg, seed, path):
                 decisions += 1
                 if len(buffers[i]) == cfg.training.sequence_length:
                     train_sequence(i)
+        if cfg.training.corpus_interface == "notes":
+            publish_notes(corpus, {i: int(obs[i]["note_opportunity"]) for i in env.agents}, obs, bank, env,
+                          cfg.training, {i: "warm" for i in env.agents})
         physical = execute_tools(corpus, actions, obs, env, cfg.training)
         obs, _, terms, _, _ = env.step(physical)
         obs = next_observations(corpus, obs, env.agents)
@@ -101,7 +106,7 @@ def warmstart(cfg, seed, path):
         if not env.agents:
             trial += 1
             obs, _ = env.reset(seed=seed + trial * 1009)
-            corpus, obs = make_corpus(cfg.training, obs, "private" if cfg.training.corpus_mode != "off" else "off")
+            corpus, obs = make_corpus(cfg.training, obs, warm_mode)
             helpers = {i: Heuristic(seed + trial * 1009 + j) for j, i in enumerate(env.agents)}
             hidden = {i: bank.zero_hidden() for i in env.agents}
     for i in list(buffers):
@@ -147,7 +152,8 @@ class Trainer:
         if prior.controller_architecture != cfg.training.controller_architecture:
             raise ValueError("Warm-start controller architecture differs")
         if cfg.training.split_controller:
-            for field in ["separate_critic", "value_scale", "intrinsic_critic", "corpus_slots"]:
+            for field in ["separate_critic", "value_scale", "intrinsic_critic", "corpus_slots",
+                          "corpus_interface", "actor_grounding", "note_style"]:
                 if getattr(prior, field) != getattr(cfg.training, field):
                     raise ValueError(f"Warm-start architecture mismatch: {field}")
         if (prior.corpus_mode == "off") != (cfg.training.corpus_mode == "off"):
@@ -182,6 +188,8 @@ class Trainer:
                                "warmstart_sha256": self.warmstart_sha256,
                                "device": str(self.bank.device), "resolved_revision": self.bank.resolved_revision,
                                "resumed": bool(resume)})
+        if not resume:
+            self.checkpoint()  # Recovery exists even if the initial evaluation is interrupted.
 
     def log(self, kind, data):
         with (self.output / f"{kind}.jsonl").open("a") as f:
@@ -209,6 +217,12 @@ class Trainer:
         if self.cfg.training.backend == "tiny":
             payload["tiny_base"] = cpu_state(self.bank.base.state_dict())
         save_atomic(self.output / name, payload)
+        if name == "latest.pt":
+            status = self.output / "checkpoint-status.json"
+            temporary = status.with_suffix(".json.tmp")
+            temporary.write_text(json.dumps({"decisions": self.decisions, "world_ticks": self.world_ticks,
+                                             "trial": self.trial, "elapsed_seconds": self.elapsed_seconds}))
+            os.replace(temporary, status)
 
     def restore(self, path):
         p = torch.load(path, map_location="cpu", weights_only=False)
@@ -300,7 +314,7 @@ class Trainer:
         self.log("recovery", {"restored_death_serials": [a["serial"] for a in self.archive]})
 
     def step(self):
-        actions, records = {}, {}
+        actions, records, writes, write_logps = {}, {}, {}, {}
         for stage in self.cfg.training.predator_curriculum:
             if self.decisions >= stage["decisions"]:
                 target = stage["temperature"]
@@ -314,11 +328,13 @@ class Trainer:
         # All actions collected before any environmental effect or policy update.
         for i in self.env.agents:
             h = self.hidden[i]
-            action, logp, vp, vs, self.hidden[i], intrinsic_values[i] = self.bank.act(
-                i, self.obs[i], h, self.action_rng, temperature, include_intrinsic=True)
+            action, logp, vp, vs, self.hidden[i], intrinsic_values[i], publication = self.bank.act(
+                i, self.obs[i], h, self.action_rng, temperature, include_intrinsic=True, include_note=True)
+            writes[i], write_logps[i] = publication
             actions[i] = action
             records[i] = (copy.deepcopy(self.obs[i]), h.cpu(), action, logp, vp, vs)
         prior_metadata = {i: {"lineage": p.lineage, "generation": p.generation} for i, p in self.env.prey.items()}
+        publication_rewards = publish_notes(self.corpus, writes, self.obs, self.bank, self.env, self.cfg.training)
         physical = execute_tools(self.corpus, actions, self.obs, self.env, self.cfg.training)
         self.obs, _, terms, _, infos = self.env.step(physical)
         self.obs = next_observations(self.corpus, self.obs, self.env.agents)
@@ -332,7 +348,14 @@ class Trainer:
         for i, record in records.items():
             raw_novelty = self.novelty.reward(prior_metadata[i]["lineage"], self.obs[i]) if beta > 0 and not terms[i] else 0.
             self.buffers[i].append(Transition(*record, infos[i]["personal_reward"], infos[i]["social_reward"], terms[i], close,
-                                             temperature, intrinsic_values[i], beta*raw_novelty))
+                                             temperature, intrinsic_values[i], beta*raw_novelty,
+                                             writes[i], write_logps[i], publication_rewards.get(i, 0.)))
+            if self.cfg.training.corpus_interface == "notes":
+                self.log("note_decisions", {"id": i, "tick": self.env.tick-1,
+                    "position": record[0]["self"][2:4].tolist(), "energy": float(record[0]["self"][0]),
+                    "action": actions[i], "action_probability": float(np.exp(record[3])),
+                    "note_ids": [n["id"] for n in record[0]["notes"]],
+                    "publication": writes[i], "publication_reward": publication_rewards.get(i, 0.)})
             if i in self.newborn_tracking:
                 self.newborn_tracking[i]["ticks_before_first_update"] += 1
             if terms[i]:
@@ -389,9 +412,9 @@ class Trainer:
                            replace(t, evaluation_maps=t.development_maps, evaluation_seed=t.development_seed), False, None))
         if t.evaluation_ablations and self.cfg.environment.message_symbols > 1:
             assays.append(("evaluation_muted", self.cfg.environment, t, final, False))
+        if t.corpus_mode == "shared" and (final or t.corpus_interface == "notes"):
+            assays.append(("evaluation_private_corpus", self.cfg.environment, replace(t, corpus_mode="private"), final, None))
         if final:
-            if t.corpus_mode == "shared":
-                assays.append(("evaluation_private_corpus", self.cfg.environment, replace(t, corpus_mode="private"), True, None))
             for temperature in t.predator_evaluation_temperatures:
                 assays.append(("predator_evaluation", replace(self.cfg.environment, predator_temperature=temperature),
                                t, True, None))
@@ -400,10 +423,16 @@ class Trainer:
             self.evaluation_decisions += sum(r["decisions"] for r in assay["episodes"])
             self.log(kind, assay)
         self.log("probes", {"checkpoint": threshold, "probabilities": probe(self.bank, self.env.agents, self.histories)})
+        if t.corpus_interface == "notes":
+            from .note_probe import probe_notes
+            self.log("note_probe", {"checkpoint": threshold,
+                                   **probe_notes(self.bank, self.env.agents, next(iter(self.obs.values())))})
         if self.corpus is not None:
             stores = {"shared": self.corpus.shared} if t.corpus_mode == "shared" else self.corpus.private
             snapshot = {"trial": self.trial, "tick": self.env.tick, "checkpoint": threshold,
                         "mode": t.corpus_mode, "stores": {name: [vars(f) for f in store.values()] for name, store in stores.items()}}
+            if t.corpus_interface == "notes":
+                snapshot["notes"] = [asdict(n) for n in self.corpus.notes]
             (self.output / f"corpus-checkpoint-{threshold}.json").write_text(json.dumps(snapshot, indent=2))
         self.completed_evaluations.append(threshold)
         self.checkpoint(f"checkpoint-{threshold}.pt")

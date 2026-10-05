@@ -1,4 +1,5 @@
 """Optional loopback HTTP interface to the simulator (not a paid language-model API)."""
+import copy
 from dataclasses import asdict
 from threading import RLock
 from typing import Literal
@@ -11,6 +12,7 @@ from pydantic import BaseModel, Field
 from .config import EnvironmentConfig, TrainingConfig
 from .env import ACTION_NAMES, PopulationEnv
 from .knowledge import TOOL_NAMES, execute_tools, make_corpus, next_observations
+from .notes import publish_notes
 
 app = FastAPI(title="Mill Street Labs Sandbox", version="0.1.0")
 sessions = {}
@@ -36,12 +38,15 @@ class CreateRequest(BaseModel):
     reproduction: bool = True
     social_preference: float = Field(default=0, ge=-2, le=2)
     corpus_mode: Literal["off", "private", "shared"] = "off"
+    corpus_interface: Literal["tools", "notes"] = "tools"
+    note_style: Literal["grounded", "prose"] = "grounded"
 
 
 class StepRequest(BaseModel):
     actions: dict[str, int]
     expected_tick: int = Field(ge=0)
     knowledge_actions: dict[str, Literal["none", "put_terrain", "put_food", "get_terrain", "get_food"]] | None = None
+    notes: dict[str, str] | None = None
 
 
 @app.get("/health")
@@ -53,6 +58,7 @@ def health():
 def schema():
     return {"actions": dict(enumerate(ACTION_NAMES)), "defaults": asdict(EnvironmentConfig()),
             "knowledge_tools": dict(enumerate(TOOL_NAMES)), "joint_action_encoding": "physical_action + 7 * knowledge_tool",
+            "notes_interface": "Create with corpus_interface=notes and corpus_mode=shared. Step with physical actions 0..6 and optional notes {agent: text}. Observations contain automatically retrieved notes; evidence is attached by the server.",
             "local_codes": {"-1": "unobserved", "0": "empty", "1": "wall", "2": "food", "3": "prey", "4": "predator", "5": "alert prey"}}
 
 
@@ -63,7 +69,10 @@ def create(request: CreateRequest):
             raise HTTPException(429, "Session limit reached; delete unused environments")
         env = PopulationEnv(reproduction=request.reproduction, social_preference=request.social_preference)
         observations, _ = env.reset(seed=request.seed)
-        training = TrainingConfig(corpus_mode=request.corpus_mode, controller_architecture="split")
+        if request.corpus_interface == "notes" and request.corpus_mode == "off":
+            raise HTTPException(422, "Notes require corpus_mode private or shared")
+        training = TrainingConfig(corpus_mode=request.corpus_mode, controller_architecture="split",
+                                  corpus_interface=request.corpus_interface, note_style=request.note_style)
         corpus, observations = make_corpus(training, observations)
         i = str(uuid4())
         sessions[i] = env
@@ -89,14 +98,31 @@ def step(i: str, request: StepRequest):
             if set(actions) != set(env.agents):
                 raise ValueError("Supply exactly one action for every living agent")
             if request.knowledge_actions is not None:
+                if training and training.corpus_interface == "notes":
+                    raise ValueError("Notes sessions accept optional text, not knowledge tool actions")
                 if corpus is None:
                     raise ValueError("Enable corpus_mode when creating this environment")
                 if not set(request.knowledge_actions) <= set(env.agents) or any(not 0 <= a < 7 for a in actions.values()):
                     raise ValueError("Named knowledge tools require living agents and physical actions 0..6")
                 actions = {a: v + 7*TOOL_NAMES.index(request.knowledge_actions.get(a, "none")) for a, v in actions.items()}
-            if any(not 0 <= a < (35 if corpus else 7) for a in actions.values()):
+            notes_mode = training and training.corpus_interface == "notes"
+            if any(not 0 <= a < (35 if corpus and not notes_mode else 7) for a in actions.values()):
                 raise ValueError("Action outside the session's action space")
             current = {a: env.observe(a) for a in env.agents}
+            publication_rewards = {}
+            if request.notes is not None:
+                if not notes_mode:
+                    raise ValueError("Enable corpus_interface=notes before depositing text")
+                if not set(request.notes) <= set(env.agents) or any(not text.strip() or len(text) > 480 for text in request.notes.values()):
+                    raise ValueError("Notes require living authors and 1..480 characters")
+                current = copy.deepcopy(corpus).augment(current)
+                if any(not current[a]["note_opportunity"] for a in request.notes):
+                    raise ValueError("No fresh evidence or publication cooldown active")
+                # Validate the entire batch before any mutation; prose is untrusted.
+                publication_rewards = publish_notes(corpus, {a: int(a in request.notes) for a in env.agents},
+                    current, None, env, training, texts=request.notes if training.note_style == "prose" else None)
+            elif notes_mode:
+                corpus.pending.clear()
             physical = execute_tools(corpus, actions, current, env, training)
             obs, rewards, terminated, truncated, infos = env.step(physical)
             obs = next_observations(corpus, obs, env.agents)
@@ -105,7 +131,8 @@ def step(i: str, request: StepRequest):
         except ValueError as e:
             raise HTTPException(422, str(e)) from e
         return serializable({"tick": env.tick, "agents": env.agents, "observations": obs,
-                             "rewards": rewards, "terminated": terminated, "truncated": truncated, "infos": infos})
+                             "rewards": rewards, "publication_rewards": publication_rewards,
+                             "terminated": terminated, "truncated": truncated, "infos": infos})
 
 
 @app.get("/environments/{i}")
@@ -115,7 +142,7 @@ def inspect(i: str):
         obs = {a: env.observe(a) for a in env.agents}
         corpus, _ = corpora.get(i, (None, None))
         return serializable({"tick": env.tick, "agents": env.agents,
-                             "observations": corpus.augment(obs) if corpus else obs})
+                             "observations": copy.deepcopy(corpus).augment(obs) if corpus else obs})
 
 
 @app.get("/environments/{i}/render")

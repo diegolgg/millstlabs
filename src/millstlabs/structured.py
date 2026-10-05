@@ -49,6 +49,10 @@ class StructuredController(nn.Module):
         self.action = nn.Linear(64, 7)
         self.watch_bias = nn.Parameter(torch.zeros(()))
         self.message = nn.Linear(64, message_symbols) if message_symbols > 1 else None
+        self.publication = nn.Linear(64, 1) if cfg.corpus_interface == "notes" else None
+        if self.publication is not None:
+            nn.init.zeros_(self.publication.weight)
+            nn.init.zeros_(self.publication.bias)
         self.critic_encoder = encoder(critic_width or width) if self.separate else None
         self.critic_gru = nn.GRUCell(64, 64) if self.separate else None
         self.personal_value = nn.Linear(64, 1)

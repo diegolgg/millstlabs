@@ -1,0 +1,145 @@
+{
+  "type": "real local SmolLM2 CPU wiring validation, not a learning claim",
+  "runs": [
+    {
+      "style": "grounded",
+      "finished": true,
+      "decisions": 128,
+      "budget": 128,
+      "unused_decisions": 0,
+      "world_ticks": 16,
+      "restarts": 0,
+      "elapsed_seconds": 92.58940349996556,
+      "evaluation_decisions": 256,
+      "births": 0,
+      "pending_dead_social_updates": 0,
+      "resources": {
+        "processed_tokens": 200079,
+        "encoder_forwards": 1328,
+        "gradient_updates": 64,
+        "inference_seconds": 27.24417871783953,
+        "observations_at_token_cap": 0,
+        "cuda_model_stream_seconds": 0.0,
+        "cuda_peak_bytes": 0
+      },
+      "warmstart_seconds": 11.827923625009134,
+      "lora_changed": true,
+      "publication_head_changed": true,
+      "notes_written": 8,
+      "new_peer_facts": 15,
+      "prose_generated_tokens_training": 0,
+      "sample_notes": [
+        "food (11,16) stock 30 at tick 0",
+        "wall (6,16); wall (6,17); wall (8,13)",
+        "wall (0,3); wall (0,6)",
+        "food (11,16) stock 32 at tick 1"
+      ],
+      "final_cue_probe": {
+        "decisions": 128,
+        "trial": 0,
+        "checkpoint": 128,
+        "synthetic": true,
+        "local_sensors_identical": true,
+        "teacher_actions": [
+          3,
+          2
+        ],
+        "west_food_action_probabilities": [
+          0.1752610206604004,
+          0.16383972764015198,
+          0.1731797158718109,
+          0.1706806719303131,
+          0.0,
+          0.15963114798069,
+          0.1574077010154724
+        ],
+        "east_food_action_probabilities": [
+          0.17525935173034668,
+          0.16383744776248932,
+          0.17318297922611237,
+          0.17068152129650116,
+          0.0,
+          0.15963207185268402,
+          0.15740656852722168
+        ],
+        "max_action_probability_change": 3.2633543014526367e-06,
+        "correct_direction_probability": 0.17193183302879333,
+        "both_argmax_directions_correct": false
+      }
+    },
+    {
+      "style": "prose",
+      "finished": true,
+      "decisions": 128,
+      "budget": 128,
+      "unused_decisions": 0,
+      "world_ticks": 16,
+      "restarts": 0,
+      "elapsed_seconds": 101.56166550004855,
+      "evaluation_decisions": 256,
+      "births": 0,
+      "pending_dead_social_updates": 0,
+      "resources": {
+        "processed_tokens": 204478,
+        "encoder_forwards": 1944,
+        "gradient_updates": 64,
+        "inference_seconds": 35.88287194108125,
+        "observations_at_token_cap": 0,
+        "cuda_model_stream_seconds": 0.0,
+        "cuda_peak_bytes": 0
+      },
+      "warmstart_seconds": 14.767932125017978,
+      "lora_changed": true,
+      "publication_head_changed": true,
+      "notes_written": 8,
+      "new_peer_facts": 15,
+      "prose_generated_tokens_training": 130,
+      "sample_notes": [
+        "The food stock is 30 units at tick 0.",
+        "Wall (6,16); Wall (6,17); Wall (8,13)",
+        "Wall (0,3) is a wall that is 3 feet high and 3 feet wide.\n\nWall",
+        "The food stock is 32 units per day."
+      ],
+      "final_cue_probe": {
+        "decisions": 128,
+        "trial": 0,
+        "checkpoint": 128,
+        "synthetic": true,
+        "local_sensors_identical": true,
+        "teacher_actions": [
+          3,
+          2
+        ],
+        "west_food_action_probabilities": [
+          0.1751764416694641,
+          0.16384997963905334,
+          0.1731244921684265,
+          0.1706615835428238,
+          0.0,
+          0.15965059399604797,
+          0.15753692388534546
+        ],
+        "east_food_action_probabilities": [
+          0.17517618834972382,
+          0.16384699940681458,
+          0.17312903702259064,
+          0.17066331207752228,
+          0.0,
+          0.1596502661705017,
+          0.1575341820716858
+        ],
+        "max_action_probability_change": 4.544854164123535e-06,
+        "correct_direction_probability": 0.17189531028270721,
+        "both_argmax_directions_correct": false
+      }
+    }
+  ],
+  "prepare_resume_validation": {
+    "backend": "smollm",
+    "initial_checkpoint_decisions": 0,
+    "resumed": true,
+    "finished": true,
+    "final_decisions": 128,
+    "individual_action_trace_rows": 128
+  }
+}

@@ -5,7 +5,7 @@ import time
 import numpy as np
 import torch
 from torch import nn
-from torch.distributions import Categorical
+from torch.distributions import Bernoulli, Categorical
 
 from .observations import observation_text, vector_observation
 from .structured import StructuredController
@@ -51,6 +51,7 @@ class PolicyBank:
         self.cuda_events = []
         self.resolved_revision = None
         self.width = 64
+        self.ground_width = len(self.physical_features(example_observation)) if cfg.actor_grounding else 0
         self.critic_width = len(structured_features(example_observation))
         self.message_symbols = len(example_observation["action_mask"]) // 7
         if cfg.backend == "structured":
@@ -108,7 +109,7 @@ class PolicyBank:
             nn.init.zeros_(self.adapters[i][1].weight)
         elif self.cfg.backend == "smollm":
             self.base.add_adapter(i, copy.deepcopy(self.lora_config))
-        self.controllers[i] = (StructuredController(self.width, self.cfg, self.message_symbols, self.critic_width,
+        self.controllers[i] = (StructuredController(self.width+self.ground_width, self.cfg, self.message_symbols, self.critic_width,
                                                     language=self.cfg.backend == "smollm")
                                if self.cfg.split_controller else Controller(self.width)).to(self.device)
         if state:
@@ -194,8 +195,11 @@ class PolicyBank:
 
     def sequence(self, i, observations, hidden, temperature=1.0):
         features = self.encode(i, observations)
+        if self.cfg.actor_grounding:
+            ground = torch.as_tensor(np.stack([self.physical_features(o) for o in observations]), device=self.device)
+            features = torch.cat([features, ground], dim=-1)
         critic_inputs = torch.as_tensor(np.stack([structured_features(o) for o in observations]), device=self.device) if (
-            self.cfg.backend == "smollm" and self.cfg.split_controller) else None
+            (self.cfg.backend == "smollm" and self.cfg.split_controller) or self.cfg.actor_grounding) else None
         output = []
         for j, obs in enumerate(observations):
             mask = torch.as_tensor(obs["action_mask"], device=self.device).unsqueeze(0)
@@ -203,11 +207,14 @@ class PolicyBank:
             kwargs = {"critic_inputs": critic_inputs[j:j+1]} if critic_inputs is not None else {}
             result = self.controllers[i](features[j:j+1], hidden, mask, temp, **kwargs)
             dist, vp, vs, hidden = result[:4]
-            output.append((dist, vp, vs) + result[4:])
+            row = (dist, vp, vs) + result[4:]
+            if self.cfg.corpus_interface == "notes":
+                row += (Bernoulli(logits=self.controllers[i].publication(hidden[:, :64]).squeeze(-1)),)
+            output.append(row)
         return output, hidden
 
     @torch.no_grad()
-    def act(self, i, obs, hidden, generator=None, temperature=1.0, include_intrinsic=False):
+    def act(self, i, obs, hidden, generator=None, temperature=1.0, include_intrinsic=False, include_note=False):
         start = time.perf_counter()
         out, next_hidden = self.sequence(i, [obs], hidden, temperature)
         dist, vp, vs = out[0][:3]
@@ -216,7 +223,56 @@ class PolicyBank:
         logp = dist.log_prob(action.to(self.device))
         self.inference_seconds += time.perf_counter() - start
         result = (int(action), float(logp), float(vp), float(vs), next_hidden.detach())
-        return result + (float(out[0][3]) if len(out[0]) > 3 else 0.0,) if include_intrinsic else result
+        if include_intrinsic:
+            result += (float(out[0][3]) if self.cfg.intrinsic_critic else 0.0,)
+        if include_note:
+            write, write_logp = -1, 0.
+            if self.cfg.corpus_interface == "notes" and obs.get("note_opportunity", False):
+                distribution = out[0][-1]
+                write = int(torch.rand((), generator=generator) < distribution.probs.cpu().squeeze())
+                write_logp = float(distribution.log_prob(torch.tensor(float(write), device=self.device)))
+            result += ((write, write_logp),)
+        return result
+
+    @staticmethod
+    def physical_features(obs):
+        # Direct grounding for energy, geometry and legal movement. Corpus
+        # information still reaches the LLM actor exclusively through language.
+        return structured_features({k: v for k, v in obs.items() if k not in {"corpus", "corpus_status"}})
+
+    @torch.no_grad()
+    def describe_note(self, i, evidence):
+        """Bounded, greedy prose from the frozen tied-embedding language model.
+
+        Selection is learned by the publication head. Wording is not PPO-trained.
+        Disable action LoRA during writing so it cannot destroy language fluency.
+        KV caching avoids repeatedly encoding the evidence for each output token.
+        """
+        if self.cfg.backend != "smollm":
+            raise ValueError("Free-form notes require a real language model")
+        if not self.base.config.tie_word_embeddings:
+            raise ValueError("Local writer requires tied input/output embeddings")
+        prompt = self.tokenizer.apply_chat_template([
+            {"role": "system", "content": "Write one short useful note to another animal in a survival game. Preserve the observed coordinates, quantities and tick. Food stock is an amount now, not units per day. Do not infer trends, stability or hidden mechanics. Use only the supplied observations."},
+            {"role": "user", "content": evidence}], tokenize=False, add_generation_prompt=True)
+        ids = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=384)["input_ids"].to(self.device)
+        self.tokens += ids.numel()
+        generated, past = [], None
+        started = time.perf_counter()
+        with self.base.disable_adapter():
+            weight = self.base.get_input_embeddings().weight
+            for _ in range(self.cfg.note_max_tokens):
+                output = self.base(input_ids=ids, past_key_values=past, use_cache=True)
+                token = int((output.last_hidden_state[:, -1] @ weight.T).argmax(-1))
+                self.encoder_forwards += 1
+                self.tokens += 1
+                if token == self.tokenizer.eos_token_id:
+                    break
+                generated.append(token)
+                past = output.past_key_values
+                ids = torch.tensor([[token]], device=self.device)
+        self.inference_seconds += time.perf_counter()-started
+        return self.tokenizer.decode(generated, skip_special_tokens=True).strip(), len(generated)
 
     def zero_hidden(self):
         width = 128 if self.cfg.split_controller and self.cfg.separate_critic else 64
