@@ -40,14 +40,19 @@ def variants(base, styles):
 
 def plan(base, styles):
     t = base.training
-    maps_per_arm = 2*(sum(c < t.decisions for c in t.checkpoints)*t.evaluation_maps+t.final_evaluation_maps)
+    maps_per_arm = (3 if t.note_memory == "tactics" else 2)*(sum(c < t.decisions for c in t.checkpoints)*t.evaluation_maps+t.final_evaluation_maps)
     return {"styles": styles, "profile": "prosocial", "method": "r_adult", "seeds": base.seeds,
             "backend": t.backend, "physical_actions": 7, "automatic_context": True,
+            **({"action_policy": t.action_policy, "note_memory": t.note_memory,
+                "knowledge_energy_cost": t.corpus_tool_cost, "feed_imitation_weight": t.feed_retention}
+               if t.action_policy == "lm_token" else {}),
             "decisions_per_arm": t.decisions, "total_training_decisions": t.decisions*len(styles)*len(base.seeds),
             "warmstart_decisions": t.warmstart_transitions*len(styles)*len(base.seeds),
             "evaluation_decision_upper_bound": maps_per_arm*t.evaluation_policies*t.evaluation_horizon*len(styles)*len(base.seeds),
             "generation_limit_per_note": t.note_max_tokens, "minimum_ticks_between_notes": t.note_interval,
-            "note": "Frozen peer-access ablations at every checkpoint. Each style has its own demonstration-trained baseline. Hours are a resumable soft invocation limit, not a completion estimate."}
+            "note": ("Zero task demonstrations; compare pretrained baseline, lineage-private and no-tactic access at each checkpoint. " if t.action_policy == "lm_token" else
+                     "Frozen peer-access ablations at every checkpoint. Each style has its own demonstration-trained baseline. ")+
+                     "Hours are a resumable soft invocation limit, not a completion estimate."}
 
 
 def paired(shared, private):
@@ -72,6 +77,7 @@ def report(root):
             knowledge = read_rows(directory/"knowledge.jsonl")
             evaluations = {r["checkpoint"]: r for r in read_rows(directory/"evaluation.jsonl")}
             private = {r["checkpoint"]: r for r in read_rows(directory/"evaluation_private_corpus.jsonl")}
+            empty = {r["checkpoint"]: r for r in read_rows(directory/"evaluation_without_tactics.jsonl")}
             probes = read_rows(directory/"note_probe.jsonl")
             committed = json.loads((directory/"checkpoint-status.json").read_text()) if (directory/"checkpoint-status.json").exists() else None
             prepared = (0 in evaluations and 0 in private and any(r["checkpoint"] == 0 for r in probes)
@@ -95,12 +101,15 @@ def report(root):
                         "hungry_feed_actions": sum(int(r["hungry_feed_actions"]) for r in e["episodes"])}
                         for c, e in evaluations.items()},
                     "peer_access_benefit": {str(c): paired(e, private[c]) for c, e in evaluations.items() if c in private}}
+            if base.training.note_memory == "tactics":
+                item["tactic_access_benefit"] = {str(c): paired(e, empty[c]) for c, e in evaluations.items() if c in empty}
             last = max(evaluations, default=0)
             if last and 0 in evaluations:
                 # Final may use a larger map bank: compare its common subset only.
                 initial_seeds = {r["map_seed"] for r in evaluations[0]["episodes"]}
                 common_final = {**evaluations[last], "episodes": [r for r in evaluations[last]["episodes"] if r["map_seed"] in initial_seeds]}
-                item["change_from_own_warmstart"] = paired(common_final, evaluations[0])
+                label = "change_from_pretrained_start" if base.training.action_policy == "lm_token" else "change_from_own_warmstart"
+                item[label] = paired(common_final, evaluations[0])
             runs.append(item)
     return {"runs": runs, "prepared": sum(r["prepared"] for r in runs),
             "complete": sum(r["finished"] for r in runs), "total": len(runs),
@@ -111,15 +120,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/corpus-notes.yaml")
     parser.add_argument("--mode", choices=["plan", "smoke", "prepare", "run", "report"], default="plan")
-    parser.add_argument("--style", nargs="+", choices=["grounded", "prose"], default=["grounded", "prose"])
+    parser.add_argument("--style", nargs="+", choices=["grounded", "prose"])
     parser.add_argument("--output")
     parser.add_argument("--hours", type=float, default=12)
     args = parser.parse_args()
-    root = Path(args.output or ("runs/corpus-notes-smoke" if args.mode == "smoke" else "runs/corpus-notes")).resolve()
+    cfg = load_config(args.config)
+    direct = cfg.training.action_policy == "lm_token"
+    args.style = args.style or ["grounded", "prose"]
+    name = "autonomous-llm" if direct else "corpus-notes"
+    root = Path(args.output or (f"runs/{name}-smoke" if args.mode == "smoke" else f"runs/{name}")).resolve()
     if args.mode == "report":
         print(json.dumps(report(root), indent=2))
         return
-    cfg = load_config(args.config)
     if cfg.training.backend != "smollm" or cfg.training.corpus_interface != "notes":
         parser.error("Deployment requires an LLM with the notes interface")
     if list(cfg.profiles) != ["prosocial"] or cfg.methods != ["r_adult"] or cfg.training.corpus_mode != "shared":
@@ -128,7 +140,7 @@ def main():
         parser.error("Hours must be positive and styles unique")
     if args.mode == "smoke":
         t = cfg.training
-        t.decisions, t.warmstart_transitions = 128, 64
+        t.decisions, t.warmstart_transitions = 128, 0 if direct else 64
         t.rollout_ticks, t.social_window, t.sequence_length = 8, 16, 4
         t.checkpoints = [0, 128]
         t.evaluation_maps = t.final_evaluation_maps = 1

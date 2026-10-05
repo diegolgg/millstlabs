@@ -13,6 +13,7 @@ from .config import EnvironmentConfig, TrainingConfig
 from .env import ACTION_NAMES, PopulationEnv
 from .knowledge import TOOL_NAMES, execute_tools, make_corpus, next_observations
 from .notes import publish_notes
+from .tactics import record_experience
 
 app = FastAPI(title="Mill Street Labs Sandbox", version="0.1.0")
 sessions = {}
@@ -40,6 +41,7 @@ class CreateRequest(BaseModel):
     corpus_mode: Literal["off", "private", "shared"] = "off"
     corpus_interface: Literal["tools", "notes"] = "tools"
     note_style: Literal["grounded", "prose"] = "grounded"
+    note_memory: Literal["map_facts", "tactics"] = "map_facts"
 
 
 class StepRequest(BaseModel):
@@ -71,8 +73,11 @@ def create(request: CreateRequest):
         observations, _ = env.reset(seed=request.seed)
         if request.corpus_interface == "notes" and request.corpus_mode == "off":
             raise HTTPException(422, "Notes require corpus_mode private or shared")
+        if request.note_memory == "tactics" and request.corpus_interface != "notes":
+            raise HTTPException(422, "Tactics require corpus_interface notes")
         training = TrainingConfig(corpus_mode=request.corpus_mode, controller_architecture="split",
-                                  corpus_interface=request.corpus_interface, note_style=request.note_style)
+                                  corpus_interface=request.corpus_interface, note_style=request.note_style,
+                                  note_memory=request.note_memory, corpus_tool_cost=0, note_write_penalty=0)
         corpus, observations = make_corpus(training, observations)
         i = str(uuid4())
         sessions[i] = env
@@ -125,6 +130,7 @@ def step(i: str, request: StepRequest):
                 corpus.pending.clear()
             physical = execute_tools(corpus, actions, current, env, training)
             obs, rewards, terminated, truncated, infos = env.step(physical)
+            record_experience(corpus, physical, current, obs, env)
             obs = next_observations(corpus, obs, env.agents)
             if corpus:
                 corpus.events.clear()

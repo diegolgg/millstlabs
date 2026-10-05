@@ -8,17 +8,20 @@ import torch
 from .env import FEED, WATCH, PopulationEnv
 from .knowledge import execute_tools, make_corpus, next_observations
 from .notes import publish_notes
+from .observations import Heuristic
+from .tactics import TacticCorpus, record_experience
 
 
 def calibration_histories(env_cfg, seed=8675309, training=None):
     """Fixed observation histories, independent of train and held-out evaluation maps."""
-    from .observations import Heuristic
     env = PopulationEnv(replace(env_cfg, max_individuals=1000), reproduction=False)
     obs, _ = env.reset(seed=seed)
     corpus = None
     if training is not None:
         corpus, obs = make_corpus(training, obs, "private" if training.corpus_mode != "off" else "off")
     histories = {i: [] for i in env.agents[:4]}
+    if training is not None and training.action_policy == "lm_token":
+        return [[copy.deepcopy(obs[i])] for i in histories]
     helpers = {i: Heuristic(seed + j) for j, i in enumerate(env.agents)}
     for _ in range(8):
         for i in histories:
@@ -31,7 +34,8 @@ def calibration_histories(env_cfg, seed=8675309, training=None):
     return list(histories.values())
 
 
-def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, deliver_messages=None):
+def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, deliver_messages=None,
+             initial_corpus=None, policy_owners=None, without_tactics=False):
     """Same unseen environments, body resets, and action RNG seeds for all conditions."""
     count = train_cfg.final_evaluation_maps if final else train_cfg.evaluation_maps
     rng = np.random.default_rng(train_cfg.evaluation_seed)
@@ -45,11 +49,21 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, delive
         env = PopulationEnv(replace(env_cfg, founders=len(selected), max_individuals=1000), reproduction=False,
                             deliver_messages=delivery)
         observations, _ = env.reset(seed=seed)
+        assignment = dict(zip(env.agents, selected))
+        for i, policy in assignment.items():
+            env.prey[i].lineage = (policy_owners or {}).get(policy, policy)
         corpus, observations = make_corpus(train_cfg, observations)
+        if isinstance(corpus, TacticCorpus):
+            owners = {i: p.lineage for i, p in env.prey.items()}
+            if initial_corpus is not None:
+                corpus.restore_memory(initial_corpus, owners, evaluation=True)
+            else:
+                corpus.owners = owners
+            corpus.block_access = without_tactics
+            observations = corpus.augment(observations)
         discovery_curve = [{"tick": 0, "decisions": 0, **corpus.metrics()}] if corpus is not None else []
         discovery_area = 0
         discovery_100_tick = None
-        assignment = dict(zip(env.agents, selected))
         hidden = {i: bank.zero_hidden() for i in env.agents}
         generators = {i: torch.Generator().manual_seed(seed * 100 + j) for j, i in enumerate(env.agents)}
         lifetimes = dict.fromkeys(env.agents, train_cfg.evaluation_horizon)
@@ -72,7 +86,9 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, delive
             decisions += len(actions)
             publish_notes(corpus, writes, observations, bank, env, train_cfg, assignment)
             physical = execute_tools(corpus, actions, observations, env, train_cfg)
+            before = observations
             observations, _, _, _, _ = env.step(physical)
+            record_experience(corpus, physical, before, observations, env)
             observations = next_observations(corpus, observations, env.agents)
             if corpus is not None:
                 corpus.events.clear()
@@ -113,6 +129,7 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, delive
             "policy_temperature": train_cfg.evaluation_temperature, "predator_temperature": env_cfg.predator_temperature,
             "deliver_messages": delivery,
             "corpus_mode": train_cfg.corpus_mode,
+            "tactic_access": "none" if without_tactics else train_cfg.corpus_mode,
             "restricted_mean_lifetime": float(np.mean([r["restricted_mean_lifetime"] for r in rows])),
             "survival_fraction": float(np.mean([r["survival_fraction"] for r in rows]))}
 

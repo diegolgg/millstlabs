@@ -16,13 +16,14 @@ import torch
 import yaml
 
 from .config import EnvironmentConfig, TrainingConfig
-from .env import PopulationEnv
+from .env import ACTION_NAMES, PopulationEnv
 from .evaluation import calibration_histories, evaluate, probe
 from .knowledge import CountNovelty, execute_tools, make_corpus, next_observations, novelty_beta, teacher_tool
 from .notes import publish_notes
 from .observations import Heuristic
 from .policy import PolicyBank, cpu_state
 from .ppo import Transition, update
+from .tactics import TacticCorpus, record_experience
 
 
 def save_atomic(path, payload):
@@ -49,7 +50,7 @@ def warmstart(cfg, seed, path):
     corpus, obs = make_corpus(cfg.training, obs, warm_mode)
     bank = PolicyBank(cfg.training, next(iter(obs.values())))
     bank.add("warm")
-    helpers = {i: Heuristic(seed + j) for j, i in enumerate(env.agents)}
+    helpers = {i: Heuristic(seed + j) for j, i in enumerate(env.agents)} if cfg.training.warmstart_transitions else {}
     hidden = {i: bank.zero_hidden() for i in env.agents}
     buffers = defaultdict(list)
     decisions, trial = 0, 0
@@ -153,7 +154,7 @@ class Trainer:
             raise ValueError("Warm-start controller architecture differs")
         if cfg.training.split_controller:
             for field in ["separate_critic", "value_scale", "intrinsic_critic", "corpus_slots",
-                          "corpus_interface", "actor_grounding", "note_style"]:
+                          "corpus_interface", "actor_grounding", "note_style", "action_policy", "note_memory"]:
                 if getattr(prior, field) != getattr(cfg.training, field):
                     raise ValueError(f"Warm-start architecture mismatch: {field}")
         if (prior.corpus_mode == "off") != (cfg.training.corpus_mode == "off"):
@@ -181,12 +182,17 @@ class Trainer:
                 self.bank.add(i, self.initial)
                 self.hidden[i] = self.bank.zero_hidden()
                 self.env.prey[i].lineage = f"trial0:{i}"
+            if isinstance(self.corpus, TacticCorpus):
+                self.corpus.owners = {i: p.lineage for i, p in self.env.prey.items()}
         (self.output / "config.yaml").write_text(yaml.safe_dump(asdict(cfg), sort_keys=False))
         self.log("manifest", {"config_digest": cfg.digest(), "profile": profile, "method": method, "seed": seed,
                                "python": platform.python_version(), "torch": torch.__version__,
                                "dependencies": {p: importlib.metadata.version(p) for p in ["numpy", "pettingzoo", "transformers", "peft"]},
                                "warmstart_sha256": self.warmstart_sha256,
                                "device": str(self.bank.device), "resolved_revision": self.bank.resolved_revision,
+                               "action_policy": cfg.training.action_policy,
+                               "demonstrations": warm["transitions"],
+                               "knowledge_energy_cost": cfg.training.corpus_tool_cost,
                                "resumed": bool(resume)})
         if not resume:
             self.checkpoint()  # Recovery exists even if the initial evaluation is interrupted.
@@ -305,12 +311,16 @@ class Trainer:
         self.trial += 1
         self.restarts += 1
         self.obs, _ = self.env.reset(seed=self.seed + self.trial * 1009)
+        previous_corpus = self.corpus
         self.corpus, self.obs = make_corpus(self.cfg.training, self.obs)
         for i, archived in zip(self.env.agents, self.archive):
             self.bank.add(i, archived["state"])
             self.hidden[i] = self.bank.zero_hidden()
             self.env.prey[i].lineage = archived["lineage"]
             self.env.prey[i].generation = archived["generation"]
+        if isinstance(self.corpus, TacticCorpus):
+            self.corpus.restore_memory(previous_corpus, {i: p.lineage for i, p in self.env.prey.items()})
+            self.obs = self.corpus.augment(self.obs)
         self.log("recovery", {"restored_death_serials": [a["serial"] for a in self.archive]})
 
     def step(self):
@@ -336,7 +346,9 @@ class Trainer:
         prior_metadata = {i: {"lineage": p.lineage, "generation": p.generation} for i, p in self.env.prey.items()}
         publication_rewards = publish_notes(self.corpus, writes, self.obs, self.bank, self.env, self.cfg.training)
         physical = execute_tools(self.corpus, actions, self.obs, self.env, self.cfg.training)
+        before = self.obs
         self.obs, _, terms, _, infos = self.env.step(physical)
+        record_experience(self.corpus, physical, before, self.obs, self.env)
         self.obs = next_observations(self.corpus, self.obs, self.env.agents)
         self.decisions += len(actions)
         self.world_ticks += 1
@@ -354,8 +366,15 @@ class Trainer:
                 self.log("note_decisions", {"id": i, "tick": self.env.tick-1,
                     "position": record[0]["self"][2:4].tolist(), "energy": float(record[0]["self"][0]),
                     "action": actions[i], "action_probability": float(np.exp(record[3])),
+                    "action_word": ACTION_NAMES[actions[i] % 7], "action_policy": self.cfg.training.action_policy,
                     "note_ids": [n["id"] for n in record[0]["notes"]],
                     "publication": writes[i], "publication_reward": publication_rewards.get(i, 0.)})
+                if self.cfg.training.action_policy == "lm_token" and (self.world_ticks <= 2 or writes[i] == 1 or self.world_ticks % 64 == 0):
+                    from .language_policy import bounded_prompt
+                    self.log("llm_decisions", {"id": i, "tick": self.env.tick-1,
+                        "prompt": bounded_prompt(self.bank.tokenizer, record[0], self.cfg.training.max_tokens),
+                        "output": ACTION_NAMES[actions[i]], "probability": float(np.exp(record[3])),
+                        "publication": writes[i]})
             if i in self.newborn_tracking:
                 self.newborn_tracking[i]["ticks_before_first_update"] += 1
             if terms[i]:
@@ -400,7 +419,8 @@ class Trainer:
             self._recover()
 
     def assess(self, threshold, final=False):
-        metrics = evaluate(self.bank, self.env.agents, self.cfg.environment, self.cfg.training, threshold, final)
+        memory = {"initial_corpus": self.corpus, "policy_owners": {i: p.lineage for i, p in self.env.prey.items()}}
+        metrics = evaluate(self.bank, self.env.agents, self.cfg.environment, self.cfg.training, threshold, final, **memory)
         self.evaluation_decisions += sum(r["decisions"] for r in metrics["episodes"])
         metrics["population"] = len(self.env.agents)
         metrics["ages"] = [p.age for p in self.env.prey.values()]
@@ -419,9 +439,14 @@ class Trainer:
                 assays.append(("predator_evaluation", replace(self.cfg.environment, predator_temperature=temperature),
                                t, True, None))
         for kind, environment, training, last, delivery in assays:
-            assay = evaluate(self.bank, self.env.agents, environment, training, threshold, last, delivery)
+            assay = evaluate(self.bank, self.env.agents, environment, training, threshold, last, delivery, **memory)
             self.evaluation_decisions += sum(r["decisions"] for r in assay["episodes"])
             self.log(kind, assay)
+        if isinstance(self.corpus, TacticCorpus):
+            assay = evaluate(self.bank, self.env.agents, self.cfg.environment, t, threshold, final,
+                             without_tactics=True, **memory)
+            self.evaluation_decisions += sum(r["decisions"] for r in assay["episodes"])
+            self.log("evaluation_without_tactics", assay)
         self.log("probes", {"checkpoint": threshold, "probabilities": probe(self.bank, self.env.agents, self.histories)})
         if t.corpus_interface == "notes":
             from .note_probe import probe_notes

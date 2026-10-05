@@ -7,6 +7,7 @@ import torch
 from torch import nn
 from torch.distributions import Bernoulli, Categorical
 
+from .language_policy import LanguageCritic, bounded_prompt, single_token_ids
 from .observations import observation_text, vector_observation
 from .structured import StructuredController
 from .structured import features as structured_features
@@ -81,6 +82,12 @@ class PolicyBank:
             self.base = get_peft_model(base, self.lora_config, adapter_name="template").to(self.device)
             self.base.eval()  # deterministic dropout; eval() still permits gradients
             self.template = self._adapter_state("template")
+            if cfg.action_policy == "lm_token":
+                from .env import ACTION_NAMES
+                if not self.base.config.tie_word_embeddings:
+                    raise ValueError("Direct local LM policy requires tied input/output embeddings")
+                self.action_token_ids = single_token_ids(self.tokenizer, ACTION_NAMES)
+                self.publication_token_ids = single_token_ids(self.tokenizer, ["no", "yes"])
 
     def _activate(self, i):
         if self.cfg.backend == "smollm":
@@ -109,9 +116,10 @@ class PolicyBank:
             nn.init.zeros_(self.adapters[i][1].weight)
         elif self.cfg.backend == "smollm":
             self.base.add_adapter(i, copy.deepcopy(self.lora_config))
-        self.controllers[i] = (StructuredController(self.width+self.ground_width, self.cfg, self.message_symbols, self.critic_width,
+        self.controllers[i] = (LanguageCritic(self.critic_width, self.cfg) if self.cfg.action_policy == "lm_token" else
+                              (StructuredController(self.width+self.ground_width, self.cfg, self.message_symbols, self.critic_width,
                                                     language=self.cfg.backend == "smollm")
-                               if self.cfg.split_controller else Controller(self.width)).to(self.device)
+                               if self.cfg.split_controller else Controller(self.width))).to(self.device)
         if state:
             self.load_state(i, state)
         elif self.cfg.backend == "smollm":
@@ -155,7 +163,7 @@ class PolicyBank:
             self.base.set_adapter("template")
             self.base.delete_adapter(i)
 
-    def encode(self, i, observations):
+    def encode(self, i, observations, purpose="action"):
         self._activate(i)
         self.encoder_forwards += len(observations)
         if self.cfg.backend == "structured":
@@ -167,8 +175,10 @@ class PolicyBank:
             result = features + self.adapters[i](features)
             self.gpu_end(start)
             return result
-        text = [observation_text(o) for o in observations]
-        enc = self.tokenizer(text, padding=True, truncation=True, max_length=self.cfg.max_tokens, return_tensors="pt")
+        text = ([bounded_prompt(self.tokenizer, o, self.cfg.max_tokens, purpose) for o in observations]
+                if self.cfg.action_policy == "lm_token" else [observation_text(o) for o in observations])
+        enc = self.tokenizer(text, padding=True, truncation=True, max_length=self.cfg.max_tokens, return_tensors="pt",
+                             **({"add_special_tokens": False} if self.cfg.action_policy == "lm_token" else {}))
         self.tokens += int(enc["attention_mask"].sum())
         # A max-length sequence may be exactly full, so this is a conservative counter.
         self.truncated_observations += int((enc["attention_mask"].sum(-1) >= self.cfg.max_tokens).sum())
@@ -194,6 +204,8 @@ class PolicyBank:
             self.cuda_events.append((start, end))
 
     def sequence(self, i, observations, hidden, temperature=1.0):
+        if self.cfg.action_policy == "lm_token":
+            return self.language_sequence(i, observations, hidden, temperature)
         features = self.encode(i, observations)
         if self.cfg.actor_grounding:
             ground = torch.as_tensor(np.stack([self.physical_features(o) for o in observations]), device=self.device)
@@ -211,6 +223,29 @@ class PolicyBank:
             if self.cfg.corpus_interface == "notes":
                 row += (Bernoulli(logits=self.controllers[i].publication(hidden[:, :64]).squeeze(-1)),)
             output.append(row)
+        return output, hidden
+
+    def language_sequence(self, i, observations, hidden, temperature=1.0):
+        features = self.encode(i, observations)
+        weight = self.base.get_input_embeddings().weight
+        logits = features.to(weight.dtype) @ weight[self.action_token_ids].T
+        opportunities = [j for j, obs in enumerate(observations) if obs.get("note_opportunity", False)]
+        publication = {}
+        if opportunities:
+            h = self.encode(i, [observations[j] for j in opportunities], purpose="publication")
+            scores = h.to(weight.dtype) @ weight[self.publication_token_ids].T
+            publication = {j: scores[k:k+1, 1]-scores[k:k+1, 0] for k, j in enumerate(opportunities)}
+        critic_inputs = torch.as_tensor(np.stack([structured_features(o) for o in observations]), device=self.device)
+        output = []
+        for j, obs in enumerate(observations):
+            temp = temperature[j] if isinstance(temperature, (list, tuple)) else temperature
+            mask = torch.as_tensor(obs["action_mask"], device=self.device).bool().unsqueeze(0)
+            row = logits[j:j+1].float().clone()
+            row[:, 5] += self.controllers[i].watch_bias
+            dist = Categorical(logits=(row/temp).masked_fill(~mask, -1e9))
+            vp, vs, hidden = self.controllers[i].value_step(critic_inputs[j:j+1], hidden)
+            write = Bernoulli(logits=publication.get(j, torch.zeros(1, device=self.device)))
+            output.append((dist, vp, vs, write))
         return output, hidden
 
     @torch.no_grad()
@@ -255,7 +290,20 @@ class PolicyBank:
         prompt = self.tokenizer.apply_chat_template([
             {"role": "system", "content": "Write one short useful note to another animal in a survival game. Preserve the observed coordinates, quantities and tick. Food stock is an amount now, not units per day. Do not infer trends, stability or hidden mechanics. Use only the supplied observations."},
             {"role": "user", "content": evidence}], tokenize=False, add_generation_prompt=True)
-        ids = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=384)["input_ids"].to(self.device)
+        return self.generate_frozen_text(prompt, 384)
+
+    @torch.no_grad()
+    def describe_tactic(self, i, experience):
+        import json
+        prompt = self.tokenizer.apply_chat_template([
+            {"role": "system", "content": "Write a short tentative tactic for other animals playing the same survival game. Infer only from your own action outcomes below. Situation means [low energy, feeding legal, predator visible]. Food distance means [before, after] distance to a known station, not a promise of available food. Birth can consume energy. Say when the tactic might help and what remains uncertain. Do not invent outcomes. Do not include map coordinates; the next map may differ."},
+            {"role": "user", "content": json.dumps(experience, separators=(",", ":"))}],
+            tokenize=False, add_generation_prompt=True)
+        return self.generate_frozen_text(prompt, 768)
+
+    @torch.no_grad()
+    def generate_frozen_text(self, prompt, cap):
+        ids = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=cap)["input_ids"].to(self.device)
         self.tokens += ids.numel()
         generated, past = [], None
         started = time.perf_counter()
@@ -294,17 +342,22 @@ class PolicyBank:
     @torch.no_grad()
     def inherit(self, child, source, histories, generator):
         self.add(child, source)
+        if self.cfg.mutation_rms == 0 and self.cfg.mutation_watch_std == 0:
+            return {"mutation_kl": 0., "mutation_scale": 0.}
         base_state = self.state(child)
         parent_probs = self.probabilities(child, histories)
         controller = self.controllers[child]
-        weight = controller.action.weight
-        noise = torch.randn(weight.shape, generator=generator) * self.cfg.mutation_rms * float(weight.square().mean().sqrt())
+        weight = (self._adapter_parameters(child)[1] if self.cfg.action_policy == "lm_token" else controller.action.weight)
+        rms = float(weight.square().mean().sqrt())
+        if self.cfg.action_policy == "lm_token":
+            rms = max(rms, 1e-3)
+        noise = torch.randn(weight.shape, generator=generator) * self.cfg.mutation_rms * rms
         watch_noise = float(torch.randn((), generator=generator)) * self.cfg.mutation_watch_std
         accepted = 0.0
         scale = 1.0
         for _ in range(20):
             self.load_state(child, base_state)
-            controller.action.weight.add_(noise.to(self.device) * scale)
+            weight.add_(noise.to(self.device) * scale)
             controller.watch_bias.add_(watch_noise * scale)
             child_probs = self.probabilities(child, histories)
             kl = (parent_probs * (parent_probs.clamp_min(1e-12).log() - child_probs.clamp_min(1e-12).log())).sum(-1).mean()

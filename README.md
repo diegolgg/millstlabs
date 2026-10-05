@@ -6,7 +6,16 @@ This is an experimental platform. The included smoke runs and heuristic pilot ve
 
 ## Run locally
 
-**Current predator–prey corpus experiment:** [optional grounded and free-form LLM notes](docs/corpus-notes.md), automatic retrieval, seven physical actions, private LoRA learning, and frozen peer-access ablations. One cooperative R-adult condition; two note styles; 32,768 decisions each.
+**Current predator–prey experiment:** [direct LLM actions without demonstrations](docs/autonomous-llm.md), persistent tentative tactics, and zero energy cost for knowledge reads/writes. One cooperative R-adult condition; two note styles × 8,192 training decisions; shared/private/no-tactic evaluation.
+
+```bash
+bash scripts/autonomous.sh --mode plan
+bash scripts/autonomous.sh --mode smoke
+caffeinate -i bash scripts/autonomous.sh --mode run --hours 12
+bash scripts/autonomous.sh --mode report
+```
+
+**Earlier corpus experiment:** [optional grounded and free-form LLM notes](docs/corpus-notes.md) with demonstration initialization and a learned action head. Its checkpoints and commands remain available:
 
 ```bash
 bash scripts/corpus_notes.sh --mode plan

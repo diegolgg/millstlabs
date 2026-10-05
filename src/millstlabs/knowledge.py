@@ -182,8 +182,12 @@ def make_corpus(training, observations, mode=None):
     if mode == "off":
         return None, observations
     if training.corpus_interface == "notes":
-        from .notes import NoteCorpus
-        corpus = NoteCorpus(mode, training)
+        if training.note_memory == "tactics":
+            from .tactics import TacticCorpus
+            corpus = TacticCorpus(mode, training)
+        else:
+            from .notes import NoteCorpus
+            corpus = NoteCorpus(mode, training)
     else:
         corpus = KnowledgeCorpus(mode, training.corpus_slots, training.corpus_food_ttl)
     corpus.observe(observations, initial=True)

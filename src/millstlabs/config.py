@@ -122,6 +122,8 @@ class TrainingConfig:
     note_write_penalty: float = 0.01
     actor_grounding: bool = False
     feed_retention: float = 0.0
+    action_policy: str = "controller"
+    note_memory: str = "map_facts"
 
     @property
     def split_controller(self):
@@ -178,6 +180,17 @@ class ExperimentConfig:
         if t.corpus_interface == "notes":
             assert t.corpus_mode != "off" and t.split_controller
             assert t.note_style != "prose" or t.backend == "smollm"
+        assert t.action_policy in {"controller", "lm_token"}
+        assert t.note_memory in {"map_facts", "tactics"}
+        if t.action_policy == "lm_token":
+            assert t.backend == "smollm" and t.controller_architecture == "split" and t.separate_critic
+            assert t.warmstart_transitions == 0 and t.feed_retention == 0
+            assert not t.actor_grounding and not t.intrinsic_critic
+            assert t.corpus_interface == "notes" and self.environment.message_symbols == 1
+            assert t.max_tokens >= 512
+            assert t.corpus_tool_cost == 0 and t.note_write_penalty == 0
+        if t.note_memory == "tactics":
+            assert t.corpus_interface == "notes" and t.corpus_tool_cost == 0
 
     def digest(self):
         # Default extensions do not invalidate already-running v1 checkpoints.
@@ -190,7 +203,7 @@ class ExperimentConfig:
                          "controller_architecture", "corpus_mode", "corpus_slots", "corpus_food_ttl", "corpus_tool_cost",
                          "intrinsic_critic", "novelty_beta_start", "novelty_beta_end", "novelty_decay_decisions", "predator_curriculum",
                          "corpus_interface", "note_style", "note_interval", "note_max_tokens", "note_credit",
-                         "note_write_penalty", "actor_grounding", "feed_retention"],
+                         "note_write_penalty", "actor_grounding", "feed_retention", "action_policy", "note_memory"],
         }
         for section, names in extensions.items():
             defaults = EnvironmentConfig() if section == "environment" else TrainingConfig()
