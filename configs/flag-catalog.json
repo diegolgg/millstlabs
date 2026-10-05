@@ -1,0 +1,264 @@
+{
+  "provenance": "Explicit reconstruction, NOT the authors' exact 28-country catalog.",
+  "limitations": [
+    "Country membership is a reconstruction choice.",
+    "Colors/stripe ratios are simplified.",
+    "Do not compare absolute scores with the paper as a reproduction."
+  ],
+  "paper_reference": "https://arxiv.org/abs/2609.19124",
+  "flags": [
+    {
+      "country": "Armenia",
+      "orientation": "horizontal",
+      "colors": [
+        "#D51021",
+        "#0033A0",
+        "#EF7D00"
+      ]
+    },
+    {
+      "country": "Austria",
+      "orientation": "horizontal",
+      "colors": [
+        "#D51021",
+        "#FFFFFF",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Belgium",
+      "orientation": "vertical",
+      "colors": [
+        "#000000",
+        "#F7D417",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Bulgaria",
+      "orientation": "horizontal",
+      "colors": [
+        "#FFFFFF",
+        "#00843D",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Colombia",
+      "orientation": "horizontal",
+      "colors": [
+        "#F7D417",
+        "#F7D417",
+        "#0033A0",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Cote d'Ivoire",
+      "orientation": "vertical",
+      "colors": [
+        "#EF7D00",
+        "#FFFFFF",
+        "#00843D"
+      ]
+    },
+    {
+      "country": "Estonia",
+      "orientation": "horizontal",
+      "colors": [
+        "#0033A0",
+        "#000000",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "country": "France",
+      "orientation": "vertical",
+      "colors": [
+        "#0033A0",
+        "#FFFFFF",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Gabon",
+      "orientation": "horizontal",
+      "colors": [
+        "#00843D",
+        "#F7D417",
+        "#0033A0"
+      ]
+    },
+    {
+      "country": "Germany",
+      "orientation": "horizontal",
+      "colors": [
+        "#000000",
+        "#D51021",
+        "#F7D417"
+      ]
+    },
+    {
+      "country": "Guinea",
+      "orientation": "vertical",
+      "colors": [
+        "#D51021",
+        "#F7D417",
+        "#00843D"
+      ]
+    },
+    {
+      "country": "Hungary",
+      "orientation": "horizontal",
+      "colors": [
+        "#D51021",
+        "#FFFFFF",
+        "#00843D"
+      ]
+    },
+    {
+      "country": "Indonesia",
+      "orientation": "horizontal",
+      "colors": [
+        "#D51021",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "country": "Ireland",
+      "orientation": "vertical",
+      "colors": [
+        "#00843D",
+        "#FFFFFF",
+        "#EF7D00"
+      ]
+    },
+    {
+      "country": "Italy",
+      "orientation": "vertical",
+      "colors": [
+        "#00843D",
+        "#FFFFFF",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Lithuania",
+      "orientation": "horizontal",
+      "colors": [
+        "#F7D417",
+        "#00843D",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Netherlands",
+      "orientation": "horizontal",
+      "colors": [
+        "#D51021",
+        "#FFFFFF",
+        "#0033A0"
+      ]
+    },
+    {
+      "country": "Nigeria",
+      "orientation": "vertical",
+      "colors": [
+        "#00843D",
+        "#FFFFFF",
+        "#00843D"
+      ]
+    },
+    {
+      "country": "Peru",
+      "orientation": "vertical",
+      "colors": [
+        "#D51021",
+        "#FFFFFF",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Poland",
+      "orientation": "horizontal",
+      "colors": [
+        "#FFFFFF",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Romania",
+      "orientation": "vertical",
+      "colors": [
+        "#0033A0",
+        "#F7D417",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Russia",
+      "orientation": "horizontal",
+      "colors": [
+        "#FFFFFF",
+        "#0033A0",
+        "#D51021"
+      ]
+    },
+    {
+      "country": "Ukraine",
+      "orientation": "horizontal",
+      "colors": [
+        "#0033A0",
+        "#F7D417"
+      ]
+    },
+    {
+      "country": "Yemen",
+      "orientation": "horizontal",
+      "colors": [
+        "#D51021",
+        "#FFFFFF",
+        "#000000"
+      ]
+    },
+    {
+      "country": "Bahamas",
+      "orientation": "horizontal",
+      "colors": [
+        "#60B8E8",
+        "#F7D417",
+        "#60B8E8"
+      ],
+      "triangle": "#000000"
+    },
+    {
+      "country": "Czech Republic",
+      "orientation": "horizontal",
+      "colors": [
+        "#FFFFFF",
+        "#D51021"
+      ],
+      "triangle": "#0033A0"
+    },
+    {
+      "country": "Sudan",
+      "orientation": "horizontal",
+      "colors": [
+        "#D51021",
+        "#FFFFFF",
+        "#000000"
+      ],
+      "triangle": "#00843D"
+    },
+    {
+      "country": "Palestine",
+      "orientation": "horizontal",
+      "colors": [
+        "#000000",
+        "#FFFFFF",
+        "#00843D"
+      ],
+      "triangle": "#D51021"
+    }
+  ]
+}

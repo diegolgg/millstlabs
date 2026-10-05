@@ -6,6 +6,16 @@ This is an experimental platform. The included smoke runs and heuristic pilot ve
 
 ## Run locally
 
+**Flag Game extension:** [frozen GPT-4o vision agents with a local RL corpus controller](docs/flag-game.md). It includes a reconstructed paper baseline, private/shared controls, cached API calls and a cumulative spending guard. The authors' exact flag assets and trial settings are not fully specified, so absolute paper-score reproduction is not claimed.
+
+```bash
+bash scripts/flag_game.sh --mode plan --size pilot
+# After configuring OPENAI_API_KEY locally:
+bash scripts/flag_game.sh --mode smoke --max-usd 2
+```
+
+See the [Flag Game notebook](notebooks/flag_game.ipynb). Real API execution requires a key and explicit `--max-usd`; `--backend mock` is only an offline wiring test.
+
 **Communal knowledge experiment:** [explicit LLM deposit/retrieval tools and a matched private-memory control](docs/discovery.md), with optional exploration guidance, discovery-rate evaluation and a frozen-policy access ablation:
 
 ```bash

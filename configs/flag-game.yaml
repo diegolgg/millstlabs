@@ -1,0 +1,8 @@
+# Protocol reconstruction: unresolved paper details are recorded in each manifest.
+model: gpt-4o-2024-08-06
+population: 8
+interaction_rounds: 10
+train_trials: 64
+evaluation_trials: 60
+backend: openai
+catalog: configs/flag-catalog.json

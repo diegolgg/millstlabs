@@ -1,0 +1,69 @@
+{
+  "validation_date": "2026-10-05",
+  "scope": "Offline engineering validation only; no evidence of GPT performance or learned task improvement.",
+  "actual_openai_requests": 0,
+  "test_suite": {
+    "passed": 60,
+    "failed": 0,
+    "existing_warnings": 2,
+    "flag_game_tests": 11
+  },
+  "static_checks": {
+    "ruff": "passed",
+    "git_diff_check": "passed",
+    "notebook_format_and_all_cells_run_false": "passed"
+  },
+  "mock_cli": {
+    "command": "bash scripts/flag_game.sh --mode smoke --backend mock --output runs/flag-game-mock-checked",
+    "finished": true,
+    "completed_jobs": 14,
+    "total_jobs": 14,
+    "logical_queries": 336,
+    "model_versions": [
+      "mock-not-an-llm"
+    ],
+    "cost_usd": 0.0,
+    "optimizer_steps": {
+      "private_rl": 16,
+      "shared_rl": 16
+    },
+    "mean_evaluation_peer_records": {
+      "paper_reference": 0.0,
+      "private_frozen": 0.0,
+      "shared_frozen": 10.0,
+      "private_rl": 0.0,
+      "shared_rl": 10.0,
+      "shared_rl_private_access": 0.0
+    }
+  },
+  "covered_behaviors": [
+    "Explicit deposit and retrieval, forged-fact rejection, private access isolation and fresh trial namespace",
+    "Synchronous reads before writes and legal masks that reveal no unread peer deposits",
+    "Deterministic matched assignments, metadata-free crop PNGs and hidden crop coordinates",
+    "Disjoint training and evaluation evidence, invalid answer scoring and consensus rules",
+    "Mocked HTTP request schema, response parsing, cache reuse and cumulative spending guard",
+    "Missing-key handling, uncertain-call reservation and explicitly authorized retry semantics",
+    "Bounded transcript, matched query opportunities, independent PPO updates and frozen evaluation weights",
+    "Resume equality and rollback of PPO updates when writing a completed trial fails",
+    "Frozen configuration binding and full-run query upper bound"
+  ],
+  "config_digest": "0fb5ff56dfc68e2bebae86a2cf8402c44510c750d379b8f974e85949c14606ae",
+  "catalog_digest": "ada65087f6a6a070e166bdb0ff9f2236555627074414faef23fbf4da6e57bc88",
+  "trials_digest": "0058534f03e784e8aa550e6b1d21c3cfbf0ce483f77602af09d768a06721aed2",
+  "implementation_digest": "b2fee0e8ff22c9096ecfd8da83ed3cd2d020c4dda105ed52f746c731dd7b87d3",
+  "exact_paper_reproduction": false,
+  "reproduction_gaps": [
+    "The paper does not enumerate its 28-country catalog or provide the original trial assignments.",
+    "The exact GPT-4o snapshot is unspecified; this runner pins gpt-4o-2024-08-06.",
+    "The numeric kappa and general probe cadence are unspecified. We choose 10 rounds, N directed exchanges per round, then one probe per agent.",
+    "Crop positions are sampled uniformly at integer pixel offsets; the paper does not fully specify this distribution.",
+    "Speaker and listener are distinct in this reconstruction; self-contact handling is unspecified for the empirical protocol.",
+    "Invalid-response repair and tie handling are unspecified. We score invalid answers incorrect, do not retry them, and use lexical country order for ties.",
+    "The public demo differs from Appendix D (including image detail and token cap); its defaults are not substituted for the PDF settings."
+  ],
+  "pending_validation": [
+    "Live GPT authentication/model access and response behavior",
+    "Real request latency and spend",
+    "Held-out corpus benefit and RL improvement"
+  ]
+}
