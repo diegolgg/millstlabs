@@ -133,8 +133,25 @@ class CostLedger:
                 f.write(json.dumps(row, sort_keys=True) + "\n")
         return row
 
+    def record_refusal(self, req: Request, reason: str, budget_left: float) -> dict[str, Any]:
+        """A call the budget refused: logged with zero usage and the reason, so overspend attempts are auditable.
+        `refused` rows carry no spend and are skipped by the usage totals."""
+        row = {
+            "run": req.meta.get("run"), "group": req.meta.get("group"), "agent": req.meta.get("agent"),
+            "generation": req.meta.get("generation"), "tag": req.tag, "model": req.model, "backend": None,
+            "input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0,
+            "spend_usd": 0.0, "new_spend_usd": 0.0, "cached": False, "batch": False, "request_key": "",
+            "refused": True, "refusal_reason": reason, "budget_left": budget_left,
+        }
+        self.rows.append(row)
+        if self.path:
+            with open(self.path, "a") as f:
+                f.write(json.dumps(row, sort_keys=True) + "\n")
+        return row
+
     def totals(self, by: str | None = None) -> dict[str, Any]:
-        def agg(rows):
+        def agg(all_rows):
+            rows = [r for r in all_rows if not r.get("refused")]  # refusals are not calls and carry no usage
             return {
                 "calls": len(rows),
                 "input_tokens": sum(r["input_tokens"] for r in rows),

@@ -105,7 +105,8 @@ def _teach(ctx: RunContext, g: int) -> list[TeachingMessage]:
         text = A.teach(ctx, sender, receivers, art, ev, g)
         if text is None:
             continue
-        sender.budget_left -= cost
+        ctx.spend(sender.group, cost)  # teaching cost debits the group's pool (not an LLM call)
+        sender.budget_left = ctx.group_budget.get(sender.group, 0.0)
         sender.bump("teach_events")
         for r in receivers:
             m = TeachingMessage(id=f"g{g}:{s}>{r}", sender=s, receiver=r, generation=g, artifact_id=art.id,

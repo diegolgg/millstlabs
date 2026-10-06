@@ -23,7 +23,7 @@ from ..evaluate.pool import Evaluator
 from ..evaluate.selfplay import first_error, seat_rates, selfplay
 from ..game.hanabi import HanabiParams
 from ..game.seeds import generation_seeds
-from ..llm.backend import CostLedger, Response
+from ..llm.backend import CostLedger, Request, Response, Usage, approx_tokens, cost_usd
 from ..llm.cache import CachedBackend, CallCache
 from ..llm.stub_backend import StubBackend, StubConfig
 from ..org import registry
@@ -68,6 +68,7 @@ class RunContext:
             t = self.pol["topology"]  # islands(G, migration_rate, interval) carries its own migration rule
             self.pol["migration"] = RandomMigration(t.migration_rate, t.interval)
         self.outbox: list[TeachingMessage] = []
+        self.group_budget: dict[str, float] = {g: float("inf") for g in self.pop.groups}
         self.evals: dict[str, Evaluation] = {}
         self.frozen: list[list] = []  # [generation, label, artifact id] snapshots for the ladder
         self.budget_bonus: dict[str, float] = {}
@@ -133,21 +134,57 @@ class RunContext:
         self.evaluator.set_params(params)
 
     # ------------------------------------------------------------------ budget
+    # The budget is a per-generation pool per group (spec section 7: a call debits the agent's share of its group's
+    # budget; when the group's budget runs out, remaining agents skip revise/teach). Reserving the estimated cost of a
+    # call before sending — and refusing if it would overspend — is what stops a group allocated 1.2 calls from
+    # spending 4. The pool is transient (recomputed at each generation start, so resume re-derives it).
     def start_budgets(self, per_group: dict[str, float] | None) -> None:
-        for a in self.agents.values():
-            if per_group is None:
-                a.budget_left = float("inf")
-            else:
-                size = len(self.pop.members[a.group])
-                a.budget_left = per_group[a.group] / size + self.budget_bonus.pop(a.id, 0.0)
+        if per_group is None:  # unbudgeted (warm start, probe): bonuses are kept for the next budgeted generation
+            self.group_budget = {g: float("inf") for g in self.pop.groups}
+        else:
+            self.group_budget = {g: float(per_group.get(g, 0.0)) for g in self.pop.groups}
+            for aid, bonus in list(self.budget_bonus.items()):  # fold earned credit-share bonus into the group's pool
+                g = self.agents[aid].group if aid in self.agents else None
+                if g in self.group_budget:
+                    self.group_budget[g] += bonus
+            self.budget_bonus = {}
+        for a in self.agents.values():  # per-agent mirror, for logs and the checkpoint
+            a.budget_left = self.group_budget.get(a.group, 0.0)
 
-    def can_spend(self, agent: AgentState) -> bool:
-        return agent.budget_left > 0
+    def estimate_cost(self, req: Request) -> float:
+        """Upper bound on what one call will cost in the budget's unit, reserved before the call is sent."""
+        unit = self.cfg.budget.unit
+        if unit == "calls":
+            return 1.0
+        new_tokens = approx_tokens(req.prompt_text()) + req.max_tokens  # input estimate + the full output allowance
+        if unit == "tokens":
+            return float(new_tokens)
+        return float(cost_usd(req.model, Usage(input_tokens=approx_tokens(req.prompt_text()),
+                                               output_tokens=req.max_tokens)) or 0.0)
+
+    def reserve(self, agent: AgentState, req: Request) -> tuple[bool, str]:
+        """Can the agent's group afford this call? Returns (ok, reason-if-refused). Does not debit (charge does)."""
+        est = self.estimate_cost(req)
+        left = self.group_budget.get(agent.group, 0.0)
+        if est > left:
+            return False, f"estimated {self.cfg.budget.unit} cost {est:g} > group budget left {left:g}"
+        return True, ""
+
+    def log_refusal(self, agent: AgentState, req: Request, reason: str) -> None:
+        agent.bump("refused_for_budget")
+        self.ledger.record_refusal(req, reason, self.group_budget.get(agent.group, 0.0))
 
     def charge(self, agent: AgentState, resp: Response, extra: float = 0.0) -> None:
+        self.spend(agent.group, self._amount(resp) + extra)
+        agent.budget_left = self.group_budget.get(agent.group, 0.0)
+
+    def _amount(self, resp: Response) -> float:
         unit = self.cfg.budget.unit
-        amount = 1.0 if unit == "calls" else float(resp.usage.total) if unit == "tokens" else float(resp.cost_usd or 0.0)
-        agent.budget_left -= amount + extra
+        return 1.0 if unit == "calls" else float(resp.usage.total) if unit == "tokens" else float(resp.cost_usd or 0.0)
+
+    def spend(self, group: str, amount: float) -> None:
+        """Debit the group's pool directly (teaching cost, which is not an LLM call)."""
+        self.group_budget[group] = self.group_budget.get(group, 0.0) - amount
 
     # ------------------------------------------------------------------ judge (engine-time measurements for org/)
     def selfplay(self, aid: str, seeds: list[int]) -> tuple[float, float]:

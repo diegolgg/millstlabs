@@ -27,15 +27,18 @@ def system_blocks(ctx: "RunContext") -> list[dict]:
 
 
 def call(ctx: "RunContext", agent: AgentState, tag_: str, user: str, generation: int, attempt: int = 0) -> Response | None:
-    """One budgeted LLM call. Returns None when the agent's budget for this generation is exhausted."""
-    if not ctx.can_spend(agent):
-        agent.bump("skipped_for_budget")
-        return None
+    """One budgeted LLM call. Returns None when the agent's group cannot afford the call (the estimated cost is
+    reserved before sending, so a group never overspends its per-generation budget); the refusal is logged."""
     cfg = ctx.cfg.llm
     req = Request(system=system_blocks(ctx), messages=[{"role": "user", "content": user}], model=cfg.model,
                   tag=tag_, seed_tag=f"{ctx.seed_prefix}/{agent.id}/g{generation}/{tag_}/{attempt}",
                   max_tokens=cfg.max_tokens, effort=cfg.effort,
                   meta={"run": ctx.run_id, "group": agent.group, "agent": agent.id, "generation": generation})
+    ok, reason = ctx.reserve(agent, req)
+    if not ok:
+        agent.bump("skipped_for_budget")
+        ctx.log_refusal(agent, req, reason)
+        return None
     resp = ctx.backend.complete(req)
     ctx.charge(agent, resp)
     agent.bump(f"calls_{tag_}")
