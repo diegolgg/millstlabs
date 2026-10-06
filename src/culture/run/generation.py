@@ -177,7 +177,8 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
     offers: dict[str, list[Offer]] = {a: [] for a in ctx.agents}
     read: dict[str, list[TeachingMessage]] = {a: [] for a in ctx.agents}
     adopted: dict[str, set[str]] = {a: set() for a in ctx.agents}
-    counts = {"delivered": 0, "verified": 0, "passed": 0, "adopted": 0, "merged": 0, "rejected": 0, "reverted": 0}
+    counts = {"delivered": 0, "undelivered": 0, "verified": 0, "passed": 0, "adopted": 0, "merged": 0, "rejected": 0,
+              "reverted": 0, "rechecked": 0}
     for m in inbox:
         if m.receiver not in ctx.agents:
             continue
@@ -185,6 +186,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
         offer = Offer(m.id, m.sender, m.delivered, False, m.artifact_id)
         offers[rcv.id].append(offer)
         if not m.delivered:
+            counts["undelivered"] += 1
             m.decision = "undelivered"
             ctx.log("messages", m.to_dict())
             continue
@@ -204,7 +206,9 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
         if decision == "adopt":
             rcv.previous, rcv.incumbent = rcv.incumbent, m.artifact_id
             if vpol.adopt_first:
-                rcv.pending_check = {"since": g, "previous": rcv.previous, "message": m.id}
+                prior = rcv.pending_check if rcv.pending_check and rcv.pending_check["since"] == g else None
+                rcv.pending_check = {"since": g, "previous": prior["previous"] if prior else rcv.previous,
+                                     "message": m.id}
             m.decision = "adopted"
         elif decision == "merge":
             mine, theirs = ctx.store.get(rcv.incumbent), ctx.store.get(m.artifact_id)
@@ -273,6 +277,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
         pc = ag.pending_check
         if pc and pc["since"] == g and hasattr(vpol, "recheck"):
             res = vpol.recheck(ag.incumbent, pc["previous"], ctx, vseeds, illegal_max)
+            counts["rechecked"] += 1
             if not res["keep"]:
                 ag.incumbent = pc["previous"]
                 counts["reverted"] += 1
@@ -306,7 +311,8 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
     moves = P["migration"].migrate(ctx.pop, ctx.agents, g, ctx.rng(g, "migration"))
     for a, _, dst in moves:
         ctx.agents[a].group = dst
-    extra_rec = {"teaching": counts | {"sent": len(sent)}, "credit_increments": increments,
+    extra_rec = {"teaching": counts | {"sent": len(sent)}, "credit_increments": increments, "allocation": alloc,
+                 "parents": {a: p for a, (_, p) in sorted(candidates.items())},
                  "credit_windows": credit_notes, "migrations": moves,
                  "accepted": accepted, "windows": [{"student": w.student, "before": w.before, "after": w.after,
                                                     "offers": [o.__dict__ for o in w.offers]} for w in windows]}
@@ -403,6 +409,7 @@ def _finish(ctx: RunContext, g: int, t0: float, extra: dict[str, Any], candidate
         "agents": {a: {"group": ag.group, "incumbent": ag.incumbent, "score": round(ag.score, 4),
                        "anchor_score": round(ag.anchor_score, 4), "credit": round(ag.credit, 4),
                        "candidate": candidates.get(a, (None,))[0],
+                       "parent": candidates[a][1] if a in candidates else None,
                        "candidate_score": (round(ctx.evals[candidates[a][0]].selfplay_mean, 4) if a in candidates else None),
                        "illegal_rate": ctx.evals[ag.incumbent].illegal_rate, "lines": ctx.evals[ag.incumbent].lines,
                        "start": starts.get(a)}

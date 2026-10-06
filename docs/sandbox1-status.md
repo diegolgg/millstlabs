@@ -77,6 +77,35 @@ Paired deltas (final student artifacts, game-level differences on the identical 
 
 Also added: `tests/test_experiment.py` (conditions share deals and warm starts; population seeds differ; curves and paired deltas compute). Tests: **82 passed** (78 + 3 smoke-learning + 1 experiment).
 
+## Phase 4: remaining section-8 mechanisms (done)
+
+Each mechanism is a small pluggable class selected by config. Each has unit tests on synthetic data with known answers (`tests/test_org_phase4.py`) and a 20-generation stub dry run (3 groups of 4) whose check confirms the mechanism actually acted (`scripts/phase4_dryruns.py` → `docs/results/phase4-dryruns.json`, all 11 checks pass).
+
+| mechanism | class (config name) | known-answer unit test | dry-run check (20 gens) |
+|---|---|---|---|
+| islands with migration | `Islands` topology (`islands`, migration_rate, interval) + `RandomMigration` (`random`) | swaps conserve agents and every group's size over 40 gens | migrations at gens 5, 10, 15, 20; 24 moves; sizes constant |
+| best-to-neighbor migration | `BestToNeighbor` | each group's best moves one step round the ring | 30 moves, sizes constant |
+| Bernoulli delivery | `Bernoulli` (`bernoulli`, p) | rate within 0.015 of p over 10,000 draws (phase 1) | delivered 365 of 720 = 0.507 |
+| critical social learning | `CriticalSocialLearning` (theta, n) | adopts with 0 games; reverts if below theta or below the pre-adoption artifact | 662 provisional adoptions, 240 rechecks, 116 reverts |
+| lineage-decay credit | `LineageDecay` (gamma) | direct teacher full share, grand-teacher gamma × share on a synthetic DAG | 72 credit events to non-direct teachers |
+| datamodel-regression credit | `DatamodelRegression` (lam, window) | 5 planted teachers (+3, 0, +1, 0, −2 per message) recovered within 0.15 under Bernoulli(0.5) delivery | 20 refits, 12 teachers in the last fit |
+| softmax_floor allocation | `SoftmaxFloor` (T, eps, by) | sums to budget, floor eps/G respected | sums and floor hold every generation; uneven in 18 of 20 |
+| nash_relative allocation | `NashRelative` (eps) | max-entropy Nash averaging: rock-paper-scissors gives uniform, a dominant group takes the mass, **a cloned group splits rather than doubles its share** (softmax rewards the clone) | sums and floor hold; dominant group gets 15.6 of 18 |
+| shinka_weighted selection | `ShinkaWeighted` (lam, cap) | weights equal sigmoid(lam (s − median)/MAD) / (1 + children); sampling frequencies match within 0.03 | 227 revisions from a non-incumbent parent |
+| hgm_clade_ts selection | `HGMCladeTS` (alpha, tau) | clade success/failure counts, Thompson sampling prefers the productive clade, UCB-Air widening threshold at the right step | 31 revisions, 209 agent-steps skipped by widening |
+| variant switch | `VariantSwitch` (at_generation, variant) | rules change exactly at the switch; non-HLE fields rejected | hand size 5 → 4 (with 6 clue tokens) at gen 10; anchors and stub bots keep playing (pop. mean 15.9 → 15.5) |
+
+The phase-1 options `merge_llm` adoption and `costly` teaching cost now also have an end-to-end loop test (a Random receiver merges Piers through one merge call).
+
+Design notes and deviations:
+- `datamodel_regression`'s parameter is `lam` (`lambda` is a Python keyword). Its regressors are teacher indicators pooled over students and generations, with a ridge fit refit each generation over a `window` of generations. Credit is beta_T × (messages from T delivered in the window). It is intent-to-treat: the receiver's adoption decision is part of the effect.
+- `nash_relative` is implemented as **Nash averaging** (Balduzzi et al. 2018), with share = eps/G + (1 − eps) × the max-entropy Nash mixture of the group-vs-group meta-game. The meta-game payoff is the mean sign of the paired per-deal score difference between group-best artifacts. The spec names the rule but not its formula, so this is my reading, chosen because it is the cloning-robust rule that queue item 8 tests. **With eps = 0.2 it starves non-dominant groups** (each got 1.2 of 18 calls and skipped 160 calls in 20 generations). For real runs a larger eps or a temperature is probably needed.
+- `hgm_clade_ts` maps HGM's "evaluate instead of expand" branch to skipping the LLM revision (re-evaluation is free here). With alpha = 0.6, counting one step per agent per generation, this is very conservative: about 13% of agent-steps made a revision. Under matched budget that may be the point; under matched generations it starves search. **Open question below.**
+- `islands` uses its own `migration_rate`/`interval` through `random` migration when `migration` is left at `none`. Migration swaps agents so group sizes stay fixed.
+- Critical social learning keeps the pre-generation incumbent as the revert target when several messages are adopted in one generation, and rechecks after the agent's revision in the same generation.
+
+Tests: **94 passed** (82 + 12 in `test_org_phase4.py`).
+
 ## Deviations from the spec
 
 1. **Observation JSON adds `possible`** (`{"colors": [...], "ranks": [...]}`) to every card, own and partner's. It is HLE's plausibility set, which includes negative information. HLE gives it to every agent and Canaan's agents depend on it. Without it the adapter loses information the raw engine provides, and trajectories cannot match. Partner cards also carry `hints`/`possible` (what the partner knows).
@@ -110,4 +139,6 @@ None in phase 1.
 
 1. The spec file `files/sandbox-architecture.md` is untracked on `enrico`. I left it alone. Commit it?
 2. Phase 3 defines the student as the agent with the lower generation-0 score and uses `best_to_all` routing for the transfer conditions (the better agent sends to the worse one). Is that the setting you want for the Jha et al. comparison, or should the teacher be fixed (for example, a stronger tier)? A fixed teacher needs a role-based routing the spec does not name.
-3. Memory caps for bot workers do not work on macOS. Is CPU plus wall timeouts enough for now, or should bots run under a container on Linux for long runs?
+3. HGM widening with alpha = 0.6 lets about 1 in 8 agent-steps revise. Should agent-steps count once per group-generation instead (much more expansion), or is the conservative reading what you want for matched-budget comparisons?
+4. `nash_relative` is implemented as max-entropy Nash averaging. Is that the rule you meant? If yes, what floor (eps) do you want so non-dominant groups are not starved?
+5. Memory caps for bot workers do not work on macOS. Is CPU plus wall timeouts enough for now, or should bots run under a container on Linux for long runs?

@@ -1,0 +1,142 @@
+{
+ "scope": "Stub backend dry runs (20 generations after warm start, 3 groups of 4); each check shows the mechanism acted. Not evidence about any mechanism's effect on learning.",
+ "runs": {
+  "islands": {
+   "migrating_generations": [
+    5,
+    10,
+    15,
+    20
+   ],
+   "moves": 24,
+   "agents_constant": true,
+   "group_sizes_constant": true,
+   "ok": true
+  },
+  "best_to_neighbor": {
+   "migrating_generations": [
+    4,
+    8,
+    12,
+    16,
+    20
+   ],
+   "moves": 30,
+   "agents_constant": true,
+   "group_sizes_constant": true,
+   "ok": true
+  },
+  "bernoulli": {
+   "delivered": 365,
+   "undelivered": 355,
+   "rate": 0.5069444444444444,
+   "ok": true
+  },
+  "critical_social_learning": {
+   "adopted_first": 662,
+   "rechecked": 240,
+   "reverted": 116,
+   "ok": true
+  },
+  "lineage_decay": {
+   "indirect_credit_events": 72,
+   "ok": true
+  },
+  "datamodel_regression": {
+   "fits": 20,
+   "teachers_in_last_fit": 12,
+   "last_beta_sample": {
+    "g0a0": -0.4831,
+    "g0a1": -0.1012,
+    "g0a2": 0.2781,
+    "g0a3": 0.2933
+   },
+   "ok": true
+  },
+  "softmax_floor": {
+   "allocations": 20,
+   "sums_to_budget": true,
+   "floor_respected": true,
+   "uneven_generations": 18,
+   "budget_skips": 44,
+   "last": {
+    "g0": 6.398630693885089,
+    "g1": 6.145090483136057,
+    "g2": 5.456278822978853
+   },
+   "ok": true
+  },
+  "nash_relative": {
+   "allocations": 20,
+   "sums_to_budget": true,
+   "floor_respected": true,
+   "uneven_generations": 20,
+   "budget_skips": 160,
+   "last": {
+    "g0": 15.599999711989547,
+    "g1": 1.2,
+    "g2": 1.200000288010453
+   },
+   "ok": true
+  },
+  "shinka_weighted": {
+   "revisions_from_non_incumbent_parent": 227,
+   "ok": true
+  },
+  "hgm_clade_ts": {
+   "revisions_per_generation": [
+    0,
+    0,
+    6,
+    0,
+    3,
+    0,
+    9,
+    0,
+    0,
+    0,
+    0,
+    6,
+    0,
+    2,
+    0,
+    4,
+    0,
+    1,
+    0,
+    0
+   ],
+   "skipped_steps": 209,
+   "ok": true
+  },
+  "variant_switch": {
+   "hand_size_by_generation": [
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "population_mean_before": 15.906666666666666,
+   "population_mean_after": 15.539999999999997,
+   "ok": true
+  }
+ },
+ "all_ok": true
+}

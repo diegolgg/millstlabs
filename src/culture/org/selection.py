@@ -63,4 +63,119 @@ class KeepBestK(Selection):
             del arch[self.k:]
 
 
-REGISTRY = {"keep_best_k": KeepBestK}
+class ShinkaWeighted(Selection):
+    """ShinkaEvolve's weighted parent rule over the group archive: s_i = sigmoid(lambda (score_i - median) / MAD),
+    h_i = 1 / (1 + children_i), p_i proportional to s_i h_i (lambda = 10). Every evaluated child enters the archive
+    and becomes the agent's incumbent (no hill-climbing gate); the archive is capped at `cap` by score."""
+
+    def __init__(self, lam: float = 10.0, cap: int = 50):
+        super().__init__()
+        self.lam, self.cap = lam, cap
+
+    def prune(self, group):
+        arch = self.archive[group]
+        if len(arch) > self.cap:
+            arch.sort(key=lambda e: (e["score"], e["generation"]), reverse=True)
+            del arch[self.cap:]
+
+    def weights(self, group: str) -> list[tuple[str, float]]:
+        import math
+        import statistics
+
+        arch = self.archive.get(group, [])
+        if not arch:
+            return []
+        sc = [e["score"] for e in arch]
+        med = statistics.median(sc)
+        mad = statistics.median([abs(x - med) for x in sc]) or 1.0
+        out = []
+        for e in arch:
+            z = max(-50.0, min(50.0, self.lam * (e["score"] - med) / mad))
+            out.append((e["id"], (1 / (1 + math.exp(-z))) / (1 + e["children"])))
+        return out
+
+    def choose_parent(self, agent, rng):
+        w = self.weights(agent.group)
+        if not w:
+            return agent.incumbent
+        tot = sum(x for _, x in w)
+        r, acc = rng.random() * tot, 0.0
+        for aid, x in w:
+            acc += x
+            if r <= acc:
+                return aid
+        return w[-1][0]
+
+    def accept(self, candidate_score, incumbent_score):
+        return True
+
+
+class HGMCladeTS(Selection):
+    """Huxley-Godel Machine parent rule. Each group keeps a tree of artifacts; a node succeeds if it scored above its
+    parent when evaluated. Clade metaproductivity uses success/failure counts over the node's whole subtree,
+    CMP = nC_s / (nC_s + nC_f); the parent is chosen by Thompson sampling Beta(tau(1 + nC_s), tau(1 + nC_f)).
+    UCB-Air widening: an agent expands (makes an LLM revision) only if n^alpha >= |T|, where n counts the group's
+    agent-steps and |T| its tree size; otherwise it spends the step re-evaluating (free in this harness), i.e. it skips
+    the LLM call. Revisions always join the tree; the agent's incumbent becomes the child (judged by descendants)."""
+
+    def __init__(self, alpha: float = 0.6, tau: float = 1.0):
+        super().__init__()
+        self.alpha, self.tau = alpha, tau
+        self.tree: dict[str, dict[str, dict]] = {}  # group -> id -> {parent, score, ok}
+        self.steps: dict[str, int] = {}
+
+    def record(self, group, aid, score, parent, generation):
+        t = self.tree.setdefault(group, {})
+        if aid in t:
+            t[aid]["score"] = score
+            return
+        ok = parent in t and score > t[parent]["score"]
+        t[aid] = {"parent": parent if parent in t else None, "score": score, "ok": bool(ok) if parent in t else None}
+
+    def clade_counts(self, group: str, aid: str) -> tuple[int, int]:
+        t = self.tree.get(group, {})
+        kids: dict[str, list[str]] = {}
+        for k, v in t.items():
+            if v["parent"]:
+                kids.setdefault(v["parent"], []).append(k)
+        s = f = 0
+        stack = list(kids.get(aid, []))
+        while stack:
+            k = stack.pop()
+            if t[k]["ok"]:
+                s += 1
+            elif t[k]["ok"] is False:
+                f += 1
+            stack += kids.get(k, [])
+        return s, f
+
+    def wants_revision(self, agent, rng):
+        g = agent.group
+        self.steps[g] = self.steps.get(g, 0) + 1
+        return self.steps[g] ** self.alpha >= len(self.tree.get(g, {}))
+
+    def choose_parent(self, agent, rng):
+        t = self.tree.get(agent.group, {})
+        if not t:
+            return agent.incumbent
+        best, best_draw = None, -1.0
+        for aid in sorted(t):
+            s, f = self.clade_counts(agent.group, aid)
+            draw = rng.betavariate(self.tau * (1 + s), self.tau * (1 + f))
+            if draw > best_draw:
+                best, best_draw = aid, draw
+        return best
+
+    def accept(self, candidate_score, incumbent_score):
+        return True
+
+    def state_dict(self):
+        return {"archive": self.archive, "tree": self.tree, "steps": self.steps}
+
+    def load_state_dict(self, state):
+        super().load_state_dict(state)
+        self.tree = {g: {k: dict(v) for k, v in t.items()} for g, t in state.get("tree", {}).items()}
+        self.steps = dict(state.get("steps", {}))
+
+
+REGISTRY = {"keep_best_k": KeepBestK, "shinka_weighted": ShinkaWeighted, "hgm_clade_ts": HGMCladeTS}

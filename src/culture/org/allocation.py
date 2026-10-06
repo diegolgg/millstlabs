@@ -52,7 +52,53 @@ class SoftmaxFloor(Allocation):
         return {g: total * (self.eps / G + (1 - self.eps) * ei / z) for g, ei in zip(groups, e)}
 
 
-REGISTRY = {"uniform": Uniform, "proportional": Proportional, "softmax_floor": SoftmaxFloor}
+def maxent_nash(A, iters: int = 400):
+    """Maximum-entropy Nash equilibrium of the symmetric zero-sum game with antisymmetric payoff A (Balduzzi et al.
+    2018, Nash averaging). Value is 0; we maximize entropy subject to (p^T A)_j >= 0 for every column j."""
+    import numpy as np
+    from scipy.optimize import linprog, minimize
+
+    A = np.asarray(A, float)
+    n = A.shape[0]
+    # a feasible Nash point first (LP), then the max-entropy point inside the equilibrium polytope
+    res = linprog(np.zeros(n), A_ub=-A.T, b_ub=np.zeros(n), A_eq=np.ones((1, n)), b_eq=[1.0], bounds=[(0, 1)] * n)
+    p0 = res.x if res.success else np.full(n, 1.0 / n)
+    cons = [{"type": "eq", "fun": lambda p: p.sum() - 1.0}, {"type": "ineq", "fun": lambda p: A.T @ p + 1e-9}]
+    obj = lambda p: float(np.sum(p * np.log(np.clip(p, 1e-12, None))))  # noqa: E731 (negative entropy)
+    out = minimize(obj, np.clip(p0, 1e-6, None) / np.clip(p0, 1e-6, None).sum(), method="SLSQP",
+                   bounds=[(0, 1)] * n, constraints=cons, options={"maxiter": iters, "ftol": 1e-12})
+    p = out.x if out.success else p0
+    p = np.clip(p, 0, None)
+    return p / p.sum()
+
+
+class NashRelative(Allocation):
+    """Nash averaging over groups. The meta-game payoff A[i, j] is the mean over this generation's shared deals of
+    sign(score_i - score_j) for the groups' best artifacts (antisymmetric). Budget share = eps/G + (1 - eps) * p_i
+    with p the maximum-entropy Nash mixture. A cloned group duplicates a row/column of A; max-entropy splits the
+    original's mass between the copies, so cloning does not buy budget (the property queue item 8 tests)."""
+
+    def __init__(self, eps: float = 0.1):
+        if not 0 <= eps <= 1:
+            raise ValueError("eps must be in [0, 1]")
+        self.eps = eps
+
+    def allocate(self, groups, stats, total):
+        import numpy as np
+
+        scores = [np.asarray(stats[g].get("scores", [stats[g].get("score", 0.0)]), float) for g in groups]
+        m = min(len(x) for x in scores)
+        G = len(groups)
+        A = np.zeros((G, G))
+        for i in range(G):
+            for j in range(G):
+                A[i, j] = float(np.mean(np.sign(scores[i][:m] - scores[j][:m]))) if m else 0.0
+        p = maxent_nash(A)
+        return {g: total * (self.eps / G + (1 - self.eps) * float(pi)) for g, pi in zip(groups, p)}
+
+
+REGISTRY = {"uniform": Uniform, "proportional": Proportional, "softmax_floor": SoftmaxFloor,
+            "nash_relative": NashRelative}
 
 
 class TeachingCost(Policy):
