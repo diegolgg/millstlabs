@@ -59,6 +59,24 @@ Fixes made during this phase:
 
 Phase 1 already contained the two resume-identity fixes found while writing the runner tests: evaluation dicts are built in sorted order, so prompts are identical before and after a JSON checkpoint; and artifact logging is decided from the truncated log, not from the store.
 
+## Phase 3: queue item 1 on the stub backend, and the learning smoke test (done)
+
+**Experiment** (`configs/stage1_transfer.yaml`, `scripts/run_experiment.py`, `src/culture/run/experiment.py`, `src/culture/analysis/transfer.py`, `notebooks/01_transfer.ipynb`): 2 agents in one group, warm start plus 10 generations, 3 population seeds, experiment seed 11 shared by every run. Conditions: `solo` (no routing); `transfer_unverified` (`best_to_all` routing, verification `none`, so blind adoption); `transfer_verified` (`best_to_all`, `selfplay(n=100)` verification, `replace_if_better`). The **student** is the agent with the lower generation-0 score. Pairing checks pass: warm starts identical across conditions (content hashes), same student in every condition of a seed, and final evaluations on identical deals.
+
+Stub results, for pipeline validation only (agents are perturbed anchor rule lists; no sabotage in this experiment):
+
+| condition | final student IQM over seeds | per seed | cumulative tokens |
+|---|---|---|---|
+| solo | 6.91 | 4.95, 0.24, 15.53 | 169,297 |
+| transfer_unverified | 16.19 | 15.29, 15.20, 18.09 | 196,584 |
+| transfer_verified | 13.47 | 14.98, 7.74, 17.68 | 189,813 |
+
+Paired deltas (final student artifacts, game-level differences on the identical final deals, 300 games, bootstrap stratified by population seed): verified minus solo **+6.56** [6.17, 6.96]; unverified minus solo **+9.29** [8.91, 9.68]; verified minus unverified **−2.73** [−2.96, −2.48]. These intervals are conditional on these three populations. The per-seed means (verified minus unverified: −0.31, −7.46, −0.41) show that the between-population spread dominates. One seed (p1) drives the gap, and it comes from a single lucky stub mutation in the unverified run at generation 6 (8.4 → 15.5), not from verification: both conditions adopted the teacher's artifact at generation 1. With 3 seeds the two transfer conditions cannot be separated. Transfer conditions spent 12 to 16% more tokens (teach calls). In a stub world without bad payloads, verification can only cost (false rejections), so this figure is not a test of the hypothesis.
+
+**Learning smoke test** (`tests/test_smoke_learning.py`, through the real generation loop, LLM revision off): oracle teacher g0a0 holds Piers; student g0a2 holds Random; in the sabotage cases a second sender g0a1 holds Flawed, whose message is processed after the oracle's. All three claims hold: verification on, the student adopts Piers and scores 17 ± 1 on 100 games; verification off with sabotage, it adopts Piers then Flawed and drops to 0.0; verification on with sabotage, it adopts Piers and rejects Flawed. Paired-delta credit for the oracle is above 15. Deviation: the spec's "student drops to 0" needs a student that holds something better than 0 first, hence the two-sender design (oracle first, saboteur second) in one generation.
+
+Also added: `tests/test_experiment.py` (conditions share deals and warm starts; population seeds differ; curves and paired deltas compute). Tests: **82 passed** (78 + 3 smoke-learning + 1 experiment).
+
 ## Deviations from the spec
 
 1. **Observation JSON adds `possible`** (`{"colors": [...], "ranks": [...]}`) to every card, own and partner's. It is HLE's plausibility set, which includes negative information. HLE gives it to every agent and Canaan's agents depend on it. Without it the adapter loses information the raw engine provides, and trajectories cannot match. Partner cards also carry `hints`/`possible` (what the partner knows).
@@ -91,4 +109,5 @@ None in phase 1.
 ## Open questions for Enrico
 
 1. The spec file `files/sandbox-architecture.md` is untracked on `enrico`. I left it alone. Commit it?
-2. Memory caps for bot workers do not work on macOS. Is CPU plus wall timeouts enough for now, or should bots run under a container on Linux for long runs?
+2. Phase 3 defines the student as the agent with the lower generation-0 score and uses `best_to_all` routing for the transfer conditions (the better agent sends to the worse one). Is that the setting you want for the Jha et al. comparison, or should the teacher be fixed (for example, a stronger tier)? A fixed teacher needs a role-based routing the spec does not name.
+3. Memory caps for bot workers do not work on macOS. Is CPU plus wall timeouts enough for now, or should bots run under a container on Linux for long runs?
