@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "culture"
+version = "0.1.0"
+description = "Sandbox 1: organized LLM populations on Hanabi (Mill Street Labs, enrico branch)"
+requires-python = ">=3.11,<3.12"
+dependencies = ["numpy", "scipy", "pyyaml", "matplotlib"]
+
+[project.optional-dependencies]
+dev = ["pytest", "nbformat", "nbclient", "ipykernel"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+culture = ["llm/prompts/*.md", "bots/anchors/canaan/*.py", "bots/anchors/canaan/LICENSE", "bots/anchors/canaan/NOTICE.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = ["slow: takes more than ~20 seconds"]

@@ -1,1 +1,8 @@
 enrico/
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+runs/
+.ipynb_checkpoints/
+.DS_Store

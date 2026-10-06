@@ -1,0 +1,8 @@
+# Tiny end-to-end configuration used by tests and quick checks (stub backend, in-process evaluation).
+name: smoke
+population: {groups: 2, agents_per_group: 2, seed: 0}
+evaluation: {selfplay_games: 16, crossplay_games: 8, anchor_games: 8, between_group_games: 8, ladder_every: 2, ladder_games: 4, workers: 0}
+org:
+  routing: broadcast_group
+  verification: {name: selfplay, n: 16}
+runner: {generations: 3}

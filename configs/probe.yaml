@@ -1,0 +1,7 @@
+# Probe (spec 13-14): two independent agents (two groups of one, isolated, no routing), author + one revision.
+name: probe
+population: {groups: 2, agents_per_group: 1, seed: 0}
+evaluation: {selfplay_games: 200, crossplay_games: 0, anchor_games: 100, between_group_games: 200, ladder_every: 0, workers: 8}
+org: {routing: none, verification: none, credit: none}
+runner: {generations: 2}
+thresholds: {headroom_max_selfplay: 20.0, null_alive_ratio: 0.8}
