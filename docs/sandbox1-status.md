@@ -2,6 +2,19 @@ Scope: offline engineering validation only, on the stub LLM backend. Zero API ca
 
 # Sandbox 1 build status (enrico branch)
 
+## At a glance
+
+| phase | commit | result |
+|---|---|---|
+| 1 build steps 1 to 6 | `eb20fab` | HLE from source; Piers 16.993 / IGGI 15.863 / Flawed 0 over 1,000 games through the adapter, identical trajectories to raw HLE; full loop, stub LLM, probe notebook; 76 tests |
+| 2 dry run | `060fda2` | 200 generations × 12 agents; SIGKILL mid-generation 101, resume byte-identical; per-generation record about 12 KB; analysis notebook; 78 tests |
+| 3 queue item 1 | `ce56131` | solo vs transfer (unverified / verified), 3 seeds, paired; figure and paired deltas; learning smoke test passes all three claims; 82 tests |
+| 4 mechanisms | `f867e26` | 11 mechanisms, unit tests with known answers, 20-generation dry-run checks all pass; 94 tests |
+| 5 analysis toolkit | `e478c6c` | HC + empirical null, DCMM, IF-PCA recover planted answers; applied to dry-run logs; 103 tests |
+| 6 baselines, export | this commit | OpenEvolve runs on our Game with the stub LLM; hanab.live export round trip exact on 100 games; 111 tests |
+
+How to reproduce: `scripts/setup_env.sh`, then `.venv/bin/python -m pytest -q`. Runs: `python -m culture.run --config configs/<x>.yaml --out runs/<x>`, `scripts/run_experiment.py`, `scripts/kill_resume_check.py`, `scripts/phase4_dryruns.py`, `scripts/bench_engine.py`, `scripts/build_notebooks.py probe|transfer|analysis_p5`. Run outputs live in `runs/` (git-ignored).
+
 Spec: `files/sandbox-architecture.md` (left untracked, as found). Package: `src/culture/`. Tests: `tests/`. Setup: `scripts/setup_env.sh`.
 
 ## Environment and engine
@@ -34,7 +47,7 @@ What exists, by spec step:
 3. **LLM layer** `llm/backend.py` (Request/Response/Usage, price table for Haiku 4.5 and Sonnet 5, batch and cache multipliers, cost ledger per run/group/agent/generation/tag), `llm/cache.py` (record / replay / replay_strict / off, atomic files), `llm/stub_backend.py`, `llm/parsing.py` (full rewrite or SEARCH/REPLACE diff; full conventions or delta), versioned prompts `llm/prompts/{system,author,revise,teach,ingest,merge,repair}.md` with hashes in the manifest.
 4. **Artifacts** `artifacts/schema.py`, `store.py` (content-addressed store, harness evidence registry, per-group corpus with evidence- and ownership-checked `deposit`, `retrieve` writing the touch log), `provenance.py` (DAG with ancestors, clade, depth, teachers_of, edges).
 5. **Agent step and loop** `agents/agent.py` (budgeted calls, parse, sandbox admission with a smoke game, one repair call, teach, merge, failure traces), `org/` v0 policies, `run/config.py` (dataclasses, YAML, strict validation, digest), `run/context.py`, `run/generation.py` (the only place that orders steps), `run/runner.py` (deployment lock, config freeze, atomic checkpoint with log byte offsets, resume by truncation, wall-clock budget, initial evaluation written once), `run/manifest.py`, CLI `python -m culture.run`.
-6. **Probe** `analysis/probe.py`, `configs/probe.yaml`, `notebooks/00_probe.ipynb` (executed; stub only). Stub probe result: gen-1 self-play 6.5 to 16.9 (headroom gate passes), cost per call measured (stub revise about 8,900 tokens, nominal $0.019 at Haiku prices), **null-alive gate fails**, as expected for the stub (see open questions).
+6. **Probe** `analysis/probe.py`, `configs/probe.yaml`, `notebooks/00_probe.ipynb` (executed; stub only). Stub probe result: gen-1 self-play 6.5 to 16.9 (headroom gate passes), cost per call measured (stub revise about 8,900 tokens, nominal $0.019 at Haiku prices), **null-alive gate fails**, as expected for the stub (see proposals).
 
 Organization policies built in phase 1: topology `isolated`, `full`, `ring`; routing `none`, `broadcast_group`, `best_to_all`, `random_k`; delivery `deterministic`; verification `none`, `selfplay(n)`, `selfplay_crossplay`; adoption `replace_if_better`, `never`, `merge_llm`; credit `none`, `paired_delta`; allocation `uniform`, `proportional`; selection `keep_best_k`; migration `none`; environment `fixed`; teaching cost `free`, `costly(c, credit_share)`. The class files for `bernoulli`, `critical_social_learning`, `softmax_floor` and `islands` were also written while building the modules; their tests and dry runs are phase 4.
 
@@ -118,11 +131,11 @@ Each tool is in `src/culture/analysis/`, tested on synthetic data with a planted
 2. **DCMM on the teaching graph** (`graphs.py`). Mixed-SCORE: K leading eigenvectors, SCORE ratios, vertex hunting (k-means denoising plus successive projection), barycentric memberships with the b1 correction. Outputs: θ (influence), P (community matrix, unit diagonal, off-diagonal = cross-lineage leakage), membership over time with Hungarian alignment across windows, and NMI against the configured groups. Known answers:
    - Planted 600-node DCMM graph, K = 3, 30% mixed nodes: pure-node accuracy above 0.95 (1.0 observed), mean membership L1/2 error below 0.2 (0.11 observed), θ correlation above 0.8 (0.91 observed), and the most-connected pair of lineages shows the most leakage. Absolute leakage is underestimated (0.08 vs 0.15 planted).
    - Planted lineage merge (two lineages that stop being separate halfway): NMI with the original groups drops from above 0.8 to more than 0.4 lower.
+   - Disconnected graphs (isolated groups) break Mixed-SCORE's Perron-vector ratios: θ came out 0 for every node outside one component, and leakage was meaningless. The fit now regularizes (A + τ·d̄/n, τ = 0.25) when the graph has more than one component. Known answer: planted isolated groups give NMI 1.0, every θ above 0.3, leakage below 0.15 (truth 0).
 3. **IF-PCA strategy counting** (`ifpca.py`, `behavior.py`). KS departure-from-normality score per feature, a Monte-Carlo null, the HC threshold for selection, then PCA, with K from the Marchenko-Pastur edge and k-means. The behavioural fingerprint is the move each artifact makes on a fixed probe set of 200 observations from anchor games, plus pairwise action disagreement. Known answers:
    - 3 planted clusters differing in 40 of 2,000 features: K = 3, accuracy 1.0, no uninformative feature selected.
    - With 8,000 features, selection beats PCA on all features.
    - Below the detection regime (shift 1.5 on 30 features) it selected 5 features and estimated K = 2, a limit to keep in mind for small populations.
-   - Disconnected graphs (isolated groups) break Mixed-SCORE's Perron-vector ratios: θ came out 0 for every node outside one component, and leakage was meaningless. The fit now regularizes (A + τ·d̄/n, τ = 0.25) when the graph has more than one component. Known answer: planted isolated groups give NMI 1.0, every θ above 0.3, leakage below 0.15 (truth 0).
 
 Applied to the phase-2 dry-run logs (`notebooks/analysis.ipynb`, stub, isolated topology):
 - HC with the empirical null detects improvement in 23 of 199 generations. With 12 agents per generation power is low, and stub hill climbing mostly yields ties.
@@ -130,6 +143,23 @@ Applied to the phase-2 dry-run logs (`notebooks/analysis.ipynb`, stub, isolated 
 - IF-PCA on the behavioural fingerprints of the 295 distinct incumbents of the last 50 generations (200 probes, 800 binary features) keeps 54 features and counts **K = 6** strategies. Mean pairwise action disagreement is 0.115. On binary features the KS screen degenerates to "keep features on which artifacts disagree", so treat K as indicative.
 
 Tests: **103 passed** (94 + 9 in `test_analysis_phase5.py`).
+
+## Phase 6: OpenEvolve adapter (stub-tested) and the hanab.live round trip (done)
+
+**OpenEvolve adapter** (`src/culture/baselines/openevolve_adapter.py`, OpenEvolve 0.4.0 from PyPI, optional extra `baselines`):
+- `evaluate(program_path)` is OpenEvolve's evaluator contract, implemented with our sandbox and protocol: self-play on a fixed shared seed set, anchor cross-play, and cross-play with a population snapshot fetched out of band from `CULTURE_OE_SNAPSHOT`. Every external loop scores one program in isolation, which is why the snapshot comes in from outside. `combined_score` = self-play mean.
+- `StubOpenEvolveLLM` plugs our stub backend into OpenEvolve through its `init_client` hook, so the whole OpenEvolve loop runs with zero API calls, and every call lands in our cost ledger.
+
+Stub test: 6 OpenEvolve iterations from IGGI made 6 stub calls (46k fake tokens), and each child was scored by our evaluator (0.25, 16.3, 16.2, 0.0, ...). The best stayed IGGI (16.3 on 20 games). Tests check the evaluator contract (Piers about 17, a sandbox violation is `valid = 0`, the snapshot is used) and that the OpenEvolve run completes with ledgered stub calls.
+
+Deviations:
+- The evaluator is passed to OpenEvolve as a file path, not a Python callable. OpenEvolve serializes callables by source text into a temp module for its worker processes; a module path is the robust equivalent.
+- OpenEvolve runs its iterations in worker processes, each with its own stub client and call counter, so two workers can issue an identical (prompt, seed tag) pair and get identical stub answers. Harmless for a stub test; a real backend would make the seed tag include the iteration id.
+- ShinkaEvolve and the generational control are not built (spec: day 2).
+
+**hanab.live round trip** (`tests/test_hanablive.py`): 100 games across four bot pairings (Piers/Piers, IGGI/Piers, Flawed/Flawed, Random/Simple), each exported to hanab.live JSON (format 3.0.0, No Variant), written to disk, reloaded and re-simulated by the independent pure-Python rules in `game/hanablive.py`. Every game gives the same final score and the same number of turns. Further checks: deck has 50 cards with correct copy counts; card targets are deal-order indices; clue targets are player indices; a corrupted replay (a clue to oneself) is rejected. I did not paste an export into the hanab.live website (no browser in this run); the format follows `misc/example_game_with_comments.jsonc` from the Hanabi-Live repository.
+
+Tests: **111 passed** (103 + 6 hanablive + 2 baselines), about 2 minutes on this machine.
 
 ## Deviations from the spec
 
@@ -152,7 +182,7 @@ Tests: **103 passed** (94 + 9 in `test_analysis_phase5.py`).
 
 ## Blockers
 
-None in phase 1.
+None. No phase was blocked for more than 30 minutes on one issue. The longest detours were the CMake 4 incompatibility, the hidden `.pth` files and the resume-identity bugs; all are fixed and described above.
 
 ## Proposals (not built; the spec does not name them)
 
