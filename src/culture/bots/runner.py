@@ -1,18 +1,18 @@
 """Sandboxed execution of LLM-written bot code (spec section 4).
 
-Guards against bugs, not adversaries:
-- source check by AST: imports only from the whitelist, no dunder escapes, no I/O builtins, size cap;
-- exec with a restricted builtins table and an import hook that only admits the whitelist;
+Guards against bugs, not adversaries (the restrictions themselves live in bots/sandbox.py):
+- source check by AST plus a token scan; exec with a restricted builtins table, proxy modules and a private-attribute
+  guard;
 - per-move soft timeout (counted) and hard timeout (SIGALRM, move replaced by the fallback);
-- worker processes (see evaluate/pool.py) add CPU and memory rlimits and a fixed PYTHONHASHSEED.
+- worker processes (see evaluate/pool.py) add CPU and memory rlimits, a fixed PYTHONHASHSEED and a wall-clock watchdog.
 Illegal moves, exceptions and hard timeouts all become the fallback move (discard oldest, else first legal) and count
 towards `illegal_rate`.
 """
 
 from __future__ import annotations
 
-import ast
 import builtins
+import copy
 import hashlib
 import json
 import random
@@ -24,26 +24,8 @@ from typing import Any
 
 from ..game.hanabi import HanabiGame, HanabiParams, IllegalMove, move_key
 from ..game.seeds import bot_seed
-from .interface import ALLOWED_IMPORTS
-
-BANNED_NAMES = {
-    "__import__", "eval", "exec", "compile", "open", "input", "globals", "locals", "vars", "breakpoint",
-    "memoryview", "__builtins__", "exit", "quit", "help", "setattr", "delattr", "__loader__", "__spec__",
-}
-ALLOWED_DUNDERS = {"__init__", "__name__", "__class__", "__eq__", "__hash__", "__lt__", "__repr__", "__str__", "__len__"}
-_SAFE_BUILTIN_NAMES = [
-    "abs", "all", "any", "bool", "dict", "divmod", "enumerate", "filter", "float", "frozenset", "getattr", "hasattr",
-    "hash", "int", "isinstance", "issubclass", "iter", "len", "list", "map", "max", "min", "next", "object", "pow",
-    "print", "range", "repr", "reversed", "round", "set", "slice", "sorted", "str", "sum", "tuple", "zip", "type",
-    "property", "staticmethod", "classmethod", "super", "Exception", "ValueError", "KeyError", "IndexError",
-    "TypeError", "StopIteration", "AttributeError", "ZeroDivisionError", "RuntimeError", "AssertionError",
-    "NotImplementedError", "ArithmeticError", "LookupError", "True", "False", "None", "callable", "chr", "ord",
-    "format", "id", "bin", "hex", "NotImplemented", "Ellipsis",
-]
-
-
-class SourceRejected(ValueError):
-    pass
+from .sandbox import (SandboxViolation, SourceRejected, check_source, compile_sandboxed, complexity,  # noqa: F401
+                      suspicious_tokens)
 
 
 @dataclass(frozen=True)
@@ -56,65 +38,17 @@ class SandboxLimits:
     memory_mb: int = 4096
 
 
-def check_source(code: str, max_lines: int = 400) -> list[str]:
-    """Return a list of violations (empty means the source is admissible)."""
-    problems: list[str] = []
-    n_lines = len(code.splitlines())
-    if n_lines > max_lines:
-        problems.append(f"too long: {n_lines} lines > {max_lines}")
-    try:
-        tree = ast.parse(code)
-    except SyntaxError as e:
-        return problems + [f"syntax error: {e.msg} (line {e.lineno})"]
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for a in node.names:
-                if a.name.split(".")[0] not in ALLOWED_IMPORTS:
-                    problems.append(f"import of {a.name!r} not allowed (line {node.lineno})")
-        elif isinstance(node, ast.ImportFrom):
-            if node.level or (node.module or "").split(".")[0] not in ALLOWED_IMPORTS:
-                problems.append(f"import from {node.module!r} not allowed (line {node.lineno})")
-        elif isinstance(node, ast.Name) and node.id in BANNED_NAMES:
-            problems.append(f"name {node.id!r} not allowed (line {node.lineno})")
-        elif isinstance(node, ast.Attribute) and node.attr.startswith("__") and node.attr not in ALLOWED_DUNDERS:
-            problems.append(f"attribute {node.attr!r} not allowed (line {node.lineno})")
-    if not any(isinstance(n, ast.ClassDef) and n.name == "Bot" for n in tree.body):
-        problems.append("no top-level `class Bot`")
-    return problems
-
-
-def complexity(code: str) -> int:
-    """Logged complexity measure: 1 + number of branch points (if/for/while/try/boolop/comprehension/lambda)."""
-    try:
-        tree = ast.parse(code)
-    except SyntaxError:
-        return -1
-    kinds = (ast.If, ast.For, ast.While, ast.Try, ast.BoolOp, ast.comprehension, ast.Lambda, ast.IfExp)
-    return 1 + sum(isinstance(n, kinds) for n in ast.walk(tree))
-
-
-def _restricted_import(name, globals=None, locals=None, fromlist=(), level=0):
-    if level or name.split(".")[0] not in ALLOWED_IMPORTS:
-        raise ImportError(f"import of {name!r} is not allowed in bot code")
-    return __import__(name, globals, locals, fromlist, level)
-
-
-def _safe_builtins() -> dict[str, Any]:
-    b = {k: getattr(builtins, k) for k in _SAFE_BUILTIN_NAMES if hasattr(builtins, k)}
-    b["__import__"] = _restricted_import
-    b["__build_class__"] = builtins.__build_class__
-    b["__name__"] = "bot"
-    return b
-
-
 def compile_bot(code: str, max_lines: int = 400, trusted: bool = False) -> type:
     """Check and exec bot source; return its `Bot` class. `trusted` skips the checks (anchors only)."""
-    if not trusted:
+    if trusted:
+        code_obj = compile(code, "<bot.py>", "exec", dont_inherit=True)
+        namespace: dict[str, Any] = {"__name__": "bot_module", "__builtins__": builtins}
+    else:
         problems = check_source(code, max_lines)
         if problems:
             raise SourceRejected("; ".join(problems[:5]))
-    namespace: dict[str, Any] = {"__name__": "bot_module", "__builtins__": builtins if trusted else _safe_builtins()}
-    exec(compile(code, "<bot.py>", "exec"), namespace)  # noqa: S102 - the point of the sandbox
+        code_obj, namespace = compile_sandboxed(code)
+    exec(code_obj, namespace)  # noqa: S102 - the point of the sandbox
     cls = namespace.get("Bot")
     if not isinstance(cls, type) or not callable(getattr(cls, "act", None)) or not callable(getattr(cls, "reset", None)):
         raise SourceRejected("`Bot` must be a class with reset() and act()")
@@ -320,7 +254,7 @@ def play_game(params: HanabiParams, specs: list[BotSpec], seed: int, limits: San
     random.seed(seed)  # bots that misuse the module-level RNG still behave deterministically
     seats = [_Seat(s, bot_factory(s, limits), limits) for s in specs]
     for p, seat in enumerate(seats):
-        seat.reset(desc, p, bot_seed(seed, p))
+        seat.reset(copy.deepcopy(desc), p, bot_seed(seed, p))  # own copy: one seat cannot edit the other's rules
     h = hashlib.sha256()
     actions: list | None = [] if record else None
     turns: list | None = [] if trace else None

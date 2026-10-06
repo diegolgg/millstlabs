@@ -21,7 +21,7 @@ ${observation_example}
 - `legal_moves` is the complete list of legal moves; `act` must return one of its elements.
 
 # Sandbox rules
-Pure Python. Imports allowed: ${allowed_imports}. No file, network or process access. All randomness must come from `random.Random(seed)` created in `reset`. A move must take well under ${soft_ms} ms; a move that hangs past ${hard_s} s, raises, or is illegal is replaced by "discard the oldest card" and counts against you. At most ${max_lines} lines.
+Pure Python. Imports allowed: ${allowed_imports}. No file, network or process access. All randomness must come from `random.Random(seed)` created in `reset`. Use only public names: no names or attributes that start with an underscore except on your own objects, no double-underscore names, and no `str.format` templates with attribute fields (use f-strings). The bot sees only its observation. A move must take well under ${soft_ms} ms; a move that hangs past ${hard_s} s, raises, or is illegal is replaced by "discard the oldest card" and counts against you. At most ${max_lines} lines.
 
 # Output format
 Return the full bot as
