@@ -126,22 +126,37 @@ class _BrokenBot:
 
 # ----------------------------------------------------------------------------------------------- timeouts
 class HardTimeout(BaseException):
-    pass
+    """Hard-timeout signal. A BaseException (not an Exception) so a bot's `except Exception` cannot catch it; bare
+    `except:`/`except BaseException` are rejected by the source check, so bot code cannot swallow it either."""
+
+
+# True between an alarm firing and the next re-arm, so a swallowed HardTimeout is still detected after the bot returns.
+_FIRED = [False]
 
 
 def _on_alarm(signum, frame):
+    _FIRED[0] = True
+    # re-arm a short repeating timer: if the exception is somehow swallowed, it fires again within 10 ms, bounding the
+    # overrun to about the hard limit rather than running unbounded.
+    signal.setitimer(signal.ITIMER_REAL, 0.01)
     raise HardTimeout()
 
 
 class _Alarm:
-    """setitimer-based hard timeout; a no-op off the main thread."""
+    """setitimer-based hard timeout; a no-op off the main thread. `fired` reports whether the timer went off (so a
+    swallowed timeout is caught after the bot call returns)."""
 
     def __init__(self, seconds: float):
         self.seconds = seconds
         self.active = threading.current_thread() is threading.main_thread() and seconds > 0
 
+    @property
+    def fired(self) -> bool:
+        return self.active and _FIRED[0]
+
     def __enter__(self):
         if self.active:
+            _FIRED[0] = False
             self._old = signal.signal(signal.SIGALRM, _on_alarm)
             signal.setitimer(signal.ITIMER_REAL, self.seconds)
         return self
@@ -150,6 +165,7 @@ class _Alarm:
         if self.active:
             signal.setitimer(signal.ITIMER_REAL, 0)
             signal.signal(signal.SIGALRM, self._old)
+            _FIRED[0] = False
         return False
 
 
@@ -195,22 +211,28 @@ class _Seat:
             return True, fn(*args)
         t0 = time.perf_counter()
         try:
-            with _Alarm(self.limits.hard_timeout_s):
+            with _Alarm(self.limits.hard_timeout_s) as alarm:
                 out = fn(*args)
+                swallowed = alarm.fired  # the timer went off but the bot returned anyway (it caught HardTimeout)
         except HardTimeout:
-            self.timeouts += 1
-            self._note("hard timeout")
-            if self.timeouts >= self.limits.max_hard_timeouts_per_game:
-                self.disabled = True
-            return False, None
+            return self._on_timeout()
         except BaseException as e:  # noqa: BLE001
             if isinstance(e, KeyboardInterrupt):
                 raise
             self._note(f"{type(e).__name__}: {e}")
             return False, None
+        if swallowed:
+            return self._on_timeout()
         if (time.perf_counter() - t0) * 1000 > self.limits.soft_timeout_ms:
             self.slow += 1
         return True, out
+
+    def _on_timeout(self):
+        self.timeouts += 1
+        self._note("hard timeout")
+        if self.timeouts >= self.limits.max_hard_timeouts_per_game:
+            self.disabled = True
+        return False, None
 
     def _note(self, msg: str):
         if self.error is None:

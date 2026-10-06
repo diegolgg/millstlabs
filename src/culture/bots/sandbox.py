@@ -164,7 +164,17 @@ def _static_problems(tree: ast.AST) -> list[str]:
             for a in node.kwd_attrs:
                 if a.startswith("_") or a in BANNED_ATTRS or a in FORMAT_ATTRS:
                     bad(f"class pattern attribute {a!r} not allowed", node)
+        elif isinstance(node, ast.ExceptHandler):
+            # a bare `except:` or `except BaseException` would swallow the hard-timeout BaseException
+            if node.type is None:
+                bad("bare `except:` is not allowed (it would swallow the hard timeout)", node)
+            elif _names_in(node.type) & {"BaseException", "GeneratorExit"}:
+                bad("`except BaseException` is not allowed (it would swallow the hard timeout)", node)
     return problems
+
+
+def _names_in(node: ast.AST) -> set[str]:
+    return {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
 
 
 def check_source(code: str, max_lines: int = 400) -> list[str]:

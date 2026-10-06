@@ -7,15 +7,26 @@ Workers are spawned with PYTHONHASHSEED=0 (set-iteration order is stable across 
 
 from __future__ import annotations
 
+import math
 import multiprocessing as mp
 import os
+import time
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from dataclasses import asdict
 
 from ..bots.runner import BotSpec, GameResult, SandboxLimits, play_games
 from ..game.hanabi import HanabiParams
 
 RLIMIT_STATUS: dict[str, str] = {}
+
+
+def _broken_results(specs: tuple[BotSpec, ...], seeds: list[int], note: str) -> list[GameResult]:
+    """Results for a chunk the wall-clock watchdog had to abandon: every seat marked broken (one illegal move each)."""
+    n = len(specs)
+    keys = [s.key for s in specs]
+    return [GameResult(seed=sd, score=0, turns=0, seats=keys, moves=[1] * n, illegal=[1] * n, timeouts=[0] * n,
+                       slow=[0] * n, errors=[note] * n, digest="watchdog") for sd in seeds]
 
 
 def _worker_init(limits: SandboxLimits) -> None:
@@ -42,14 +53,18 @@ def _worker_rlimit_status() -> dict:
 
 class Evaluator:
     def __init__(self, params: HanabiParams | None = None, limits: SandboxLimits | None = None, workers: int = 0,
-                 chunk: int = 16):
+                 chunk: int = 16, task_wall_budget_s: float = 600.0):
         self.params = params or HanabiParams()
         self.limits = limits or SandboxLimits()
         self.workers = workers
         self.chunk = chunk
+        # a worker chunk that runs longer than this is abandoned (its games come back broken) and its workers killed,
+        # so one bot that defeats the in-process SIGALRM (e.g. a C-level loop ignoring signals) cannot hang the pool.
+        self.task_wall_budget_s = task_wall_budget_s
         self._memo: dict[tuple, GameResult] = {}
         self._pool: ProcessPoolExecutor | None = None
         self.games_played = 0
+        self.watchdog_trips = 0
 
     # ------------------------------------------------------------------ pool management
     def _get_pool(self) -> ProcessPoolExecutor:
@@ -69,6 +84,43 @@ class Evaluator:
         if self._pool is not None:
             self._pool.shutdown(cancel_futures=True)
             self._pool = None
+
+    def _kill_pool(self) -> None:
+        """Terminate the worker processes and drop the pool (a following run lazily rebuilds a clean one)."""
+        pool, self._pool = self._pool, None
+        if pool is None:
+            return
+        for p in list(getattr(pool, "_processes", {}).values()):
+            try:
+                p.terminate()
+            except Exception:  # noqa: BLE001
+                pass
+        try:
+            pool.shutdown(wait=False, cancel_futures=True)
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _collect(self, tasks: list, futs: list) -> list:
+        """Gather futures under a wall-clock deadline; abandon the pool on overrun, returning broken results."""
+        waves = max(1, math.ceil(len(tasks) / max(self.workers, 1)))
+        deadline = time.monotonic() + self.task_wall_budget_s * waves
+        outs: list = [None] * len(tasks)
+        tripped = False
+        for i, fut in enumerate(futs):
+            if tripped:
+                continue
+            try:
+                outs[i] = fut.result(timeout=max(0.0, deadline - time.monotonic()))
+            except FutureTimeout:
+                tripped = True
+        if tripped:
+            self.watchdog_trips += 1
+            self._kill_pool()
+            note = f"wall-clock watchdog: chunk exceeded {self.task_wall_budget_s:g}s"
+            for i, (specs, seeds) in enumerate(tasks):
+                if outs[i] is None:
+                    outs[i] = _broken_results(tuple(specs), seeds, note)
+        return outs
 
     def clear_memo(self) -> None:
         self._memo.clear()
@@ -99,7 +151,7 @@ class Evaluator:
                 pool = self._get_pool()
                 pd = asdict(self.params)
                 futs = [pool.submit(_run_chunk, pd, specs, seeds, self.limits) for specs, seeds in tasks]
-                outs = [f.result() for f in futs]
+                outs = self._collect(tasks, futs)
             else:
                 outs = [play_games(self.params, list(specs), seeds, self.limits) for specs, seeds in tasks]
             for (specs, seeds), res in zip(tasks, outs):

@@ -32,7 +32,9 @@ def test_series_report_and_figures(tmp_path):
               figures.diversity):
         fig = f(s)
         fig.savefig(tmp_path / f"{f.__name__}.png")
-    assert trajectory_shape(s, threshold=10.0)["first_gen_between_above_threshold"] is not None
+    # threshold the stub trajectory crosses (it peaks near 7; the system prompt now states the sandbox rules, which
+    # rehashed stub requests and lowered this stub curve). The assertion checks trajectory_shape's crossing plumbing.
+    assert trajectory_shape(s, threshold=6.0)["first_gen_between_above_threshold"] is not None
 
 
 def test_changepoints_and_slope_known_answers():
