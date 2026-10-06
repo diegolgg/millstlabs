@@ -46,8 +46,11 @@ def _group_stats(ctx: RunContext) -> dict[str, dict[str, Any]]:
     for gname, members in ctx.pop.members.items():
         scores = [ctx.agents[a].score for a in members] or [0.0]
         incs = {ctx.agents[a].incumbent for a in members}
+        best = max(members, key=lambda a: (ctx.agents[a].score, a)) if members else None
+        ev = ctx.evals.get(ctx.agents[best].incumbent) if best else None
         out[gname] = {"credit": sum(ctx.agents[a].credit for a in members), "score": max(scores),
-                      "mean": float(np.mean(scores)), "size": len(members), "incumbents": incs}
+                      "mean": float(np.mean(scores)), "size": len(members), "incumbents": incs,
+                      "scores": list(ev.selfplay_scores) if ev else []}
     for gname, s in out.items():  # number of groups holding exactly the same artifact set (cloning detection)
         s["clones"] = sum(1 for o in out.values() if o["incumbents"] == s["incumbents"])
     for s in out.values():
@@ -140,8 +143,8 @@ def warm_start(ctx: RunContext) -> dict[str, Any]:
         ctx.pol["selection"].record(ag.group, ag.incumbent, ag.score, None, g)
     _deposit(ctx)
     sent = _teach(ctx, g)
-    return _finish(ctx, g, t0, {"messages_sent": len(sent)}, candidates={}, starts={a: ag.incumbent for a, ag in
-                                                                                       ctx.agents.items()})
+    return _finish(ctx, g, t0, {"teaching": {"sent": len(sent)}}, candidates={},
+                   starts={a: ag.incumbent for a, ag in ctx.agents.items()})
 
 
 # ------------------------------------------------------------------------------------------------ generation g >= 1

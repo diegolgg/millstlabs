@@ -1,0 +1,56 @@
+{
+ "config": "configs/dryrun.yaml",
+ "killed_with": "SIGKILL to the process group",
+ "checkpoint_generation_at_kill": 100,
+ "log_bytes_at_kill": {
+  "generations": 1247510,
+  "ledger": 1058126,
+  "messages": 4174403,
+  "artifacts": 298092
+ },
+ "ref_returncode": 0,
+ "resume_returncode": 0,
+ "identical": true,
+ "digest_ref": {
+  "state": "e04f3b1b33de39f9",
+  "generations": "831eb56a4b1ba9d6",
+  "artifacts": "feecb9a046d20fba",
+  "messages": "714dd898999194c7",
+  "ledger": "cb50546487d57f0d",
+  "touch": "bcb1c864091adc3a",
+  "provenance": "a1b3293647212334",
+  "artifact_files": "ef118315038c2d52"
+ },
+ "digest_resumed": {
+  "state": "e04f3b1b33de39f9",
+  "generations": "831eb56a4b1ba9d6",
+  "artifacts": "feecb9a046d20fba",
+  "messages": "714dd898999194c7",
+  "ledger": "cb50546487d57f0d",
+  "touch": "bcb1c864091adc3a",
+  "provenance": "a1b3293647212334",
+  "artifact_files": "ef118315038c2d52"
+ },
+ "generations": 200,
+ "generation_record_bytes": {
+  "first10_mean": 11931.2,
+  "last10_mean": 12633.9,
+  "max": 13508
+ },
+ "run_dir_bytes": {
+  ".lock": 0,
+  "artifacts": 24901333,
+  "artifacts.jsonl": 605948,
+  "checkpoint.json": 94116,
+  "config.json": 1818,
+  "generations.jsonl": 2503380,
+  "initial_evaluation.json": 743,
+  "ledger.jsonl": 2097888,
+  "llm_cache": 23533038,
+  "manifest.json": 1343,
+  "messages.jsonl": 8348281,
+  "provenance.jsonl": 1039269,
+  "touch.jsonl": 1413900
+ },
+ "wall_seconds": 1225.8
+}

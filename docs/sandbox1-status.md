@@ -40,6 +40,25 @@ Organization policies built in phase 1: topology `isolated`, `full`, `ring`; rou
 
 Tests: **76 passed** (test_engine 8, test_adapter 9, test_bots 15, test_evaluate 8, test_cache 12, test_artifacts 5, test_org 10, test_runner 8; one run of the suite takes about 80 s). The runner tests include: kill-and-resume equals uninterrupted at 4 kill points (after receive, verify, revise, evaluate), a 1,000-generation dry run with bounded per-generation log size, config-digest refusal, deployment lock, and an end-to-end run in `replay_strict` from the committed fixture `tests/fixtures/llm_cache_smoke/` (regenerate with `scripts/regen_fixture.py` after changing prompts or the stub).
 
+## Phase 2: 200-generation stub dry run, real crash and resume, bounded logs, analysis notebook (done)
+
+Config `configs/dryrun.yaml`: 3 groups of 4 agents, broadcast teaching inside groups, `selfplay(n=40)` verification, paired-delta credit, 40 self-play / 16 cross-play / 16 anchor games per artifact per generation, 6 evaluation workers. `scripts/kill_resume_check.py` ran the config twice side by side. One run went uninterrupted. The other was hit with **SIGKILL to the whole process group about 1.5 s into generation 101** (checkpoint at 100, partial log lines on disk), then restarted with the same command. The resumed run ended **byte-identical** to the uninterrupted one: equal digests for the checkpoint state, all six JSONL logs and the artifact file set. Wall time stripped; result in `docs/results/phase2-dryrun-resume.json`.
+
+**Log sizes are bounded per generation.** The generation record averaged 11.9 KB over the first 10 generations and 12.6 KB over the last 10 (max 13.5 KB; the only growing field is the ladder's frozen-snapshot list, 3 entries per 20 generations). Other logs grow linearly at constant rates: messages about 42 KB, ledger 10 KB, touch 7 KB, provenance 5 KB, artifact index 3 KB per generation. Checkpoint 94 KB. The content-addressed artifact store (about 125 KB/generation) and the LLM cache (about 118 KB/generation) dominate disk, about 50 MB per 200 generations at this population size. For 1,000-plus-generation runs: about 0.3 MB per generation, or about 0.6 GB per 2,000 generations.
+
+Dry-run outcome on the stub (pipeline behaviour, not learning evidence): population mean self-play rose from 9.0 to 18.1 and the best from 17.2 to 18.3, by stub hill climbing on rule-list mutations. Changepoints at generations 5 and 29, then flat (last-third slope −0.003/gen). 7,164 messages were delivered and 9% passed verification; 567 adoptions, all within groups (isolated topology). 7 retained innovations (k = 10). Between-group cross-play of group bests rose from 16.6 to 17.6 and tracked self-play throughout, as expected for stub bots that share one template. 30.4 M stub tokens, $50.28 nominal at Haiku prices for 200 generations × 12 agents. A real run of this shape would cost that order of money, which is why the queue screens at smaller sizes first.
+
+Built: `analysis/metrics.py` (series, slope, binary-segmentation changepoints, trajectory shape, adoption edges, retained innovations), `analysis/figures.py` (between-group cross-play vs tokens with the OBL / human / SmartBot / o3 reference lines, group bests, teaching rates, tokens by call type, diversity, condition comparisons, paired-delta intervals), `analysis/report.py`, `notebooks/analysis.ipynb` (executed on the dry-run logs), `tests/test_analysis.py`.
+
+Tests: **78 passed** (76 + 2).
+
+Fixes made during this phase:
+- The generation-0 record now uses the same `teaching` block as later generations.
+- Retained innovations are now scored from the generation records; artifacts are logged without their evaluation, so the first version always reported 0.
+- `sitecustomize.py` now appends `src/` instead of prepending, so an explicit `PYTHONPATH` (a worktree) wins.
+
+Phase 1 already contained the two resume-identity fixes found while writing the runner tests: evaluation dicts are built in sorted order, so prompts are identical before and after a JSON checkpoint; and artifact logging is decided from the truncated log, not from the store.
+
 ## Deviations from the spec
 
 1. **Observation JSON adds `possible`** (`{"colors": [...], "ranks": [...]}`) to every card, own and partner's. It is HLE's plausibility set, which includes negative information. HLE gives it to every agent and Canaan's agents depend on it. Without it the adapter loses information the raw engine provides, and trajectories cannot match. Partner cards also carry `hints`/`possible` (what the partner knows).

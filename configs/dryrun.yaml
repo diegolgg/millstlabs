@@ -1,0 +1,10 @@
+# Phase 2 dry run: screening-size population on the stub backend, v0 mechanisms with in-group teaching.
+name: dryrun
+experiment_seed: 0
+population: {groups: 3, agents_per_group: 4, seed: 0}
+evaluation: {selfplay_games: 40, crossplay_games: 16, anchor_games: 16, between_group_games: 30, ladder_every: 20, ladder_games: 10, workers: 6}
+org:
+  routing: broadcast_group
+  verification: {name: selfplay, n: 40}
+  credit: paired_delta
+runner: {generations: 200}

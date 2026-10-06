@@ -13,6 +13,6 @@ rm -rf third_party/hanabi-learning-environment/_skbuild third_party/hanabi-learn
 uv pip install --python .venv/bin/python -e ".[dev]"
 # macOS can flag site-packages/*.pth as hidden, and Python then skips them; sitecustomize.py is a plain import instead.
 SP=$(.venv/bin/python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")
-printf 'import sys\n_p = "%s"\nif _p not in sys.path:\n    sys.path.insert(0, _p)\n' "$(pwd)/src" > "$SP/sitecustomize.py"
+printf 'import sys\n_p = "%s"\nif _p not in sys.path:\n    sys.path.append(_p)\n' "$(pwd)/src" > "$SP/sitecustomize.py"
 .venv/bin/python -m ipykernel install --sys-prefix --name culture --display-name "culture (.venv)"
 .venv/bin/python -c "import culture, hanabi_learning_environment.pyhanabi; print('environment ok')"

@@ -61,6 +61,12 @@ class RunContext:
         self.agents = {a: AgentState(a, self.pop.group_of(a)) for a in self.pop.agents}
         self.corpora = {g: Corpus(g, cfg.corpus.capacity) for g in self.pop.groups}
         self.pol = {f: registry.make(f, getattr(cfg.org, f)) for f in registry.REGISTRIES}
+        from ..org.migration import NoMigration, RandomMigration
+        from ..org.population import Islands
+
+        if isinstance(self.pol["topology"], Islands) and isinstance(self.pol["migration"], NoMigration):
+            t = self.pol["topology"]  # islands(G, migration_rate, interval) carries its own migration rule
+            self.pol["migration"] = RandomMigration(t.migration_rate, t.interval)
         self.outbox: list[TeachingMessage] = []
         self.evals: dict[str, Evaluation] = {}
         self.frozen: list[list] = []  # [generation, label, artifact id] snapshots for the ladder
