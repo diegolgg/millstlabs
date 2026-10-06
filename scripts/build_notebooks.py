@@ -131,7 +131,7 @@ ANALYSIS_P5 = [
     code("import numpy as np\nfrom culture.analysis.hc import hc_test, plateau\n"
          "res = [hc_test(r['hc']['z'], null='empirical', sims=300) if len(r['hc']['z']) >= 5 else None for r in run['generations']]\n"
          "det = [r.detected for r in res if r is not None]\n"
-         "print(f'generations with HC detection: {sum(det)} of {len(det)}; first plateau (5 gens) at index {plateau(res, 5)}')\n"
+         "print(f'generations with HC detection: {sum(det)} of {len(det)}; first plateau (5 generations under threshold) starts at generation {plateau(res, 5)}')\n"
          "import matplotlib.pyplot as plt\nfig, ax = plt.subplots(figsize=(7.5, 3))\n"
          "g = [r['generation'] for r, x in zip(run['generations'], res) if x is not None]\n"
          "ax.plot(g, [x.hc for x in res if x is not None], color=figures.SERIES[0], linewidth=2, label='HC (empirical null)')\n"

@@ -106,6 +106,31 @@ Design notes and deviations:
 
 Tests: **94 passed** (82 + 12 in `test_org_phase4.py`).
 
+## Phase 5: section-10 analysis toolkit (done)
+
+Each tool is in `src/culture/analysis/`, tested on synthetic data with a planted known answer (`tests/test_analysis_phase5.py`), and applied to the phase-2 dry-run logs in `notebooks/analysis.ipynb`.
+
+1. **Higher Criticism with Efron's empirical null** (`hc.py`). The null N(δ0, σ0²) is estimated from the centre of the z-scores; the default is robust (median, IQR/1.349), with an optional truncated-normal MLE. Then HC+ runs on the standardized one-sided p-values, against a Monte-Carlo threshold for the same procedure under the null. Also included: a Meinshausen-Rice lower bound on the fraction of agents that improved, a plateau detector (HC under threshold for k generations), and paired z-scores from games × agents matrices. Known answers:
+   - Inflated null (δ0 = 0.4, σ0 = 1.5, as correlated agents produce): the estimate is within 0.15 of the truth by both methods.
+   - Pure noise: theoretical-null HC fires on more than 80% of reps; empirical-null HC stays near nominal (below 15% at level 0.05 with Monte-Carlo slack).
+   - 5% planted improvers (shift of 4 null sds): detected in more than 90% of reps; fraction estimate between 1.5% and 7% (it is a lower bound).
+   - Deviation: the unbounded MLE drifted badly (δ0 = −134 on one draw), so it is now bounded and robust is the default.
+2. **DCMM on the teaching graph** (`graphs.py`). Mixed-SCORE: K leading eigenvectors, SCORE ratios, vertex hunting (k-means denoising plus successive projection), barycentric memberships with the b1 correction. Outputs: θ (influence), P (community matrix, unit diagonal, off-diagonal = cross-lineage leakage), membership over time with Hungarian alignment across windows, and NMI against the configured groups. Known answers:
+   - Planted 600-node DCMM graph, K = 3, 30% mixed nodes: pure-node accuracy above 0.95 (1.0 observed), mean membership L1/2 error below 0.2 (0.11 observed), θ correlation above 0.8 (0.91 observed), and the most-connected pair of lineages shows the most leakage. Absolute leakage is underestimated (0.08 vs 0.15 planted).
+   - Planted lineage merge (two lineages that stop being separate halfway): NMI with the original groups drops from above 0.8 to more than 0.4 lower.
+3. **IF-PCA strategy counting** (`ifpca.py`, `behavior.py`). KS departure-from-normality score per feature, a Monte-Carlo null, the HC threshold for selection, then PCA, with K from the Marchenko-Pastur edge and k-means. The behavioural fingerprint is the move each artifact makes on a fixed probe set of 200 observations from anchor games, plus pairwise action disagreement. Known answers:
+   - 3 planted clusters differing in 40 of 2,000 features: K = 3, accuracy 1.0, no uninformative feature selected.
+   - With 8,000 features, selection beats PCA on all features.
+   - Below the detection regime (shift 1.5 on 30 features) it selected 5 features and estimated K = 2, a limit to keep in mind for small populations.
+   - Disconnected graphs (isolated groups) break Mixed-SCORE's Perron-vector ratios: θ came out 0 for every node outside one component, and leakage was meaningless. The fit now regularizes (A + τ·d̄/n, τ = 0.25) when the graph has more than one component. Known answer: planted isolated groups give NMI 1.0, every θ above 0.3, leakage below 0.15 (truth 0).
+
+Applied to the phase-2 dry-run logs (`notebooks/analysis.ipynb`, stub, isolated topology):
+- HC with the empirical null detects improvement in 23 of 199 generations. With 12 agents per generation power is low, and stub hill climbing mostly yields ties.
+- DCMM recovers the configured groups exactly (NMI 1.0, leakage 0.06, no cross-group adoptions to find): idea-communities coincide with groups, the "no transfer" pattern the spec predicts for isolated groups. Top influence: g0a1 caused 77 adoptions.
+- IF-PCA on the behavioural fingerprints of the 295 distinct incumbents of the last 50 generations (200 probes, 800 binary features) keeps 54 features and counts **K = 6** strategies. Mean pairwise action disagreement is 0.115. On binary features the KS screen degenerates to "keep features on which artifacts disagree", so treat K as indicative.
+
+Tests: **103 passed** (94 + 9 in `test_analysis_phase5.py`).
+
 ## Deviations from the spec
 
 1. **Observation JSON adds `possible`** (`{"colors": [...], "ranks": [...]}`) to every card, own and partner's. It is HLE's plausibility set, which includes negative information. HLE gives it to every agent and Canaan's agents depend on it. Without it the adapter loses information the raw engine provides, and trajectories cannot match. Partner cards also carry `hints`/`possible` (what the partner knows).
