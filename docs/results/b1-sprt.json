@@ -1,0 +1,4008 @@
+{
+ "curves": {
+  "SPRT": [
+   {
+    "deals": 40.36666666666667,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 42.022222222222226,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 52.78333333333333,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 52.84,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 53.03333333333333,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 22.95,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 46.21666666666667,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 30.181818181818183,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 28.138333333333332,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.008333333333333333
+   },
+   {
+    "deals": 39.15394736842105,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.11578947368421053
+   },
+   {
+    "deals": 79.47727272727273,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 0.7681818181818182
+   },
+   {
+    "deals": 122.73333333333333,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 0.9166666666666666
+   },
+   {
+    "deals": 29.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 95.55,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 0.9333333333333333
+   },
+   {
+    "deals": 92.2,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 75.75,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 54.82222222222222,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 51.6,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=100 (mean>0)": [
+   {
+    "deals": 100.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.19166666666666668
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.593421052631579
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=100 (t-test)": [
+   {
+    "deals": 100.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.025
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.2118421052631579
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 0.8090909090909091
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 0.8
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 100.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=200 (mean>0)": [
+   {
+    "deals": 200.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.19166666666666668
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.5986842105263158
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=200 (t-test)": [
+   {
+    "deals": 200.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.013333333333333334
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.30394736842105263
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 0.9590909090909091
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 0.9
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 200.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=400 (mean>0)": [
+   {
+    "deals": 400.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.11666666666666667
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.6631578947368421
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=400 (t-test)": [
+   {
+    "deals": 400.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.011666666666666667
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.3907894736842105
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 0.990909090909091
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 400.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=50 (mean>0)": [
+   {
+    "deals": 50.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.03333333333333333
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.03333333333333333
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.05454545454545454
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.24833333333333332
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.5421052631578948
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 0.9454545454545454
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 0.9666666666666667
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 0.9333333333333333
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ],
+  "fixed N=50 (t-test)": [
+   {
+    "deals": 50.0,
+    "delta_mid": -4.25,
+    "n": 30,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -3.75,
+    "n": 90,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -3.25,
+    "n": 120,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -2.75,
+    "n": 50,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -2.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -1.75,
+    "n": 40,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -1.25,
+    "n": 60,
+    "p_adopt": 0.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -0.75,
+    "n": 220,
+    "p_adopt": 0.004545454545454545
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": -0.25,
+    "n": 600,
+    "p_adopt": 0.018333333333333333
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 0.25,
+    "n": 760,
+    "p_adopt": 0.15394736842105264
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 0.75,
+    "n": 220,
+    "p_adopt": 0.6181818181818182
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 1.25,
+    "n": 60,
+    "p_adopt": 0.5833333333333334
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 1.75,
+    "n": 40,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 2.25,
+    "n": 60,
+    "p_adopt": 0.4666666666666667
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 2.75,
+    "n": 50,
+    "p_adopt": 0.64
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 3.25,
+    "n": 120,
+    "p_adopt": 0.8583333333333333
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 3.75,
+    "n": 90,
+    "p_adopt": 1.0
+   },
+   {
+    "deals": 50.0,
+    "delta_mid": 4.25,
+    "n": 30,
+    "p_adopt": 1.0
+   }
+  ]
+ },
+ "decision_rule": {
+  "fixed_n_as_accurate_as_sprt": [
+   "fixed N=400 (t-test)"
+  ],
+  "note": "recomputed from the saved operating characteristics after fixing an inverted 'matched' condition; the engine results are unchanged",
+  "passes": true,
+  "rule": "adopt SPRT as default if, at delta = 1, it uses >= 30% fewer deals than the smallest fixed-N t-test that is as accurate (false adoption and miss rate near delta = 1 no worse than the SPRT's)",
+  "saving_vs_smallest": 0.7280588235294118,
+  "smallest_as_accurate": "fixed N=400 (t-test)",
+  "sprt_deals_near_delta1": 108.7764705882353
+ },
+ "design": {
+  "alpha": 0.05,
+  "bases": [
+   "piers",
+   "iggi"
+  ],
+  "beta": 0.05,
+  "block_deals": 600,
+  "bots": 70,
+  "delta1": 1.0,
+  "fixed_n": [
+   50,
+   100,
+   200,
+   400
+  ],
+  "pairs": 360,
+  "replications_per_pair": 10,
+  "sprt": "Wald, online sigma after 20 deals, cap 600",
+  "truth_deals": 2000
+ },
+ "operating_characteristics": {
+  "SPRT": {
+   "deals_mean": 40.062777777777775,
+   "deals_near_delta1": 108.7764705882353,
+   "false_adoption": 0.0026595744680851063,
+   "missed_improvement": 0.01,
+   "missed_near_delta1": 0.1,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=100 (mean>0)": {
+   "deals_mean": 100.0,
+   "deals_near_delta1": 100.0,
+   "false_adoption": 0.061170212765957445,
+   "missed_improvement": 0.0,
+   "missed_near_delta1": 0.0,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=100 (t-test)": {
+   "deals_mean": 100.0,
+   "deals_near_delta1": 100.0,
+   "false_adoption": 0.007978723404255319,
+   "missed_improvement": 0.013333333333333334,
+   "missed_near_delta1": 0.24,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=200 (mean>0)": {
+   "deals_mean": 200.0,
+   "deals_near_delta1": 200.0,
+   "false_adoption": 0.061170212765957445,
+   "missed_improvement": 0.0,
+   "missed_near_delta1": 0.0,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=200 (t-test)": {
+   "deals_mean": 200.0,
+   "deals_near_delta1": 200.0,
+   "false_adoption": 0.00425531914893617,
+   "missed_improvement": 0.006666666666666667,
+   "missed_near_delta1": 0.12,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=400 (mean>0)": {
+   "deals_mean": 400.0,
+   "deals_near_delta1": 400.0,
+   "false_adoption": 0.03723404255319149,
+   "missed_improvement": 0.0,
+   "missed_near_delta1": 0.0,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=400 (t-test)": {
+   "deals_mean": 400.0,
+   "deals_near_delta1": 400.0,
+   "false_adoption": 0.003723404255319149,
+   "missed_improvement": 0.0,
+   "missed_near_delta1": 0.0,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=50 (mean>0)": {
+   "deals_mean": 50.0,
+   "deals_near_delta1": 50.0,
+   "false_adoption": 0.08776595744680851,
+   "missed_improvement": 0.006666666666666667,
+   "missed_near_delta1": 0.04,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  },
+  "fixed N=50 (t-test)": {
+   "deals_mean": 50.0,
+   "deals_near_delta1": 50.0,
+   "false_adoption": 0.006382978723404255,
+   "missed_improvement": 0.10222222222222223,
+   "missed_near_delta1": 0.5,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170
+  }
+ },
+ "pairs": [
+  {
+   "candidate": "piers~0: swapped tell_dispensable and osawa_discard",
+   "delta": 0.1,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.018605727251125432,
+   "sigma": 0.8320734180867354
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.1,
+   "incumbent": "piers~0: swapped tell_dispensable and osawa_discard",
+   "kind": "mutation",
+   "se": 0.018605727251125432,
+   "sigma": 0.8320734180867354
+  },
+  {
+   "candidate": "piers~1: swapped tell_dispensable and osawa_discard; changed play_probably_safe.threshold to 0.61",
+   "delta": 0.1395,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.030132604632373973,
+   "sigma": 1.3475710459422654
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.1395,
+   "incumbent": "piers~1: swapped tell_dispensable and osawa_discard; changed play_probably_safe.threshold to 0.61",
+   "kind": "mutation",
+   "se": 0.030132604632373973,
+   "sigma": 1.3475710459422654
+  },
+  {
+   "candidate": "piers~2: swapped play_safe_card and play_probably_safe; removed rule discard_oldest_first",
+   "delta": -1.6585,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.05786288042835175,
+   "sigma": 2.5877066802347333
+  },
+  {
+   "candidate": "piers",
+   "delta": 1.6585,
+   "incumbent": "piers~2: swapped play_safe_card and play_probably_safe; removed rule discard_oldest_first",
+   "kind": "mutation",
+   "se": 0.05786288042835175,
+   "sigma": 2.5877066802347333
+  },
+  {
+   "candidate": "piers~3: added rule discard_probably_useless at position 6; changed discard_probably_useless.threshold to 0.4",
+   "delta": 0.1305,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.04859954560401217,
+   "sigma": 2.1734377529234457
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.1305,
+   "incumbent": "piers~3: added rule discard_probably_useless at position 6; changed discard_probably_useless.threshold to 0.4",
+   "kind": "mutation",
+   "se": 0.04859954560401217,
+   "sigma": 2.1734377529234457
+  },
+  {
+   "candidate": "piers~4: changed tell_dispensable.min_information_tokens to 2",
+   "delta": 0.0505,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.017553601894475527,
+   "sigma": 0.7850209417203274
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.0505,
+   "incumbent": "piers~4: changed tell_dispensable.min_information_tokens to 2",
+   "kind": "mutation",
+   "se": 0.017553601894475527,
+   "sigma": 0.7850209417203274
+  },
+  {
+   "candidate": "piers~5: swapped tell_anyone_useful_card and tell_dispensable",
+   "delta": -1.278,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.03646948054888844,
+   "sigma": 1.630964752228418
+  },
+  {
+   "candidate": "piers",
+   "delta": 1.278,
+   "incumbent": "piers~5: swapped tell_anyone_useful_card and tell_dispensable",
+   "kind": "mutation",
+   "se": 0.03646948054888844,
+   "sigma": 1.630964752228418
+  },
+  {
+   "candidate": "piers~6: swapped tell_randomly and discard_randomly",
+   "delta": 0.0,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "piers",
+   "delta": 0.0,
+   "incumbent": "piers~6: swapped tell_randomly and discard_randomly",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "piers~7: added rule tell_playable_card_outer at position 10; added rule discard_randomly at position 7",
+   "delta": 0.021,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.05496171299138586,
+   "sigma": 2.457962528171442
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.021,
+   "incumbent": "piers~7: added rule tell_playable_card_outer at position 10; added rule discard_randomly at position 7",
+   "kind": "mutation",
+   "se": 0.05496171299138586,
+   "sigma": 2.457962528171442
+  },
+  {
+   "candidate": "piers~8: removed rule discard_oldest_first; added rule tell_playable_card_outer at position 5",
+   "delta": -1.6585,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.05786288042835175,
+   "sigma": 2.5877066802347333
+  },
+  {
+   "candidate": "piers",
+   "delta": 1.6585,
+   "incumbent": "piers~8: removed rule discard_oldest_first; added rule tell_playable_card_outer at position 5",
+   "kind": "mutation",
+   "se": 0.05786288042835175,
+   "sigma": 2.5877066802347333
+  },
+  {
+   "candidate": "piers~9: added rule tell_playable_card_outer at position 10; added rule tell_randomly at position 11",
+   "delta": 0.0,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "piers",
+   "delta": 0.0,
+   "incumbent": "piers~9: added rule tell_playable_card_outer at position 10; added rule tell_randomly at position 11",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "piers~11: removed rule tell_randomly",
+   "delta": -1.7365,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.10650448571651275,
+   "sigma": 4.763025399415558
+  },
+  {
+   "candidate": "piers",
+   "delta": 1.7365,
+   "incumbent": "piers~11: removed rule tell_randomly",
+   "kind": "mutation",
+   "se": 0.10650448571651275,
+   "sigma": 4.763025399415558
+  },
+  {
+   "candidate": "piers~12: changed play_probably_safe.require_extra_lives to False; added rule tell_randomly at position 3",
+   "delta": -9.26,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.09578772178010034,
+   "sigma": 4.283757146202831
+  },
+  {
+   "candidate": "piers",
+   "delta": 9.26,
+   "incumbent": "piers~12: changed play_probably_safe.require_extra_lives to False; added rule tell_randomly at position 3",
+   "kind": "mutation",
+   "se": 0.09578772178010034,
+   "sigma": 4.283757146202831
+  },
+  {
+   "candidate": "piers~13: changed play_probably_safe.require_extra_lives to False; swapped hail_mary and play_safe_card",
+   "delta": -3.9635,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.16355414655222658,
+   "sigma": 7.31436379385483
+  },
+  {
+   "candidate": "piers",
+   "delta": 3.9635,
+   "incumbent": "piers~13: changed play_probably_safe.require_extra_lives to False; swapped hail_mary and play_safe_card",
+   "kind": "mutation",
+   "se": 0.16355414655222658,
+   "sigma": 7.31436379385483
+  },
+  {
+   "candidate": "piers~15: added rule osawa_discard at position 6; changed play_probably_safe.threshold to 0.56",
+   "delta": -0.045,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.022852759665129202,
+   "sigma": 1.0220064816938845
+  },
+  {
+   "candidate": "piers",
+   "delta": 0.045,
+   "incumbent": "piers~15: added rule osawa_discard at position 6; changed play_probably_safe.threshold to 0.56",
+   "kind": "mutation",
+   "se": 0.022852759665129202,
+   "sigma": 1.0220064816938845
+  },
+  {
+   "candidate": "piers~16: removed rule osawa_discard",
+   "delta": -0.351,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.024914049348258582,
+   "sigma": 1.1141901587498104
+  },
+  {
+   "candidate": "piers",
+   "delta": 0.351,
+   "incumbent": "piers~16: removed rule osawa_discard",
+   "kind": "mutation",
+   "se": 0.024914049348258582,
+   "sigma": 1.1141901587498104
+  },
+  {
+   "candidate": "piers~17: removed rule osawa_discard; swapped tell_dispensable and discard_oldest_first",
+   "delta": 0.516,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.031382549804248025,
+   "sigma": 1.403470293391426
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.516,
+   "incumbent": "piers~17: removed rule osawa_discard; swapped tell_dispensable and discard_oldest_first",
+   "kind": "mutation",
+   "se": 0.031382549804248025,
+   "sigma": 1.403470293391426
+  },
+  {
+   "candidate": "piers~18: added rule discard_oldest_first at position 5; swapped osawa_discard and discard_oldest_first",
+   "delta": 0.516,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.031382549804248025,
+   "sigma": 1.403470293391426
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.516,
+   "incumbent": "piers~18: added rule discard_oldest_first at position 5; swapped osawa_discard and discard_oldest_first",
+   "kind": "mutation",
+   "se": 0.031382549804248025,
+   "sigma": 1.403470293391426
+  },
+  {
+   "candidate": "piers~19: swapped play_safe_card and play_probably_safe",
+   "delta": 0.001,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.0007069298939339522,
+   "sigma": 0.031614865963260665
+  },
+  {
+   "candidate": "piers",
+   "delta": -0.001,
+   "incumbent": "piers~19: swapped play_safe_card and play_probably_safe",
+   "kind": "mutation",
+   "se": 0.0007069298939339522,
+   "sigma": 0.031614865963260665
+  },
+  {
+   "candidate": "piers~20: swapped discard_oldest_first and tell_randomly; removed rule discard_oldest_first",
+   "delta": -1.6585,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.05786288042835175,
+   "sigma": 2.5877066802347333
+  },
+  {
+   "candidate": "piers",
+   "delta": 1.6585,
+   "incumbent": "piers~20: swapped discard_oldest_first and tell_randomly; removed rule discard_oldest_first",
+   "kind": "mutation",
+   "se": 0.05786288042835175,
+   "sigma": 2.5877066802347333
+  },
+  {
+   "candidate": "piers~21: changed play_probably_safe.require_extra_lives to False",
+   "delta": -3.9635,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.16355414655222658,
+   "sigma": 7.31436379385483
+  },
+  {
+   "candidate": "piers",
+   "delta": 3.9635,
+   "incumbent": "piers~21: changed play_probably_safe.require_extra_lives to False",
+   "kind": "mutation",
+   "se": 0.16355414655222658,
+   "sigma": 7.31436379385483
+  },
+  {
+   "candidate": "piers~22: changed tell_dispensable.min_information_tokens to 2; swapped osawa_discard and discard_oldest_first",
+   "delta": -0.233,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.026734114094695824,
+   "sigma": 1.1955859286795023
+  },
+  {
+   "candidate": "piers",
+   "delta": 0.233,
+   "incumbent": "piers~22: changed tell_dispensable.min_information_tokens to 2; swapped osawa_discard and discard_oldest_first",
+   "kind": "mutation",
+   "se": 0.026734114094695824,
+   "sigma": 1.1955859286795023
+  },
+  {
+   "candidate": "piers~23: removed rule play_safe_card; removed rule play_probably_safe",
+   "delta": -15.269,
+   "incumbent": "piers",
+   "kind": "mutation",
+   "se": 0.044992573451992236,
+   "sigma": 2.0121290544261403
+  },
+  {
+   "candidate": "piers",
+   "delta": 15.269,
+   "incumbent": "piers~23: removed rule play_safe_card; removed rule play_probably_safe",
+   "kind": "mutation",
+   "se": 0.044992573451992236,
+   "sigma": 2.0121290544261403
+  },
+  {
+   "candidate": "iggi~0: added rule osawa_discard at position 5; removed rule play_safe_card",
+   "delta": 0.015,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.08298090391895958,
+   "sigma": 3.711018839943447
+  },
+  {
+   "candidate": "iggi",
+   "delta": -0.015,
+   "incumbent": "iggi~0: added rule osawa_discard at position 5; removed rule play_safe_card",
+   "kind": "mutation",
+   "se": 0.08298090391895958,
+   "sigma": 3.711018839943447
+  },
+  {
+   "candidate": "iggi~1: removed rule play_if_certain",
+   "delta": 0.0,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.0,
+   "incumbent": "iggi~1: removed rule play_if_certain",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi~2: added rule discard_probably_useless at position 6; swapped play_if_certain and play_safe_card",
+   "delta": 0.0,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.0,
+   "incumbent": "iggi~2: added rule discard_probably_useless at position 6; swapped play_if_certain and play_safe_card",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi~3: removed rule legal_random",
+   "delta": 0.0,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.0,
+   "incumbent": "iggi~3: removed rule legal_random",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi~4: removed rule discard_oldest_first; swapped osawa_discard and legal_random",
+   "delta": -15.649,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10767402819702662,
+   "sigma": 4.815328929195613
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.649,
+   "incumbent": "iggi~4: removed rule discard_oldest_first; swapped osawa_discard and legal_random",
+   "kind": "mutation",
+   "se": 0.10767402819702662,
+   "sigma": 4.815328929195613
+  },
+  {
+   "candidate": "iggi~5: swapped play_safe_card and tell_playable_card_outer; added rule tell_dispensable at position 3",
+   "delta": -0.329,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.08420168918870402,
+   "sigma": 3.765614016925026
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.329,
+   "incumbent": "iggi~5: swapped play_safe_card and tell_playable_card_outer; added rule tell_dispensable at position 3",
+   "kind": "mutation",
+   "se": 0.08420168918870402,
+   "sigma": 3.765614016925026
+  },
+  {
+   "candidate": "iggi~6: added rule hail_mary at position 5; swapped discard_oldest_first and legal_random",
+   "delta": -15.6405,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.6405,
+   "incumbent": "iggi~6: added rule hail_mary at position 5; swapped discard_oldest_first and legal_random",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi~7: added rule discard_probably_useless at position 7",
+   "delta": 0.0,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.0,
+   "incumbent": "iggi~7: added rule discard_probably_useless at position 7",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi~8: removed rule play_safe_card",
+   "delta": 0.015,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.08298090391895958,
+   "sigma": 3.711018839943447
+  },
+  {
+   "candidate": "iggi",
+   "delta": -0.015,
+   "incumbent": "iggi~8: removed rule play_safe_card",
+   "kind": "mutation",
+   "se": 0.08298090391895958,
+   "sigma": 3.711018839943447
+  },
+  {
+   "candidate": "iggi~10: removed rule play_if_certain; removed rule play_safe_card",
+   "delta": -15.4975,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10837836412266497,
+   "sigma": 4.846827789370065
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.4975,
+   "incumbent": "iggi~10: removed rule play_if_certain; removed rule play_safe_card",
+   "kind": "mutation",
+   "se": 0.10837836412266497,
+   "sigma": 4.846827789370065
+  },
+  {
+   "candidate": "iggi~11: swapped osawa_discard and discard_oldest_first; added rule discard_randomly at position 5",
+   "delta": -0.1785,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.02647960459919794,
+   "sigma": 1.1842039180224535
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.1785,
+   "incumbent": "iggi~11: swapped osawa_discard and discard_oldest_first; added rule discard_randomly at position 5",
+   "kind": "mutation",
+   "se": 0.02647960459919794,
+   "sigma": 1.1842039180224535
+  },
+  {
+   "candidate": "iggi~12: added rule play_if_certain at position 5; swapped discard_oldest_first and legal_random",
+   "delta": -15.6405,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.6405,
+   "incumbent": "iggi~12: added rule play_if_certain at position 5; swapped discard_oldest_first and legal_random",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi~13: added rule tell_anyone_useful_card at position 3",
+   "delta": 0.0,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.0,
+   "incumbent": "iggi~13: added rule tell_anyone_useful_card at position 3",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi~14: removed rule osawa_discard; swapped tell_playable_card_outer and discard_oldest_first",
+   "delta": -8.0825,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.15815610500949967,
+   "sigma": 7.072956037156726
+  },
+  {
+   "candidate": "iggi",
+   "delta": 8.0825,
+   "incumbent": "iggi~14: removed rule osawa_discard; swapped tell_playable_card_outer and discard_oldest_first",
+   "kind": "mutation",
+   "se": 0.15815610500949967,
+   "sigma": 7.072956037156726
+  },
+  {
+   "candidate": "iggi~15: added rule discard_randomly at position 1; swapped play_safe_card and tell_playable_card_outer",
+   "delta": -15.437,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.1089332305789293,
+   "sigma": 4.871642171662894
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.437,
+   "incumbent": "iggi~15: added rule discard_randomly at position 1; swapped play_safe_card and tell_playable_card_outer",
+   "kind": "mutation",
+   "se": 0.1089332305789293,
+   "sigma": 4.871642171662894
+  },
+  {
+   "candidate": "iggi~16: added rule tell_unknown at position 1; added rule hail_mary at position 8",
+   "delta": -7.0765,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10912964086011245,
+   "sigma": 4.880425906467002
+  },
+  {
+   "candidate": "iggi",
+   "delta": 7.0765,
+   "incumbent": "iggi~16: added rule tell_unknown at position 1; added rule hail_mary at position 8",
+   "kind": "mutation",
+   "se": 0.10912964086011245,
+   "sigma": 4.880425906467002
+  },
+  {
+   "candidate": "iggi~17: removed rule discard_oldest_first",
+   "delta": -15.6405,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.6405,
+   "incumbent": "iggi~17: removed rule discard_oldest_first",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi~19: added rule hail_mary at position 4; added rule tell_anyone_useful_card at position 4",
+   "delta": 0.2285,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.012756380271017694,
+   "sigma": 0.5704826686566551
+  },
+  {
+   "candidate": "iggi",
+   "delta": -0.2285,
+   "incumbent": "iggi~19: added rule hail_mary at position 4; added rule tell_anyone_useful_card at position 4",
+   "kind": "mutation",
+   "se": 0.012756380271017694,
+   "sigma": 0.5704826686566551
+  },
+  {
+   "candidate": "iggi~20: swapped play_if_certain and play_safe_card",
+   "delta": 0.0,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.0,
+   "incumbent": "iggi~20: swapped play_if_certain and play_safe_card",
+   "kind": "mutation",
+   "se": 0.0,
+   "sigma": 0.0
+  },
+  {
+   "candidate": "iggi~21: swapped discard_oldest_first and legal_random; removed rule osawa_discard",
+   "delta": -15.649,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10767402819702662,
+   "sigma": 4.815328929195613
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.649,
+   "incumbent": "iggi~21: swapped discard_oldest_first and legal_random; removed rule osawa_discard",
+   "kind": "mutation",
+   "se": 0.10767402819702662,
+   "sigma": 4.815328929195613
+  },
+  {
+   "candidate": "iggi~22: swapped discard_oldest_first and legal_random",
+   "delta": -15.6405,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi",
+   "delta": 15.6405,
+   "incumbent": "iggi~22: swapped discard_oldest_first and legal_random",
+   "kind": "mutation",
+   "se": 0.10791641604235064,
+   "sigma": 4.826168843176897
+  },
+  {
+   "candidate": "iggi~23: swapped tell_playable_card_outer and osawa_discard",
+   "delta": -0.3775,
+   "incumbent": "iggi",
+   "kind": "mutation",
+   "se": 0.05008743605561491,
+   "sigma": 2.2399782367805776
+  },
+  {
+   "candidate": "iggi",
+   "delta": 0.3775,
+   "incumbent": "iggi~23: swapped tell_playable_card_outer and osawa_discard",
+   "kind": "mutation",
+   "se": 0.05008743605561491,
+   "sigma": 2.2399782367805776
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -16.072,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.03725724159174311,
+   "sigma": 1.6661944970654012
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": 0.2975,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.03968355159425082,
+   "sigma": 1.7747023790672998
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -15.203,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.096439337269013,
+   "sigma": 4.312898276770841
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": 0.458,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.041520838021347754,
+   "sigma": 1.8568683259698289
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -13.0835,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.1540897001517182,
+   "sigma": 6.891100883436031
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 0.813,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.04306904888067233,
+   "sigma": 1.9261064204688914
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -3.1505,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.17625253857370915,
+   "sigma": 7.88225314915435
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.9935,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.043100553405402184,
+   "sigma": 1.9275153456467868
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": 0.66,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.07498007072217758,
+   "sigma": 3.353210701850616
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.9385,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.04225223663606904,
+   "sigma": 1.8895774663931486
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 0.9345,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.04588199487518893,
+   "sigma": 2.0519051896843887
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 0.7955,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.04098999835304328,
+   "sigma": 1.8331284543001842
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 0.7965,
+   "incumbent": "graded t=0.3 lives=True",
+   "kind": "graded",
+   "se": 0.04099248793417541,
+   "sigma": 1.833239791753123
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": 16.072,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.03725724159174311,
+   "sigma": 1.6661944970654012
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": 16.3695,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.04124724891155028,
+   "sigma": 1.8446330490216127
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": 0.869,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.09168763717866059,
+   "sigma": 4.100395788556442
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": 16.53,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.041700353232674965,
+   "sigma": 1.8648964902802865
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": 2.9885,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.15399201487519623,
+   "sigma": 6.886732265061952
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 16.885,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.04518748116710107,
+   "sigma": 2.0208455924325905
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": 12.9215,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.17856962908405113,
+   "sigma": 7.985876586977238
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 17.0655,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.04367560708596004,
+   "sigma": 1.9532325280555634
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": 16.732,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.0758450013653903,
+   "sigma": 3.391891576131542
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 17.0105,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.043464231785715034,
+   "sigma": 1.9437795372533178
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 17.0065,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.047104546427569734,
+   "sigma": 2.106579357226816
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 16.8675,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.04215282084454818,
+   "sigma": 1.8851314570355966
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 16.8685,
+   "incumbent": "graded t=0.3 lives=False",
+   "kind": "graded",
+   "se": 0.04215438733021265,
+   "sigma": 1.8852015124042272
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.2975,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.03968355159425082,
+   "sigma": 1.7747023790672998
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -16.3695,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.04124724891155028,
+   "sigma": 1.8446330490216127
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -15.5005,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.08807030182775587,
+   "sigma": 3.938623633715722
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": 0.1605,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.03358472631898257,
+   "sigma": 1.5019546210994263
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -13.381,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.15184514471654004,
+   "sigma": 6.790721312789532
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 0.5155,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.04156011906561835,
+   "sigma": 1.8586250276741536
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -3.448,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.17489694814728934,
+   "sigma": 7.821629302291898
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.696,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.042387384269055646,
+   "sigma": 1.8956214522802732
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": 0.3625,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.07347275684224051,
+   "sigma": 3.2858015758712518
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.641,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.04232558596893618,
+   "sigma": 1.892857748281052
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 0.637,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.04586575338601595,
+   "sigma": 2.0511788482074564
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 0.498,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.04261344802965946,
+   "sigma": 1.9057313309994608
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 0.499,
+   "incumbent": "graded t=0.4 lives=True",
+   "kind": "graded",
+   "se": 0.042619334859332635,
+   "sigma": 1.9059945980258841
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": 15.203,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.096439337269013,
+   "sigma": 4.312898276770841
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -0.869,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.09168763717866059,
+   "sigma": 4.100395788556442
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": 15.5005,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.08807030182775587,
+   "sigma": 3.938623633715722
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": 15.661,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.0922593919213586,
+   "sigma": 4.125965437979056
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": 2.1195,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.15415898407548487,
+   "sigma": 6.894199354701835
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 16.016,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.09792684429418068,
+   "sigma": 4.3794216132765085
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": 12.0525,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.19148552224023047,
+   "sigma": 8.563492888724063
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 16.1965,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.09699302912503263,
+   "sigma": 4.337660129343798
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": 15.863,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.11375669559589206,
+   "sigma": 5.087354084963312
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 16.1415,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.09775232290496558,
+   "sigma": 4.371616779480255
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 16.1375,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.09940693005958857,
+   "sigma": 4.445613060956146
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 15.9985,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.09769862530093679,
+   "sigma": 4.36921534962351
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 15.9995,
+   "incumbent": "graded t=0.4 lives=False",
+   "kind": "graded",
+   "se": 0.09770375062628467,
+   "sigma": 4.369444561141203
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.458,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.041520838021347754,
+   "sigma": 1.8568683259698289
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -16.53,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.041700353232674965,
+   "sigma": 1.8648964902802865
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.1605,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.03358472631898257,
+   "sigma": 1.5019546210994263
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -15.661,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.0922593919213586,
+   "sigma": 4.125965437979056
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -13.5415,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.14677332891244246,
+   "sigma": 6.563902814643133
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 0.355,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.036737750763561755,
+   "sigma": 1.6429621609553777
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -3.6085,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.1723672506874632,
+   "sigma": 7.708497792638301
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.5355,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.04128222360766188,
+   "sigma": 1.8461971649815716
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": 0.202,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.0734765091624483,
+   "sigma": 3.285969384732411
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.4805,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.04185912048746356,
+   "sigma": 1.8719967777664532
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 0.4765,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.04552757686422113,
+   "sigma": 2.0360551343849034
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 0.3375,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.04251118059096475,
+   "sigma": 1.9011577921033376
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 0.3385,
+   "incumbent": "graded t=0.5 lives=True",
+   "kind": "graded",
+   "se": 0.04251896995933934,
+   "sigma": 1.9015061432470848
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": 13.0835,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.1540897001517182,
+   "sigma": 6.891100883436031
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -2.9885,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.15399201487519623,
+   "sigma": 6.886732265061952
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": 13.381,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.15184514471654004,
+   "sigma": 6.790721312789532
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -2.1195,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.15415898407548487,
+   "sigma": 6.894199354701835
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": 13.5415,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.14677332891244246,
+   "sigma": 6.563902814643133
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 13.8965,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.15273689192227605,
+   "sigma": 6.830601460204956
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": 9.933,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.20822087663520525,
+   "sigma": 9.311920689818333
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 14.077,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.1559268806077003,
+   "sigma": 6.973262091166232
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": 13.7435,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.16562780611986636,
+   "sigma": 7.407100668963537
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 14.022,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.1559580695563069,
+   "sigma": 6.974656903350854
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 14.018,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.15688258052453116,
+   "sigma": 7.016002290768727
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 13.879,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.15580859301986338,
+   "sigma": 6.967972109420275
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 13.88,
+   "incumbent": "graded t=0.5 lives=False",
+   "kind": "graded",
+   "se": 0.15581861159649682,
+   "sigma": 6.968420153788079
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.813,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.04306904888067233,
+   "sigma": 1.9261064204688914
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -16.885,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.04518748116710107,
+   "sigma": 2.0208455924325905
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.5155,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.04156011906561835,
+   "sigma": 1.8586250276741536
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -16.016,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.09792684429418068,
+   "sigma": 4.3794216132765085
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": -0.355,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.036737750763561755,
+   "sigma": 1.6429621609553777
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -13.8965,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.15273689192227605,
+   "sigma": 6.830601460204956
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -3.9635,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.16355414655222658,
+   "sigma": 7.31436379385483
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.1805,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.03822552118984276,
+   "sigma": 1.709497277116941
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": -0.153,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.07103392435452656,
+   "sigma": 3.176733671305985
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.1255,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.04106358464615572,
+   "sigma": 1.8364193333724168
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 0.1215,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.04502646517641754,
+   "sigma": 2.013644738419934
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": -0.0175,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.043995052646049464,
+   "sigma": 1.967518567804972
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": -0.0165,
+   "incumbent": "graded t=0.6 lives=True",
+   "kind": "graded",
+   "se": 0.0440066150264144,
+   "sigma": 1.968035653174526
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": 3.1505,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.17625253857370915,
+   "sigma": 7.88225314915435
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -12.9215,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.17856962908405113,
+   "sigma": 7.985876586977238
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": 3.448,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.17489694814728934,
+   "sigma": 7.821629302291898
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -12.0525,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.19148552224023047,
+   "sigma": 8.563492888724063
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": 3.6085,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.1723672506874632,
+   "sigma": 7.708497792638301
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -9.933,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.20822087663520525,
+   "sigma": 9.311920689818333
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 3.9635,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.16355414655222658,
+   "sigma": 7.31436379385483
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 4.144,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.17375766994274516,
+   "sigma": 7.7706792320790035
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": 3.8105,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.17357378489968522,
+   "sigma": 7.762455642952454
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 4.089,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.1754435228637906,
+   "sigma": 7.846072866709489
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 4.085,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.17631770037558017,
+   "sigma": 7.8851672735247496
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 3.946,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.1778731610747258,
+   "sigma": 7.95472959071713
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 3.947,
+   "incumbent": "graded t=0.6 lives=False",
+   "kind": "graded",
+   "se": 0.17790986892449323,
+   "sigma": 7.956371215664886
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.9935,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.043100553405402184,
+   "sigma": 1.9275153456467868
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -17.0655,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.04367560708596004,
+   "sigma": 1.9532325280555634
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.696,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.042387384269055646,
+   "sigma": 1.8956214522802732
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -16.1965,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.09699302912503263,
+   "sigma": 4.337660129343798
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": -0.5355,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.04128222360766188,
+   "sigma": 1.8461971649815716
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -14.077,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.1559268806077003,
+   "sigma": 6.973262091166232
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": -0.1805,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.03822552118984276,
+   "sigma": 1.709497277116941
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -4.144,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.17375766994274516,
+   "sigma": 7.7706792320790035
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": -0.3335,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.059223243505279605,
+   "sigma": 2.6485439665165624
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": -0.055,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.030585212564469888,
+   "sigma": 1.367812288008707
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": -0.059,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.035789662613315974,
+   "sigma": 1.600562369903146
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": -0.198,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.03914925710873812,
+   "sigma": 1.7508080032751066
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": -0.197,
+   "incumbent": "graded t=0.7 lives=True",
+   "kind": "graded",
+   "se": 0.03915816876579579,
+   "sigma": 1.7512065446945686
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.66,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.07498007072217758,
+   "sigma": 3.353210701850616
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -16.732,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.0758450013653903,
+   "sigma": 3.391891576131542
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.3625,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.07347275684224051,
+   "sigma": 3.2858015758712518
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -15.863,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.11375669559589206,
+   "sigma": 5.087354084963312
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": -0.202,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.0734765091624483,
+   "sigma": 3.285969384732411
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -13.7435,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.16562780611986636,
+   "sigma": 7.407100668963537
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 0.153,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.07103392435452656,
+   "sigma": 3.176733671305985
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -3.8105,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.17357378489968522,
+   "sigma": 7.762455642952454
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.3335,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.059223243505279605,
+   "sigma": 2.6485439665165624
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.2785,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.0686973692310676,
+   "sigma": 3.0722397495213927
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 0.2745,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.06805432073193549,
+   "sigma": 3.0434817463836197
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": 0.1355,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.07385321268239964,
+   "sigma": 3.3028160782919036
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 0.1365,
+   "incumbent": "graded t=0.7 lives=False",
+   "kind": "graded",
+   "se": 0.0738489045643378,
+   "sigma": 3.302623413395077
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.9385,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.04225223663606904,
+   "sigma": 1.8895774663931486
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -17.0105,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.043464231785715034,
+   "sigma": 1.9437795372533178
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.641,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.04232558596893618,
+   "sigma": 1.892857748281052
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -16.1415,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.09775232290496558,
+   "sigma": 4.371616779480255
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": -0.4805,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.04185912048746356,
+   "sigma": 1.8719967777664532
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -14.022,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.1559580695563069,
+   "sigma": 6.974656903350854
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": -0.1255,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.04106358464615572,
+   "sigma": 1.8364193333724168
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -4.089,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.1754435228637906,
+   "sigma": 7.846072866709489
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.055,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.030585212564469888,
+   "sigma": 1.367812288008707
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": -0.2785,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.0686973692310676,
+   "sigma": 3.0722397495213927
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": -0.004,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.01888571775621948,
+   "sigma": 0.8445949741356311
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": -0.143,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.03405665027147939,
+   "sigma": 1.5230597018592915
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": -0.142,
+   "incumbent": "graded t=0.8 lives=True",
+   "kind": "graded",
+   "se": 0.034066086495583285,
+   "sigma": 1.5234817026302365
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.9345,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.04588199487518893,
+   "sigma": 2.0519051896843887
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -17.0065,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.047104546427569734,
+   "sigma": 2.106579357226816
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.637,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.04586575338601595,
+   "sigma": 2.0511788482074564
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -16.1375,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.09940693005958857,
+   "sigma": 4.445613060956146
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": -0.4765,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.04552757686422113,
+   "sigma": 2.0360551343849034
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -14.018,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.15688258052453116,
+   "sigma": 7.016002290768727
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": -0.1215,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.04502646517641754,
+   "sigma": 2.013644738419934
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -4.085,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.17631770037558017,
+   "sigma": 7.8851672735247496
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.059,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.035789662613315974,
+   "sigma": 1.600562369903146
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": -0.2745,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.06805432073193549,
+   "sigma": 3.0434817463836197
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.004,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.01888571775621948,
+   "sigma": 0.8445949741356311
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": -0.139,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.03854325221287862,
+   "sigma": 1.7237066404383157
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": -0.138,
+   "incumbent": "graded t=0.8 lives=False",
+   "kind": "graded",
+   "se": 0.038538560044521025,
+   "sigma": 1.7234968002901268
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.7955,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.04098999835304328,
+   "sigma": 1.8331284543001842
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -16.8675,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.04215282084454818,
+   "sigma": 1.8851314570355966
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.498,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.04261344802965946,
+   "sigma": 1.9057313309994608
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -15.9985,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.09769862530093679,
+   "sigma": 4.36921534962351
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": -0.3375,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.04251118059096475,
+   "sigma": 1.9011577921033376
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -13.879,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.15580859301986338,
+   "sigma": 6.967972109420275
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 0.0175,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.043995052646049464,
+   "sigma": 1.967518567804972
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -3.946,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.1778731610747258,
+   "sigma": 7.95472959071713
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.198,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.03914925710873812,
+   "sigma": 1.7508080032751066
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": -0.1355,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.07385321268239964,
+   "sigma": 3.3028160782919036
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.143,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.03405665027147939,
+   "sigma": 1.5230597018592915
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 0.139,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.03854325221287862,
+   "sigma": 1.7237066404383157
+  },
+  {
+   "candidate": "graded t=0.9 lives=False",
+   "delta": 0.001,
+   "incumbent": "graded t=0.9 lives=True",
+   "kind": "graded",
+   "se": 0.0007069298939339522,
+   "sigma": 0.031614865963260665
+  },
+  {
+   "candidate": "graded t=0.3 lives=True",
+   "delta": -0.7965,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.04099248793417541,
+   "sigma": 1.833239791753123
+  },
+  {
+   "candidate": "graded t=0.3 lives=False",
+   "delta": -16.8685,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.04215438733021265,
+   "sigma": 1.8852015124042272
+  },
+  {
+   "candidate": "graded t=0.4 lives=True",
+   "delta": -0.499,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.042619334859332635,
+   "sigma": 1.9059945980258841
+  },
+  {
+   "candidate": "graded t=0.4 lives=False",
+   "delta": -15.9995,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.09770375062628467,
+   "sigma": 4.369444561141203
+  },
+  {
+   "candidate": "graded t=0.5 lives=True",
+   "delta": -0.3385,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.04251896995933934,
+   "sigma": 1.9015061432470848
+  },
+  {
+   "candidate": "graded t=0.5 lives=False",
+   "delta": -13.88,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.15581861159649682,
+   "sigma": 6.968420153788079
+  },
+  {
+   "candidate": "graded t=0.6 lives=True",
+   "delta": 0.0165,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.0440066150264144,
+   "sigma": 1.968035653174526
+  },
+  {
+   "candidate": "graded t=0.6 lives=False",
+   "delta": -3.947,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.17790986892449323,
+   "sigma": 7.956371215664886
+  },
+  {
+   "candidate": "graded t=0.7 lives=True",
+   "delta": 0.197,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.03915816876579579,
+   "sigma": 1.7512065446945686
+  },
+  {
+   "candidate": "graded t=0.7 lives=False",
+   "delta": -0.1365,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.0738489045643378,
+   "sigma": 3.302623413395077
+  },
+  {
+   "candidate": "graded t=0.8 lives=True",
+   "delta": 0.142,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.034066086495583285,
+   "sigma": 1.5234817026302365
+  },
+  {
+   "candidate": "graded t=0.8 lives=False",
+   "delta": 0.138,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.038538560044521025,
+   "sigma": 1.7234968002901268
+  },
+  {
+   "candidate": "graded t=0.9 lives=True",
+   "delta": -0.001,
+   "incumbent": "graded t=0.9 lives=False",
+   "kind": "graded",
+   "se": 0.0007069298939339522,
+   "sigma": 0.031614865963260665
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": 0.133,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.08338244309150432,
+   "sigma": 3.7289762176522276
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": 0.1335,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.08338354323630845,
+   "sigma": 3.72902541762357
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": 2.397,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.1562879024564189,
+   "sigma": 6.989407479068181
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": 2.5615,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.16383537435470083,
+   "sigma": 7.326940683524737
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": 2.6925,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.167071626373749,
+   "sigma": 7.47167027366299
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": 3.227,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.17387884410190074,
+   "sigma": 7.7760983052187695
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": 3.469,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.1790112902054239,
+   "sigma": 8.005628272785403
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 3.568,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.18513866739036863,
+   "sigma": 8.279652910971757
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 3.5725,
+   "incumbent": "graded iggi+pps t=0.62",
+   "kind": "graded",
+   "se": 0.18533360771342589,
+   "sigma": 8.288370907249993
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -0.133,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.08338244309150432,
+   "sigma": 3.7289762176522276
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": 0.0005,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.0005,
+   "sigma": 0.0223606797749979
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": 2.264,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.14950695021998822,
+   "sigma": 6.686154076011416
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": 2.4285,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.15819752559238015,
+   "sigma": 7.074808421936495
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": 2.5595,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.16182806937308036,
+   "sigma": 7.237171275715189
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": 3.094,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.1699691935716049,
+   "sigma": 7.601253418138576
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": 3.336,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.17577400333987123,
+   "sigma": 7.860852402904543
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 3.435,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.181697260428504,
+   "sigma": 8.12574851287235
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 3.4395,
+   "incumbent": "graded iggi+pps t=0.64",
+   "kind": "graded",
+   "se": 0.18138252309647265,
+   "sigma": 8.11167303148277
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -0.1335,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.08338354323630845,
+   "sigma": 3.72902541762357
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -0.0005,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.0005,
+   "sigma": 0.0223606797749979
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": 2.2635,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.14951491975925113,
+   "sigma": 6.68651048464224
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": 2.428,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.15823535386760695,
+   "sigma": 7.076500153834068
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": 2.559,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.16186525161330925,
+   "sigma": 7.238834116049341
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": 3.0935,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.16997742508203478,
+   "sigma": 7.601621542476152
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": 3.3355,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.17578088444045142,
+   "sigma": 7.861160135077689
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 3.4345,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.18170543004173906,
+   "sigma": 8.12611386908322
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 3.439,
+   "incumbent": "graded iggi+pps t=0.66",
+   "kind": "graded",
+   "se": 0.18139071309027288,
+   "sigma": 8.112039299140223
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -2.397,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.1562879024564189,
+   "sigma": 6.989407479068181
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -2.264,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.14950695021998822,
+   "sigma": 6.686154076011416
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": -2.2635,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.14951491975925113,
+   "sigma": 6.68651048464224
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": 0.1645,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.05664206949801982,
+   "sigma": 2.5331103556767944
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": 0.2955,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.07575591960155548,
+   "sigma": 3.387907718541737
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": 0.83,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.11051541443805116,
+   "sigma": 4.942399584900882
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": 1.072,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.12241895768466704,
+   "sigma": 5.474742222351716
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 1.171,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.13214806489513103,
+   "sigma": 5.909841124011333
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 1.1755,
+   "incumbent": "graded iggi+pps t=0.68",
+   "kind": "graded",
+   "se": 0.13402362120357836,
+   "sigma": 5.993718552037668
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -2.5615,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.16383537435470083,
+   "sigma": 7.326940683524737
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -2.4285,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.15819752559238015,
+   "sigma": 7.074808421936495
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": -2.428,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.15823535386760695,
+   "sigma": 7.076500153834068
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": -0.1645,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.05664206949801982,
+   "sigma": 2.5331103556767944
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": 0.131,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.05598201937449757,
+   "sigma": 2.5035920167817367
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": 0.6655,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.1036130914091249,
+   "sigma": 4.633718314994056
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": 0.9075,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.11734290158879078,
+   "sigma": 5.2477340925920855
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 1.0065,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.1274670655557768,
+   "sigma": 5.700500469502779
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 1.011,
+   "incumbent": "graded iggi+pps t=0.7",
+   "kind": "graded",
+   "se": 0.1294751768127982,
+   "sigma": 5.790305935044426
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -2.6925,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.167071626373749,
+   "sigma": 7.47167027366299
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -2.5595,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.16182806937308036,
+   "sigma": 7.237171275715189
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": -2.559,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.16186525161330925,
+   "sigma": 7.238834116049341
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": -0.2955,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.07575591960155548,
+   "sigma": 3.387907718541737
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": -0.131,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.05598201937449757,
+   "sigma": 2.5035920167817367
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": 0.5345,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.09127469753554433,
+   "sigma": 4.081928566304193
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": 0.7765,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.10993096144008553,
+   "sigma": 4.916262052238789
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 0.8755,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.12150671510623581,
+   "sigma": 5.4339454940048775
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 0.88,
+   "incumbent": "graded iggi+pps t=0.75",
+   "kind": "graded",
+   "se": 0.12511845313005124,
+   "sigma": 5.5954673287683185
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -3.227,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.17387884410190074,
+   "sigma": 7.7760983052187695
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -3.094,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.1699691935716049,
+   "sigma": 7.601253418138576
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": -3.0935,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.16997742508203478,
+   "sigma": 7.601621542476152
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": -0.83,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.11051541443805116,
+   "sigma": 4.942399584900882
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": -0.6655,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.1036130914091249,
+   "sigma": 4.633718314994056
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": -0.5345,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.09127469753554433,
+   "sigma": 4.081928566304193
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": 0.242,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.0785831130258048,
+   "sigma": 3.5143436521849742
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 0.341,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.09952794786492436,
+   "sigma": 4.451025141740518
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 0.3455,
+   "incumbent": "graded iggi+pps t=0.8",
+   "kind": "graded",
+   "se": 0.10442469599461032,
+   "sigma": 4.670014375473974
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -3.469,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.1790112902054239,
+   "sigma": 8.005628272785403
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -3.336,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.17577400333987123,
+   "sigma": 7.860852402904543
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": -3.3355,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.17578088444045142,
+   "sigma": 7.861160135077689
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": -1.072,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.12241895768466704,
+   "sigma": 5.474742222351716
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": -0.9075,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.11734290158879078,
+   "sigma": 5.2477340925920855
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": -0.7765,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.10993096144008553,
+   "sigma": 4.916262052238789
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": -0.242,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.0785831130258048,
+   "sigma": 3.5143436521849742
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": 0.099,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.06854888018405,
+   "sigma": 3.065599117460482
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 0.1035,
+   "incumbent": "graded iggi+pps t=0.85",
+   "kind": "graded",
+   "se": 0.0782876641251806,
+   "sigma": 3.501130775671508
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -3.568,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.18513866739036863,
+   "sigma": 8.279652910971757
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -3.435,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.181697260428504,
+   "sigma": 8.12574851287235
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": -3.4345,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.18170543004173906,
+   "sigma": 8.12611386908322
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": -1.171,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.13214806489513103,
+   "sigma": 5.909841124011333
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": -1.0065,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.1274670655557768,
+   "sigma": 5.700500469502779
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": -0.8755,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.12150671510623581,
+   "sigma": 5.4339454940048775
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": -0.341,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.09952794786492436,
+   "sigma": 4.451025141740518
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": -0.099,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.06854888018405,
+   "sigma": 3.065599117460482
+  },
+  {
+   "candidate": "graded iggi+pps t=0.95",
+   "delta": 0.0045,
+   "incumbent": "graded iggi+pps t=0.9",
+   "kind": "graded",
+   "se": 0.03845099627522385,
+   "sigma": 1.719580829479835
+  },
+  {
+   "candidate": "graded iggi+pps t=0.62",
+   "delta": -3.5725,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.18533360771342589,
+   "sigma": 8.288370907249993
+  },
+  {
+   "candidate": "graded iggi+pps t=0.64",
+   "delta": -3.4395,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.18138252309647265,
+   "sigma": 8.11167303148277
+  },
+  {
+   "candidate": "graded iggi+pps t=0.66",
+   "delta": -3.439,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.18139071309027288,
+   "sigma": 8.112039299140223
+  },
+  {
+   "candidate": "graded iggi+pps t=0.68",
+   "delta": -1.1755,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.13402362120357836,
+   "sigma": 5.993718552037668
+  },
+  {
+   "candidate": "graded iggi+pps t=0.7",
+   "delta": -1.011,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.1294751768127982,
+   "sigma": 5.790305935044426
+  },
+  {
+   "candidate": "graded iggi+pps t=0.75",
+   "delta": -0.88,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.12511845313005124,
+   "sigma": 5.5954673287683185
+  },
+  {
+   "candidate": "graded iggi+pps t=0.8",
+   "delta": -0.3455,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.10442469599461032,
+   "sigma": 4.670014375473974
+  },
+  {
+   "candidate": "graded iggi+pps t=0.85",
+   "delta": -0.1035,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.0782876641251806,
+   "sigma": 3.501130775671508
+  },
+  {
+   "candidate": "graded iggi+pps t=0.9",
+   "delta": -0.0045,
+   "incumbent": "graded iggi+pps t=0.95",
+   "kind": "graded",
+   "se": 0.03845099627522385,
+   "sigma": 1.719580829479835
+  }
+ ],
+ "pairs_summary": {
+  "median_sigma": 3.6126812460642106,
+  "n_h0 (delta<=0)": 188,
+  "n_h1 (delta>=1)": 90,
+  "n_indifference": 82,
+  "wald_asn_h1_at_median_sigma": 69.1726402702195
+ },
+ "wall_seconds": 944.1
+}
