@@ -1,0 +1,10 @@
+# Null-population calibration (fix round 1, step 11): the stub in `null` mode (revisions = parent rule list with a
+# fresh random stream), same loop and organization as the dry run, at a size that runs K populations in minutes.
+name: null_calibration
+experiment_seed: 0
+population: {groups: 2, agents_per_group: 2}
+evaluation: {selfplay_games: 40, crossplay_games: 16, anchor_games: 16, between_group_games: 30, ladder_every: 0, workers: 0}
+org:
+  routing: broadcast_group
+  verification: {name: selfplay, n: 40}
+runner: {generations: 10}

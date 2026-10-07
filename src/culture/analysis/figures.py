@@ -37,9 +37,25 @@ def _refs(ax, xmax):
         ax.text(xmax, y, " " + label, color=MUTED, fontsize=7, va="center", ha="left")
 
 
-def between_vs_tokens(s: dict[str, Any], title: str = "Between-group cross-play vs tokens"):
+def _null_band(ax, x, null: dict[str, Any] | None, metric: str, color: str, label: str) -> None:
+    """Shade the null-population band (analysis/null.py) for `metric`, aligned by generation index with x."""
+    if not null or metric not in null.get("metrics", {}):
+        return
+    m = null["metrics"][metric]
+    n = min(len(x), len(m["lo"]))
+    lo = np.array([np.nan if v is None else v for v in m["lo"][:n]], float)
+    hi = np.array([np.nan if v is None else v for v in m["hi"][:n]], float)
+    ax.fill_between(np.asarray(x)[:n], lo, hi, color=color, alpha=0.12, linewidth=0,
+                    label=f"{label} null band (K={null['k']}, coverage {null.get('coverage', float('nan')):.2f})")
+
+
+def between_vs_tokens(s: dict[str, Any], title: str = "Between-group cross-play vs tokens",
+                      null: dict[str, Any] | None = None):
+    """`null`: a null calibration (analysis/null.py) whose bands are drawn behind the matching curves."""
     fig, ax = plt.subplots(figsize=(7.5, 4))
     x = s["tokens"] / 1e6
+    _null_band(ax, x, null, "between_offdiag", SERIES[0], "between-group")
+    _null_band(ax, x, null, "population_mean", SERIES[2], "population mean")
     ax.plot(x, s["between_offdiag"], color=SERIES[0], linewidth=2, label="between-group cross-play (group bests)")
     ax.plot(x, s["between_diag"], color=SERIES[1], linewidth=2, label="self-play of group bests")
     ax.plot(x, s["population_mean"], color=SERIES[2], linewidth=1.5, label="population mean self-play")
@@ -51,8 +67,10 @@ def between_vs_tokens(s: dict[str, Any], title: str = "Between-group cross-play 
     return fig
 
 
-def score_vs_generation(s: dict[str, Any], title: str = "Group best self-play by generation"):
+def score_vs_generation(s: dict[str, Any], title: str = "Group best self-play by generation",
+                        null: dict[str, Any] | None = None):
     fig, ax = plt.subplots(figsize=(7.5, 3.6))
+    _null_band(ax, s["generation"], null, "population_best", MUTED, "population best")
     for i, (gname, y) in enumerate(sorted(s["group_best"].items())):
         ax.plot(s["generation"], y, color=SERIES[i % len(SERIES)], linewidth=2, label=gname)
     ax.plot(s["generation"], s["anchor_mean"], color=MUTED, linewidth=1, label="mean score with anchors")

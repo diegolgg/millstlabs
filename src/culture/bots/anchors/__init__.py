@@ -64,11 +64,17 @@ RULE_DOCS = {
 }
 
 
-def rulebot_source(rules: list) -> str:
-    """bot.py text for a rule list (the template with its CONFIG block replaced)."""
+def rulebot_source(rules: list, noise: int = 0) -> str:
+    """bot.py text for a rule list (the template with its CONFIG block replaced). `noise != 0` (the null stub) adds
+    `NOISE = <k>` and seeds the bot's RNG with `seed + NOISE`: the same policy with a different random stream, so the
+    expected score is unchanged and only the realized games differ. noise = 0 leaves the template text untouched."""
     template = (_DIR / "rulebot.py").read_text()
     block = "# === CONFIG ===\nRULES = " + repr(rules) + "\n# === END CONFIG ===\n"
-    return CONFIG_RE.sub(lambda _: block, template, count=1)
+    src = CONFIG_RE.sub(lambda _: block, template, count=1)
+    if noise:
+        src = src.replace("COPIES = [3, 2, 2, 2, 1]\n", f"COPIES = [3, 2, 2, 2, 1]\nNOISE = {int(noise)}\n", 1)
+        src = src.replace("self.rng = random.Random(seed)", "self.rng = random.Random(seed + NOISE)", 1)
+    return src
 
 
 def parse_rules(code: str) -> list | None:

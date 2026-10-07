@@ -38,6 +38,9 @@ class StubConfig:
     diff_rate: float = 0.3
     invalid_rate: float = 0.03
     teach_words: int = 60
+    # "hill": revisions mutate the rule list (selection then hill-climbs). "null": revisions return the parent's rule
+    # list unchanged with a fresh RNG salt (pure noise, no expected change), for null-population calibration.
+    mode: str = "hill"
 
 
 def _rng_for(req: Request) -> random.Random:
@@ -148,15 +151,20 @@ class StubBackend:
         else:
             rules = found[0]
             lo, hi = cfg.revise_mutations
+        noise = 0
+        if cfg.mode == "null" and req.tag != "author" and found:
+            rules, lo, hi = found[0], 0, 0  # the parent's (or receiver's own) rule list, untouched
+            noise = rng.randint(1, 2**30)
+            notes.append("kept the rule list; new random stream")
         for _ in range(rng.randint(lo, hi)):
             rules, what = mutate(rules, rng)
             notes.append(what)
-        code = rulebot_source(rules)
+        code = rulebot_source(rules, noise=noise)
         conventions = conventions_for(rules, title="Conventions")
         broken = req.tag != "repair" and rng.random() < cfg.invalid_rate
         if broken:
             code = code.replace("    def act(self, obs):", "    def act(self, obs)", 1)
-        if req.tag == "revise" and found and not broken and rng.random() < cfg.diff_rate:
+        if req.tag == "revise" and found and not broken and not noise and rng.random() < cfg.diff_rate:
             diff = f"<<<<<<< SEARCH\n{_config_line(found[0])}\n=======\n{_config_line(rules)}\n>>>>>>> REPLACE"
             return (f"{'; '.join(notes)}.\n<bot_diff>\n{diff}\n</bot_diff>\n"
                     f"<conventions>\n{conventions}</conventions>\n")
