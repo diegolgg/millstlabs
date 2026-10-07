@@ -432,6 +432,7 @@ def _finish(ctx: RunContext, g: int, t0: float, extra: dict[str, Any], candidate
         "hc": _hc_record(ctx, g, starts),
         "ladder": ladder,
         "cost": {"tokens": led["tokens"], "spend_usd": led["spend_usd"], "new_spend_usd": led["new_spend_usd"],
+                 "real_spend_usd": led["real_spend_usd"],
                  "calls": led["calls"], "by_tag": {k: {"tokens": v["tokens"], "calls": v["calls"],
                                                        "spend_usd": v["spend_usd"]} for k, v in sorted(by_tag.items())}},
         "counters": {a: dict(sorted(ag.counters.items())) for a, ag in sorted(ctx.agents.items())},

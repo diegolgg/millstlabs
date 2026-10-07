@@ -34,6 +34,7 @@ def series(run: dict[str, Any]) -> dict[str, np.ndarray]:
         "generation": g,
         "tokens": np.array([r["cost"]["tokens"] for r in recs], float),
         "spend_usd": np.array([r["cost"]["spend_usd"] for r in recs], float),
+        "real_spend_usd": np.array([r["cost"].get("real_spend_usd", np.nan) for r in recs], float),
         "population_best": np.array([r["population_best"] for r in recs], float),
         "population_mean": np.array([r["population_mean"] for r in recs], float),
         "anchor_mean": np.array([np.mean([a["anchor_score"] for a in r["agents"].values()]) for r in recs], float),

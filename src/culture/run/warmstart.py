@@ -98,7 +98,7 @@ def build_warm_start(cfg: ExperimentConfig, root: str | Path) -> Path:
         doc = {"key": key, "population_seed": cfg.population.seed, "name": cfg.name,
                "agents": {aid: art.to_dict() for aid, art in sorted(arts.items())},
                "content": {aid: art.id for aid, art in sorted(arts.items())},
-               "ledger_totals": {k: totals[k] for k in ("calls", "tokens", "spend_usd", "new_spend_usd")},
+               "ledger_totals": {k: totals[k] for k in ("calls", "tokens", "spend_usd", "new_spend_usd", "real_spend_usd")},
                "counters": {aid: dict(sorted(ag.counters.items())) for aid, ag in sorted(ctx.agents.items())}}
         with open(tmp / SET_FILE, "w") as f:
             json.dump(doc, f, sort_keys=True, indent=1)

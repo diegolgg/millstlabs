@@ -106,7 +106,9 @@ class CostLedger:
     """Append-only JSONL: one row per LLM call with (run, group, agent, generation, tag) and usage.
 
     `cached` rows were served by the record/replay cache. `spend_usd` is what that call cost when it was first made, so a
-    replayed or resumed run reports the same curve as the original; `new_spend_usd` is 0 for cache hits."""
+    replayed or resumed run reports the same curve as the original; `new_spend_usd` is 0 for cache hits from other
+    runs but counts a resumed run's replays of its own calls; `real_spend_usd` (totals only) excludes those replays
+    and is the money actually paid."""
 
     def __init__(self, path: Path | None = None):
         self.path = Path(path) if path else None
@@ -162,6 +164,9 @@ class CostLedger:
                               + r["cache_creation_input_tokens"] for r in rows),
                 "spend_usd": sum(r["spend_usd"] or 0.0 for r in rows),
                 "new_spend_usd": sum(r["new_spend_usd"] or 0.0 for r in rows),
+                # money actually paid: new spend minus a resumed run's replays of its own calls (those were paid once,
+                # before the crash, and new_spend_usd counts them again so that the cost curve matches)
+                "real_spend_usd": sum(r["new_spend_usd"] or 0.0 for r in rows if not r.get("replayed_within_run")),
             }
 
         if by is None:

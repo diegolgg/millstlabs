@@ -34,6 +34,8 @@ def run_report(run_dir: str | Path) -> str:
         f"| distinct incumbents | {s['distinct_incumbents'][0]:.0f} | {s['distinct_incumbents'][-1]:.0f} |",
         f"| cumulative tokens | {s['tokens'][0]:.0f} | {s['tokens'][-1]:.0f} |",
         f"| cumulative spend (USD, nominal for stub) | {s['spend_usd'][0]:.2f} | {s['spend_usd'][-1]:.2f} |",
+        f"| money actually paid (USD; excludes cache hits and resume replays) | {s['real_spend_usd'][0]:.2f} | "
+        f"{s['real_spend_usd'][-1]:.2f} |",
         "",
         f"Slope of population mean: first third {shape['slope_first_third']:+.4f}/gen, last third "
         f"{shape['slope_last_third']:+.4f}/gen; changepoints at generations {shape['changepoints']}.",

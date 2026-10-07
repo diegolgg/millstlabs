@@ -144,7 +144,7 @@ class Runner:
         return False
 
 
-VOLATILE_KEYS = {"volatile", "wall_seconds", "replayed_within_run", "cached", "new_spend_usd"}
+VOLATILE_KEYS = {"volatile", "wall_seconds", "replayed_within_run", "cached", "new_spend_usd", "real_spend_usd"}
 
 
 def _strip(o: Any) -> Any:
