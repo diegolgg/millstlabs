@@ -33,6 +33,13 @@ def generation_seeds(experiment_seed: int, generation: int, n: int, purpose: str
     return SeedSet(base % (2**31 - 2**24), n)
 
 
+BOT_SEED_SALT = "culture/bot-seed/v1"
+
+
 def bot_seed(game_seed: int, seat: int) -> int:
-    """Seed handed to a bot's `reset` (its only legitimate randomness source)."""
-    return (game_seed * 16 + seat + 1) % (2**31 - 1)
+    """Seed handed to a bot's `reset` (its only legitimate randomness source). A one-way hash of (salt, game seed,
+    seat), so a bot cannot recover the deal seed from it (the old `game_seed * 16 + seat + 1` was trivially
+    invertible, and the deck is a deterministic function of the deal seed). Deterministic across runs and processes.
+    Seat -1 seeds the module-level `random` state that `play_game` resets before each game."""
+    h = hashlib.sha256(f"{BOT_SEED_SALT}:{int(game_seed)}:{int(seat)}".encode()).digest()
+    return int.from_bytes(h[:8], "big") % (2**31 - 1)

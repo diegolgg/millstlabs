@@ -273,7 +273,7 @@ def play_game(params: HanabiParams, specs: list[BotSpec], seed: int, limits: San
     game = HanabiGame(params)
     match = game.new_game(seed)
     desc = params.describe()
-    random.seed(seed)  # bots that misuse the module-level RNG still behave deterministically
+    random.seed(bot_seed(seed, -1))  # module-level RNG: deterministic for bots that misuse it, and not the deal seed
     seats = [_Seat(s, bot_factory(s, limits), limits) for s in specs]
     for p, seat in enumerate(seats):
         seat.reset(copy.deepcopy(desc), p, bot_seed(seed, p))  # own copy: one seat cannot edit the other's rules

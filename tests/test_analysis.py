@@ -32,9 +32,11 @@ def test_series_report_and_figures(tmp_path):
               figures.diversity):
         fig = f(s)
         fig.savefig(tmp_path / f"{f.__name__}.png")
-    # threshold the stub trajectory crosses (it peaks near 7; the system prompt now states the sandbox rules, which
-    # rehashed stub requests and lowered this stub curve). The assertion checks trajectory_shape's crossing plumbing.
-    assert trajectory_shape(s, threshold=6.0)["first_gen_between_above_threshold"] is not None
+    # crossing plumbing, with a data-derived threshold (a fixed constant broke whenever the stub curve shifted)
+    thr = float(np.nanmax(s["between_offdiag"]))
+    first = int(s["generation"][np.where(s["between_offdiag"] >= thr)[0][0]])
+    assert trajectory_shape(s, threshold=thr)["first_gen_between_above_threshold"] == first
+    assert trajectory_shape(s, threshold=thr + 1.0)["first_gen_between_above_threshold"] is None
 
 
 def test_changepoints_and_slope_known_answers():
