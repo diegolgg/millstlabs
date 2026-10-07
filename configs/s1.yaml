@@ -1,0 +1,123 @@
+# S1: switchback perturbation of levers (tex/research.tex, Experiment S1). Run with
+#   python scripts/run_experiment.py configs/s1.yaml runs/s1 [processes]     (or scripts/g1_pilot.py for the stub pilot)
+# One condition per lever; in each, that lever alone is toggled every 30 generations by org.schedule (org/schedule.py),
+# the other levers held at the base organization, which is G1's `organized` condition (configs/g1.yaml): 8 agents in
+# two islands of 4, broadcast_group teaching, selfplay(n=200) verification, replace_if_better, keep_best_k(5),
+# islands migration 0.25 every 5 generations, corpus on, credit none, the same matched cap of 24 calls per generation
+# (2 groups x 12; arithmetic in configs/g1.yaml).
+#
+# Schedule: ON for generations 1-30, OFF 31-60, ON 61-90, ..., OFF 271-300 (switches at 31, 61, ..., 271): 10 blocks
+# of 30, 5 ON and 5 OFF, 9 switches per run. Generation 0 (warm start) runs the base organization (ON).
+# A switch at g takes effect at the top of generation g (before allocation). Messages sent at the end of g - 1 are
+# still received in g, so the first generation of a teaching-OFF block still reads the last ON block's messages, and
+# the first generation of a teaching-ON block receives nothing; the analysis drops a burn-in after each switch.
+#
+# What ON and OFF mean per lever:
+#   teaching      ON  routing broadcast_group (every agent sends its incumbent and one teach call's prose to its
+#                     island)      OFF routing none (no messages; no teach calls)
+#   verification  ON  selfplay(n=200): adopt a received artifact only if it beats the incumbent on 200 verify deals
+#                 OFF none: with replace_if_better this is blind adoption (every delivered artifact is adopted in
+#                     message-id order, so the last one wins)
+#   quarantine    ON  quarantine_unverified true: a received message reaches the revise prompt only if it passed
+#                     verification     OFF false: rejected messages' prose and evidence are shown too.
+#                     Verification stays selfplay(n=200) throughout (base value of this condition: quarantine ON).
+#   migration     ON  topology islands(migration_rate 0.25, interval 5): every 5 generations 2 agents each swap with
+#                     an agent of the other island   OFF islands(migration_rate 0, interval 5): the same reachability,
+#                     no moves. The lever is the islands rate, not the `migration` policy: with topology islands,
+#                     migration `none` means "use the islands' own rate" (run/context.py, registry.effective_migration),
+#                     so switching `migration` to none would not turn migration off.
+#   selection     ON  keep_best_k(k=5), the base: revise your incumbent, keep the revision only if it scores at least
+#                     as well on the same deals     OFF shinka_weighted(lam=10, cap=50): parent sampled from the group
+#                     archive (score sigmoid x novelty), every revision accepted. The archive carries across switches.
+#                     Note: tex/research.tex calls this lever "shrinkage selection"; neither policy shrinks scores for
+#                     the winner's curse. This is the selection rule we have; a shrinkage rule is not built.
+base:
+  name: s1
+  experiment_seed: 401
+  population: {groups: 2, agents_per_group: 4, warm_start: author, warm_start_canonical: true}
+  evaluation:
+    selfplay_games: 200
+    crossplay_games: 50
+    anchor_games: 50
+    anchors: [piers, iggi]
+    between_group_games: 50
+    ladder_every: 10
+    workers: 0
+  # Hosted block goes here (added by another build). Stub until then: zero model calls.
+  llm: {backend: stub}
+  corpus: {enabled: true}
+  budget: {unit: calls, per_group_per_generation: 12}
+  org:
+    topology: {name: islands, migration_rate: 0.25, interval: 5}
+    routing: broadcast_group
+    migration: none
+    verification: {name: selfplay, n: 200}
+    adoption: replace_if_better
+    credit: none
+    allocation: uniform
+    selection: {name: keep_best_k, k: 5}
+  runner: {generations: 301}   # generation 0 is the warm start, then 300 generations
+  thresholds: {min_effect_population_mean: 1.0}
+conditions:
+  teaching:
+    org:
+      schedule:
+        - {at: 31, set: {routing: none}}
+        - {at: 61, set: {routing: broadcast_group}}
+        - {at: 91, set: {routing: none}}
+        - {at: 121, set: {routing: broadcast_group}}
+        - {at: 151, set: {routing: none}}
+        - {at: 181, set: {routing: broadcast_group}}
+        - {at: 211, set: {routing: none}}
+        - {at: 241, set: {routing: broadcast_group}}
+        - {at: 271, set: {routing: none}}
+  verification:
+    org:
+      schedule:
+        - {at: 31, set: {verification: none}}
+        - {at: 61, set: {verification: {name: selfplay, n: 200}}}
+        - {at: 91, set: {verification: none}}
+        - {at: 121, set: {verification: {name: selfplay, n: 200}}}
+        - {at: 151, set: {verification: none}}
+        - {at: 181, set: {verification: {name: selfplay, n: 200}}}
+        - {at: 211, set: {verification: none}}
+        - {at: 241, set: {verification: {name: selfplay, n: 200}}}
+        - {at: 271, set: {verification: none}}
+  quarantine:
+    org:
+      quarantine_unverified: true
+      schedule:
+        - {at: 31, set: {quarantine_unverified: false}}
+        - {at: 61, set: {quarantine_unverified: true}}
+        - {at: 91, set: {quarantine_unverified: false}}
+        - {at: 121, set: {quarantine_unverified: true}}
+        - {at: 151, set: {quarantine_unverified: false}}
+        - {at: 181, set: {quarantine_unverified: true}}
+        - {at: 211, set: {quarantine_unverified: false}}
+        - {at: 241, set: {quarantine_unverified: true}}
+        - {at: 271, set: {quarantine_unverified: false}}
+  migration:
+    org:
+      schedule:
+        - {at: 31, set: {topology: {name: islands, migration_rate: 0.0, interval: 5}}}
+        - {at: 61, set: {topology: {name: islands, migration_rate: 0.25, interval: 5}}}
+        - {at: 91, set: {topology: {name: islands, migration_rate: 0.0, interval: 5}}}
+        - {at: 121, set: {topology: {name: islands, migration_rate: 0.25, interval: 5}}}
+        - {at: 151, set: {topology: {name: islands, migration_rate: 0.0, interval: 5}}}
+        - {at: 181, set: {topology: {name: islands, migration_rate: 0.25, interval: 5}}}
+        - {at: 211, set: {topology: {name: islands, migration_rate: 0.0, interval: 5}}}
+        - {at: 241, set: {topology: {name: islands, migration_rate: 0.25, interval: 5}}}
+        - {at: 271, set: {topology: {name: islands, migration_rate: 0.0, interval: 5}}}
+  selection:
+    org:
+      schedule:
+        - {at: 31, set: {selection: {name: shinka_weighted, lam: 10.0, cap: 50}}}
+        - {at: 61, set: {selection: {name: keep_best_k, k: 5}}}
+        - {at: 91, set: {selection: {name: shinka_weighted, lam: 10.0, cap: 50}}}
+        - {at: 121, set: {selection: {name: keep_best_k, k: 5}}}
+        - {at: 151, set: {selection: {name: shinka_weighted, lam: 10.0, cap: 50}}}
+        - {at: 181, set: {selection: {name: keep_best_k, k: 5}}}
+        - {at: 211, set: {selection: {name: shinka_weighted, lam: 10.0, cap: 50}}}
+        - {at: 241, set: {selection: {name: keep_best_k, k: 5}}}
+        - {at: 271, set: {selection: {name: shinka_weighted, lam: 10.0, cap: 50}}}
+population_seeds: [0, 1, 2]
