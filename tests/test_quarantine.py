@@ -129,6 +129,8 @@ def test_config_flag_default_off_and_digest_stable():
 
     d.pop("debug"), d["runner"].pop("generations"), d["runner"].pop("wall_clock_budget_s")
     d["evaluation"].pop("workers"), d["org"].pop("quarantine_unverified")
+    d["org"].pop("schedule"), d["population"].pop("warm_start_canonical")  # later default-off fields, same rule
+    assert off.digest() == "f875065a1af48815"  # the default digest before any of these fields existed
     assert off.digest() == hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:16]
     with pytest.raises(ConfigError):
         from_dict({"org": {"quarantine_unverified": "yes"}})

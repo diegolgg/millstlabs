@@ -1,0 +1,10 @@
+# G1 null band: configs/g1.yaml with the stub in `null` mode (a revision returns its parent's rule list with a fresh
+# random stream, so nothing can improve in expectation while selection still acts on noisy evaluations). Same
+# conditions, budgets, evaluation and deals; K = 10 population seeds per condition. analysis/accumulation.null_band
+# turns these runs into per-generation bands (analysis/null.py; with K = 10 the band is the [min, max] envelope,
+# coverage (K - 1)/(K + 1) = 0.82 per point). Stub only: zero model calls.
+extends: g1.yaml
+base:
+  name: g1_null
+  llm: {backend: stub, stub: {mode: "null"}}
+population_seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]

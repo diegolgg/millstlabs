@@ -16,7 +16,7 @@ import hashlib
 import json
 import os
 import shutil
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -37,10 +37,14 @@ def warm_start_key(cfg: ExperimentConfig) -> str:
     llm = asdict(cfg.llm)
     llm.pop("cache_mode", None)
     llm.pop("cache_dir", None)
+    pop = {k: v for k, v in asdict(cfg.population).items() if k not in ("warm_start_set", "warm_start_canonical")}
+    if cfg.population.warm_start_canonical:  # only the population size matters, not its split into groups
+        n = pop.pop("groups") * pop.pop("agents_per_group")
+        pop.update(canonical_agents=n)
     material = {
         "name": cfg.name,  # the seed-tag prefix
         "experiment_seed": cfg.experiment_seed,
-        "population": {k: v for k, v in asdict(cfg.population).items() if k != "warm_start_set"},
+        "population": pop,
         "game": asdict(cfg.game),
         "sandbox": asdict(cfg.sandbox),
         "llm": llm,
@@ -51,6 +55,29 @@ def warm_start_key(cfg: ExperimentConfig) -> str:
 
 def needs_authoring(cfg: ExperimentConfig) -> bool:
     return cfg.population.warm_start == "author"
+
+
+def canonical_ids(n: int) -> list[str]:
+    """Agent ids of the canonical one-group population a canonical warm-start set is authored for."""
+    return [f"g0a{i}" for i in range(n)]
+
+
+def assign(ctx, shared: dict[str, Any]) -> dict[str, Artifact]:
+    """The generation-0 artifact of each of the run's agents from a loaded set. A canonical set is handed out by
+    position (the run's agents in population order g0a0, g0a1, ..., g1a0, ... get canonical artifacts 0, 1, ...),
+    re-labelled with the run's author and group; the content, and therefore the artifact id, is unchanged."""
+    arts = shared["artifacts"]
+    if not shared.get("canonical"):
+        return arts
+    order = ctx.pop.agents
+    ids = canonical_ids(len(order))
+    if sorted(arts) != sorted(ids):
+        raise WarmStartMismatch(f"canonical set has agents {sorted(arts)}, this run needs {len(order)}")
+    out = {}
+    for aid, cid in zip(order, ids):
+        a = arts[cid]
+        out[aid] = replace(a, author=a.author if a.author.startswith("anchor:") else aid, group=ctx.agents[aid].group)
+    return out
 
 
 def author_initial(ctx) -> dict[str, Artifact]:
@@ -88,14 +115,18 @@ def build_warm_start(cfg: ExperimentConfig, root: str | Path) -> Path:
         return path
     tmp = final.with_name(final.name + ".tmp")
     shutil.rmtree(tmp, ignore_errors=True)
-    wcfg = from_dict({"condition": "_warm_start", "population": {"warm_start_set": ""}}, cfg)
+    over: dict[str, Any] = {"condition": "_warm_start", "population": {"warm_start_set": ""}}
+    canonical = cfg.population.warm_start_canonical
+    if canonical:  # author for one group of N, whatever the run's layout
+        over["population"].update(groups=1, agents_per_group=cfg.population.groups * cfg.population.agents_per_group)
+    wcfg = from_dict(over, cfg)
     ctx = RunContext(wcfg, tmp)
     try:
         _apply_environment(ctx, 0)
         ctx.start_budgets(None)
         arts = author_initial(ctx)
         totals = ctx.ledger.totals()
-        doc = {"key": key, "population_seed": cfg.population.seed, "name": cfg.name,
+        doc = {"key": key, "population_seed": cfg.population.seed, "name": cfg.name, **({"canonical": True} if canonical else {}),
                "agents": {aid: art.to_dict() for aid, art in sorted(arts.items())},
                "content": {aid: art.id for aid, art in sorted(arts.items())},
                "ledger_totals": {k: totals[k] for k in ("calls", "tokens", "spend_usd", "new_spend_usd", "real_spend_usd")},

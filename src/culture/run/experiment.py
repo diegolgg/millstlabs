@@ -7,6 +7,8 @@ Spec file format (YAML):
     base: {...ExperimentConfig fields...}
     conditions: {name: {...overrides...}, ...}
     population_seeds: [0, 1, 2]
+    extends: other.yaml     # optional: start from another spec (path relative to this file) and deep-merge this one
+                            # over it; mappings merge key by key, anything else (lists, scalars) replaces
 Runs land in <out>/<condition>/p<seed>/; warm-start sets in <out>/_warm_start/."""
 
 from __future__ import annotations
@@ -23,9 +25,19 @@ from .runner import run_config
 from .warmstart import build_warm_start, needs_authoring, warm_start_key
 
 
+def _deep_merge(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
+    out = dict(a)
+    for k, v in b.items():
+        out[k] = _deep_merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
 def load_spec(path: str | Path) -> dict[str, Any]:
     with open(path) as f:
         spec = yaml.safe_load(f)
+    if "extends" in spec:
+        parent = load_spec(Path(path).parent / spec.pop("extends"))
+        spec = _deep_merge(parent, spec)
     for k in ("base", "conditions", "population_seeds"):
         if k not in spec:
             raise ValueError(f"experiment spec needs `{k}`")

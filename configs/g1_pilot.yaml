@@ -1,0 +1,9 @@
+# G1 pilot: configs/g1.yaml at 3 population seeds and 30 generations after the warm start, for a quick hosted pilot
+# (the hosted llm block is added by another build; until then this is the stub and costs nothing). Seeds for the full
+# G1 come from this pilot's variance (power rule in tex/research.tex, Experiment G1). Matched-budget arithmetic,
+# isolated shape and pairing: see the comments in configs/g1.yaml.
+extends: g1.yaml
+base:
+  name: g1_pilot
+  runner: {generations: 31}
+population_seeds: [0, 1, 2]

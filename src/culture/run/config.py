@@ -45,6 +45,10 @@ class PopulationConfig:
     warm_start_overrides: dict[str, str] = field(default_factory=dict)  # agent id -> anchor name
     # path to a shared warm-start set (run/warmstart.py); when set, generation 0 is read from it, never authored
     warm_start_set: str = ""
+    # G1/S1 prep: author generation 0 for a canonical one-group population of the same size (ids g0a0 .. g0a{N-1})
+    # and hand the artifacts out by agent position, so conditions with different group layouts (8 x 1, 1 x 8, 2 x 4)
+    # start from identical artifacts. Default off; left out of the digest while off.
+    warm_start_canonical: bool = False
 
 
 @dataclass
@@ -115,6 +119,11 @@ class OrgConfig:
     # messages are withheld entirely (their prose, evidence and verification line). Default off. Left out of the
     # digest while off, so configs written before this flag keep their digests.
     quarantine_unverified: bool = False
+    # S1 lever schedule (org/schedule.py): [{at: g, set: {lever: value, ...}}, ...] with `at` >= 1 strictly
+    # increasing. A lever is any policy field above or `quarantine_unverified`; from generation `at` on it takes the
+    # new value (applied at the top of the generation, before allocation). Default empty; left out of the digest while
+    # empty, so configs written before it keep their digests.
+    schedule: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -181,6 +190,10 @@ class ExperimentConfig:
         d["evaluation"].pop("workers")
         if not d["org"].get("quarantine_unverified"):
             d["org"].pop("quarantine_unverified", None)
+        if not d["org"].get("schedule"):
+            d["org"].pop("schedule", None)
+        if not d["population"].get("warm_start_canonical"):
+            d["population"].pop("warm_start_canonical", None)
         return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:16]
 
 
@@ -279,6 +292,16 @@ def validate(cfg: ExperimentConfig) -> None:
         raise ConfigError("budget.unit must be calls | tokens | usd")
     if not isinstance(cfg.org.quarantine_unverified, bool):
         raise ConfigError("org.quarantine_unverified must be true or false")
+    if not isinstance(p.warm_start_canonical, bool):
+        raise ConfigError("population.warm_start_canonical must be true or false")
+    if p.warm_start_canonical and p.warm_start_overrides:
+        raise ConfigError("population.warm_start_canonical cannot be combined with warm_start_overrides")
+    from ..org.schedule import ScheduleError, parse_schedule
+
+    try:
+        parse_schedule(cfg.org.schedule)
+    except ScheduleError as e:
+        raise ConfigError(f"org.schedule: {e}") from e
     for f in fields(cfg.org):
         spec = getattr(cfg.org, f.name)
         if isinstance(spec, PolicySpec):
