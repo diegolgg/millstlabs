@@ -376,6 +376,24 @@ def _hc_record(ctx: RunContext, g: int, starts: dict[str, str]) -> dict[str, Any
     return {"z": [round(x, 3) for x in z], "hc": round(hc, 4), "hc_k": k}
 
 
+def _generalization(ctx: RunContext, g: int, candidates: dict) -> dict[str, dict[str, float]]:
+    """Per artifact (incumbents and this generation's candidates): held-out evaluation score minus its score on the
+    generation's feedback deals (the deals whose traces the LLM saw). A large positive gap on feedback deals would mean
+    revisions overfit the traces they were shown."""
+    fseeds = A.feedback_seeds(ctx, g)
+    if not fseeds:
+        return {}
+    ids = sorted({ag.incumbent for ag in ctx.agents.values()} | {c for c, _ in candidates.values()})
+    out = {}
+    for aid in ids:
+        if aid not in ctx.evals:
+            continue
+        ev_score = ctx.evals[aid].selfplay_mean
+        fb = float(np.mean([r.score for r in selfplay(ctx.evaluator, ctx.spec(aid), fseeds)]))
+        out[aid] = {"eval": round(ev_score, 4), "feedback": round(fb, 4), "generalization_gap": round(ev_score - fb, 4)}
+    return out
+
+
 def _finish(ctx: RunContext, g: int, t0: float, extra: dict[str, Any], candidates: dict, starts: dict) -> dict[str, Any]:
     cfg = ctx.cfg
     groups = {}
@@ -430,6 +448,7 @@ def _finish(ctx: RunContext, g: int, t0: float, extra: dict[str, Any], candidate
         "diversity": {"distinct_incumbents": len(incs),
                       "code_clusters": code_clusters({i: ctx.store.get(i).code for i in incs})},
         "hc": _hc_record(ctx, g, starts),
+        "generalization": _generalization(ctx, g, candidates),
         "ladder": ladder,
         "cost": {"tokens": led["tokens"], "spend_usd": led["spend_usd"], "new_spend_usd": led["new_spend_usd"],
                  "real_spend_usd": led["real_spend_usd"],

@@ -7,7 +7,11 @@ from dataclasses import dataclass
 
 # Generation seed sets are spaced far apart so selfplay/crossplay/verification/anchor sets never overlap.
 GENERATION_STRIDE = 1_000_003
-PURPOSE_OFFSETS = {"eval": 0, "verify": 200_000, "ladder": 400_000, "probe": 600_000, "reeval": 800_000}
+# Within a generation the purposes are disjoint: `feedback` deals are the only ones whose traces an LLM ever sees,
+# `verify` deals are used by receivers to check payloads, `eval` deals are held out (selection, metrics, credit).
+PURPOSE_OFFSETS = {"eval": 0, "verify": 200_000, "ladder": 400_000, "probe": 600_000, "reeval": 800_000,
+                   "feedback": 900_000}
+MAX_GAMES_PER_PURPOSE = 100_000  # keeps purpose blocks (and generations) disjoint
 
 
 @dataclass(frozen=True)
@@ -29,6 +33,8 @@ class SeedSet:
 def generation_seeds(experiment_seed: int, generation: int, n: int, purpose: str = "eval") -> SeedSet:
     """The shared deal set for one generation. Depends only on (experiment seed, generation, purpose), never on the
     condition or the population seed, so every condition of an experiment plays the same deals."""
+    if n > MAX_GAMES_PER_PURPOSE:
+        raise ValueError(f"at most {MAX_GAMES_PER_PURPOSE} games per purpose per generation")
     base = experiment_seed * 7_919_993 + generation * GENERATION_STRIDE + PURPOSE_OFFSETS[purpose]
     return SeedSet(base % (2**31 - 2**24), n)
 

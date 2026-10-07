@@ -11,7 +11,7 @@ ${code}
 ## Evaluation on this generation's shared deals
 ${evaluation}
 
-## Your lowest-scoring games
+## Your lowest-scoring games on this generation's practice deals
 ${failures}
 
 ## Material you received or adopted this generation

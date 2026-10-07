@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from ..artifacts.schema import Artifact, Evaluation, TeachingMessage
 from ..bots.runner import BotSpec, check_source, play_game
+from ..evaluate.selfplay import selfplay
 from ..llm import prompts
 from ..llm.backend import Request, Response
 from ..llm.parsing import ParseError, parse_artifact, tag
@@ -92,16 +93,26 @@ def author_prompt(agent: AgentState, generation: int) -> str:
     return prompts.render("author", generation=generation, agent=agent.id)
 
 
-def failure_text(ctx: "RunContext", art: Artifact, ev: Evaluation | None) -> str:
-    """Compact traces of the k lowest-scoring self-play games (replayed deterministically with tracing on)."""
-    if ev is None or not ev.selfplay_scores:
-        return "(no evaluation yet)"
+def feedback_seeds(ctx: "RunContext", generation: int) -> list[int]:
+    """The generation's feedback deals: disjoint from its verification and held-out evaluation deals."""
+    e = ctx.cfg.evaluation
+    n = e.feedback_games if e.feedback_games is not None else min(e.selfplay_games, 40)
+    return ctx.seeds(generation, "feedback", n) if n > 0 else []
+
+
+def failure_text(ctx: "RunContext", art: Artifact, generation: int) -> str:
+    """Compact traces of the k lowest-scoring self-play games on this generation's feedback deals (strict deal
+    separation: the LLM never sees a trace from a deal that verifies or evaluates its output)."""
+    seeds = feedback_seeds(ctx, generation)
+    if not seeds:
+        return "(no feedback games this generation)"
     k = ctx.cfg.evaluation.failure_traces
-    order = sorted(range(len(ev.selfplay_scores)), key=lambda i: (ev.selfplay_scores[i], i))[:k]
     spec = ctx.spec(art.id)
+    scores = [r.score for r in selfplay(ctx.evaluator, spec, seeds)]
+    order = sorted(range(len(seeds)), key=lambda i: (scores[i], i))[:k]
     out = []
     for i in order:
-        seed = ev.seed_base + i
+        seed = seeds[i]
         r = play_game(ctx.game_params, [spec, spec], seed, ctx.limits, trace=True)
         lines = [f"Game seed {seed}: score {r.score}, {r.turns} turns."]
         shown = 0
@@ -129,7 +140,7 @@ def revise_prompt(ctx: "RunContext", agent: AgentState, parent: Artifact, ev: Ev
                   corpus_text: str, generation: int) -> str:
     return prompts.render("revise", generation=generation, agent=agent.id, conventions=parent.conventions.strip(),
                           code=parent.code.rstrip(), evaluation=ev.summary() if ev else "(not evaluated yet)",
-                          failures=failure_text(ctx, parent, ev), adopted=adopted_text or "(none)",
+                          failures=failure_text(ctx, parent, generation), adopted=adopted_text or "(none)",
                           corpus=corpus_text or "(none)")
 
 

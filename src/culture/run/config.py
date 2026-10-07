@@ -57,6 +57,9 @@ class EvalConfig:
     ladder_every: int = 10  # frozen ladder every k generations (0 = off)
     ladder_games: int = 20
     failure_traces: int = 3
+    # feedback deals per artifact per generation: the only deals whose traces the LLM sees (0 = no traces).
+    # None = min(selfplay_games, 40), so the engine cost scales with the configured evaluation size.
+    feedback_games: int | None = None
     workers: int = 0  # 0 = evaluate in-process
     illegal_rate_max: float = 0.01
 
@@ -236,8 +239,8 @@ def validate(cfg: ExperimentConfig) -> None:
     if cfg.game.players != 2:
         raise ConfigError("this build supports 2-player Hanabi only")
     e = cfg.evaluation
-    for k in ("selfplay_games", "crossplay_games", "anchor_games", "between_group_games"):
-        if getattr(e, k) < 0:
+    for k in ("selfplay_games", "crossplay_games", "anchor_games", "between_group_games", "feedback_games"):
+        if getattr(e, k) is not None and getattr(e, k) < 0:
             raise ConfigError(f"evaluation.{k} must be >= 0")
     if e.selfplay_games < 1:
         raise ConfigError("evaluation.selfplay_games must be >= 1")
