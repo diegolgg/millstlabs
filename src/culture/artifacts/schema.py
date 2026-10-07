@@ -156,6 +156,7 @@ class TeachingMessage:
     verification: Verification | None = None
     sender_group: str = ""
     receiver_group: str = ""
+    sabotaged: bool = False  # payload replaced by the sabotage treatment (D1); set by the harness, never by agents
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)

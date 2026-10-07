@@ -74,6 +74,33 @@ def paired_parent_score(ctx: RunContext, parent_id: str, g: int) -> float:
     return ctx.selfplay(parent_id, ctx.seeds(g))[0]
 
 
+def _sabotage(ctx: RunContext, g: int, inbox: list[TeachingMessage]) -> int:
+    """D1 treatment. One uniform per message in fixed (sorted-id) order, compared with epsilon: common random numbers,
+    so the sabotaged set at a larger epsilon contains the set at a smaller one (paired cells). Only delivered messages
+    are affected. The replacement carries persuasive prose and the harness's honest evidence for the payload."""
+    sab = ctx.cfg.sabotage
+    if sab.epsilon <= 0 or not inbox:
+        return 0
+    from ..artifacts.schema import Artifact
+    from ..bots.anchors import anchor_conventions, anchor_source
+
+    rng = ctx.rng(g, "sabotage")
+    draws = [rng.random() for _ in inbox]
+    art = Artifact.make(anchor_source(sab.payload), anchor_conventions(sab.payload), author="saboteur",
+                        group="saboteur", generation=g, origin="seed")
+    n = 0
+    for m, u in zip(inbox, draws):
+        if not m.delivered or u >= sab.epsilon:
+            continue
+        if art.id not in ctx.store:
+            ctx.add_artifact(art)
+        if art.id not in ctx.evals:
+            ctx.evaluate_many(g - 1, [(art.id, [])])  # honest evidence, like any sender's
+        m.artifact_id, m.delta_text, m.evidence, m.sabotaged = art.id, sab.text, ctx.evals[art.id], True
+        n += 1
+    return n
+
+
 def _refresh_scores(ctx: RunContext) -> None:
     for ag in ctx.agents.values():
         ev = ctx.evals[ag.incumbent]
@@ -173,6 +200,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
     ctx.outbox = []
     for m, flag in zip(inbox, P["delivery"].deliver(len(inbox), ctx.rng(g, "delivery"))):
         m.delivered = bool(flag)
+    n_sabotaged = _sabotage(ctx, g, inbox)
     starts = {a: ag.incumbent for a, ag in ctx.agents.items()}
     maybe_kill(ctx, g, "receive")
 
@@ -181,7 +209,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
     read: dict[str, list[TeachingMessage]] = {a: [] for a in ctx.agents}
     adopted: dict[str, set[str]] = {a: set() for a in ctx.agents}
     counts = {"delivered": 0, "undelivered": 0, "verified": 0, "passed": 0, "adopted": 0, "merged": 0, "rejected": 0,
-              "reverted": 0, "rechecked": 0}
+              "reverted": 0, "rechecked": 0, "sabotaged": n_sabotaged, "sabotaged_adopted": 0}
     for m in inbox:
         if m.receiver not in ctx.agents:
             continue
@@ -231,6 +259,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
             offer.adopted = True
             adopted[rcv.id].add(m.id)
             rcv.bump("adoptions")
+            counts["sabotaged_adopted"] += int(m.sabotaged)
         counts[m.decision if m.decision in counts else "rejected"] += 1
         ctx.log("messages", m.to_dict())
     maybe_kill(ctx, g, "verify")

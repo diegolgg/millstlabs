@@ -1,0 +1,11 @@
+# D1 pilot on the null stub (fix round 1, step 16): one group of 4 students, broadcast routing, 10 generations.
+# Grid (set by scripts/d1_pilot.py): sabotage epsilon in {0, 0.1, 0.2, 0.3, 0.5} x verification on/off x 5 seeds.
+# The null stub's revisions keep the rule list, so skill moves only by copying (teaching) and by sabotage.
+name: d1_pilot
+experiment_seed: 21
+population: {groups: 1, agents_per_group: 4}
+evaluation: {selfplay_games: 100, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0, workers: 0}
+org: {routing: broadcast_group, adoption: replace_if_better, credit: none}
+corpus: {enabled: false}
+llm: {stub: {mode: "null"}}
+runner: {generations: 11}   # generation 0 is the warm start, then 10 generations
