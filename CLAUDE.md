@@ -78,4 +78,12 @@ Diego's sandbox is on `main` (package `millstlabs`); ours is `src/culture/`. Nev
   mlx-community/Qwen3.6-35B-A3B-4bit --host 127.0.0.1 --port 8080 --max-tokens 8192 --chat-template-args
   '{"enable_thinking": false}'`): seeded temperature-0 requests are bit-reproducible, about 65 tok/s, runnable code.
   Ollama 0.40 runs this model on its own MLX runner that ignores seed/temperature/num_gpu; do not use it for replay.
+- Unattended runs: start `caffeinate -i -s` before launching anything (the Mac idle-slept twice during Overnight 2 and
+  lost 22 minutes). Model calls must run one at a time against the MLX server; concurrent requests can be batched and
+  break bit-reproducibility.
+- Overnight 2 (2026-10-07, commits a970163..fad221f, 214 tests): C1 full run verdict "no confirmatory estimator
+  passes" (exhaustive replay passes; pooled ridge fails the per-seed criterion but has 0.47 error against
+  population-average credit); rejected prose still hurts (Flawed minus placebo -2.44, p=0.0004, exploratory); C2 pilot
+  mechanical at temperature 0; A1 parameters measured, no medium claim. Results in docs/results/, verdicts in
+  files/prereg/LEDGER.md, open questions in docs/sandbox1-status.md "Overnight 2".
 - Memory notes live in `~/.claude/projects/-Users-enricoyao-bate-Desktop-prep--startup-millstlabs/memory/`.
