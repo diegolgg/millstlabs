@@ -34,15 +34,26 @@ from .config import ExperimentConfig
 LOGS = ("generations", "artifacts", "messages", "ledger", "touch", "provenance")
 
 
-def make_backend(cfg: ExperimentConfig):
-    """The inner LLM backend named by the config (the cache and ledger wrap it)."""
+def spend_file_for(cfg: ExperimentConfig, out: Path | None) -> str:
+    """The spend database a hosted backend reserves against: llm.spend_file, else <run dir>/spend.sqlite."""
+    if cfg.llm.spend_file:
+        return cfg.llm.spend_file
+    return str(Path(out) / "spend.sqlite") if out else ""
+
+
+def make_backend(cfg: ExperimentConfig, out: Path | None = None):
+    """The inner LLM backend named by the config (the cache and ledger wrap it). `out` is the run directory, used for
+    the default spend file of a hosted backend."""
     if cfg.llm.backend == "openai_compat":
         from ..llm.openai_compat import OpenAICompatBackend, OpenAICompatConfig
 
         c = cfg.llm
-        return OpenAICompatBackend(OpenAICompatConfig(base_url=c.base_url, seed=c.seed, temperature=c.temperature,
-                                                      request_timeout_s=c.request_timeout_s,
-                                                      extra_body=dict(c.extra_body)))
+        return OpenAICompatBackend(OpenAICompatConfig(
+            base_url=c.base_url, seed=c.seed, temperature=c.temperature, request_timeout_s=c.request_timeout_s,
+            extra_body=dict(c.extra_body), api_key_env=c.api_key_env, price_in_per_mtok=c.price_in_per_mtok,
+            price_out_per_mtok=c.price_out_per_mtok, max_usd=c.max_usd,
+            spend_file=spend_file_for(cfg, out) if c.api_key_env else "", retry_uncertain=c.retry_uncertain,
+            max_rate_limit_retries=c.max_rate_limit_retries, concurrency=c.concurrency))
     return StubBackend(StubConfig(**cfg.llm.stub))
 
 
@@ -64,7 +75,7 @@ class RunContext:
         if cfg.llm.cache_mode != "off":
             cache_dir = Path(cfg.llm.cache_dir) if cfg.llm.cache_dir else (self.out / "llm_cache" if self.out else None)
             cache = CallCache(cache_dir) if cache_dir else None
-        self.backend = CachedBackend(make_backend(cfg), cache, cfg.llm.cache_mode, self.ledger)
+        self.backend = CachedBackend(make_backend(cfg, self.out), cache, cfg.llm.cache_mode, self.ledger)
         self.store = ArtifactStore(self.out / "artifacts" if self.out else None)
         self.provenance = Provenance(self._p("provenance"))
         self.touch = TouchLog(self._p("touch"))
@@ -171,6 +182,11 @@ class RunContext:
         new_tokens = approx_tokens(req.prompt_text()) + req.max_tokens  # input estimate + the full output allowance
         if unit == "tokens":
             return float(new_tokens)
+        if self.cfg.llm.hosted:  # the configured provider prices, with the spend guard's conservative estimate
+            from ..llm.spend import estimate_usd
+
+            return estimate_usd(req.prompt_text(), req.max_tokens, self.cfg.llm.price_in_per_mtok,
+                                self.cfg.llm.price_out_per_mtok)
         return float(cost_usd(req.model, Usage(input_tokens=approx_tokens(req.prompt_text()),
                                                output_tokens=req.max_tokens)) or 0.0)
 

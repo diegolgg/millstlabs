@@ -15,6 +15,7 @@ Scope: engineering validation, three pilots, and Overnight 2 (2026-10-07): the f
 | fix round 1, steps 1 to 12 | `9fb78c6` to `f06372e` | the 8 review defects fixed with regression tests; local MLX backend (live-checked: bit-reproducible); disjoint feedback/verification/evaluation deals; null calibration (K=40); innovation base rate; 183 passed, 1 skipped (opt-in live test) |
 | fix round 1, steps 13 to 16 | `e3bd512` to `673178b` | C1 single-student driver with exact Shapley oracle; C1 pilot on stub and MLX (80 replays); B1 SPRT vs fixed N (SPRT passes the 30% rule); D1 pilot on the null stub; **205 passed, 1 skipped** |
 | Overnight 2 | `a970163` to `f374fb8` | quarantine policy (C2 stratum); C1 full on MLX: **no confirmatory credit estimator passes** (only exhaustive replay does); C2 pilot: primary mechanical at temperature 0; A1 parameters: medium-ordering rule not met; 322 model calls, $0; **214 passed, 1 skipped** |
+| hosted backend | `7282089` to the docs commit | `openai_compat` targets hosted OpenAI-compatible providers behind a sqlite spend guard (reserve before send, cumulative cap across runs and processes, no automatic paid retry); `scripts/hosted_check.py`; no paid call made; **247 passed, 1 skipped** |
 
 How to reproduce: `scripts/setup_env.sh`, then `.venv/bin/python -m pytest -q`. Runs: `python -m culture.run --config configs/<x>.yaml --out runs/<x>`, `scripts/run_experiment.py`, `scripts/kill_resume_check.py`, `scripts/phase4_dryruns.py`, `scripts/bench_engine.py`, `scripts/build_notebooks.py probe|transfer|analysis_p5`. Run outputs live in `runs/` (git-ignored).
 
@@ -605,6 +606,166 @@ Piers scores v_T = 16.7 on the common 300 deals, and the student's incumbent sco
    is the two primary contrasts.
 
 Test suite at the end: **214 passed, 1 skipped** (the skip is the opt-in live MLX test, `CULTURE_LIVE=1`): the 205 from fix round 1 plus 9 new tests (1 per-stratum replicates, 6 quarantine, 2 transmission).
+
+## Hosted backend (2026-10-07, handoff action 1)
+
+**What it is for.** Population experiments at G1 scale (8 agents × 100 generations × 5 seeds × 3 conditions, about
+12,000 calls, tens of dollars) are too slow on the local MLX server. A hosted open-weight provider is fast enough, but
+it costs money, so these runs need a hard spend cap. They do not need exact replay.
+
+**What it is.** The existing `openai_compat` backend can now target any OpenAI-compatible chat-completions URL
+(DeepInfra, Fireworks, OpenRouter, ...). Every hosted call is checked against a cumulative spend cap kept in one sqlite
+file. The design follows Diego's cost guard on `main` (`src/millstlabs/flags/provider.py`):
+
+- reserve a conservative estimate before sending;
+- keep the cap across restarts;
+- never retry a paid call automatically;
+- keep the reservation when the outcome is uncertain;
+- release it when the provider certainly did not bill.
+
+**No paid call was made during the build.** Every test runs against a fake HTTP server, and this environment has no
+key.
+
+Commits `7282089` (config), `e134d93` (guard and pricing), `c0855ff` (backend behaviour), `188dab5` (experiments and
+`scripts/hosted_check.py`), `bd574fe` (tests), and the commit that adds this section and `configs/hosted_example.yaml`.
+
+### Config (`LLMConfig`, every earlier field and default unchanged)
+
+| field | default | meaning |
+|---|---|---|
+| `api_key_env` | `""` | NAME of the environment variable holding the key. Empty means the local server (`Bearer local`). The key is read at call time and is never logged, cached, written to the manifest or hashed. |
+| `price_in_per_mtok`, `price_out_per_mtok` | `null` | dollars per million tokens; null means unpriced |
+| `max_usd` | `0.0` | cumulative cap for the spend file; 0.0 means no paid call is ever allowed |
+| `spend_file` | `""` | shared spend database; empty means `<run dir>/spend.sqlite` |
+| `retry_uncertain` | `false` | re-send a request whose earlier attempt may have been billed |
+| `max_rate_limit_retries` | `8` | unbilled retries (HTTP 429, connection refused), exponential backoff |
+| `concurrency` | `1` | thread-pool size for `complete_batch` (hosted only) |
+
+`validate()` rules:
+
+- A config with `api_key_env` set and a missing price, or `max_usd` not above 0, is a `ConfigError`. The message says
+  no paid call can be made without a price and a cap.
+- `concurrency > 1` without `api_key_env` is a `ConfigError`. Concurrent requests to the local MLX server break
+  bit-reproducibility.
+- `claude*` model names are still refused. Only the message changed.
+
+The operational fields (`api_key_env`, `max_usd`, `spend_file`, `retry_uncertain`, `max_rate_limit_retries`,
+`concurrency`) are left out of the config digest and the warm-start key, so raising the cap does not block a resume.
+The prices are hashed only when set. Every existing config keeps its digest (the default is still `f875065a1af48815`,
+pinned in `tests/test_quarantine.py`). The manifest gains `llm_provider`: base URL, model, hosted flag, env var name,
+prices, cap and spend file.
+
+### Spend guard (`src/culture/llm/spend.py`)
+
+The guard is a `SpendGuard(path, max_usd)` over the table `calls(key, reserved, cost, state, created)`.
+
+| state | meaning | counts toward the cap as |
+|---|---|---|
+| `pending` | reserved, request in flight (or the process died mid-request) | `reserved` |
+| `complete` | settled from the provider's usage | `cost` |
+| `uncertain` | may have been billed | `reserved` (kept until a human looks) |
+| `released` | certainly not billed | nothing |
+
+- **Reserving.** `reserve(key, estimate)` raises `BudgetExhausted` when the committed amount plus the estimate would
+  exceed `max_usd`, and sends nothing. The committed amount is the cost of complete rows plus the reservations of
+  pending and uncertain rows.
+- **Concurrency.** Each check-and-insert runs inside `BEGIN IMMEDIATE` with a 30 s busy timeout. A test runs 20
+  spawned processes against a cap that admits exactly 10; exactly 10 succeed. The guard opens one connection per
+  operation, so threads can share it.
+- **Estimate.** `(ceil(chars/4) × 1.1 + 256) × price_in + max_tokens × price_out`, per million tokens.
+- **Settlement.** Prompt tokens × price_in plus completion tokens × price_out. Provider-cached prompt tokens are
+  charged at the full input rate, so the cost is never under-counted.
+- **Guard key.** The request's cache key, prefixed with the run id (`meta.run`). Two runs that share a spend file
+  therefore never block each other's identical requests.
+- **Re-sending a key.** If the key is already `pending` or `uncertain`, the guard raises `UncertainOutcome`, whose
+  message names `llm.retry_uncertain`. With that flag set, the old row is renamed with its reservation intact and a
+  fresh reservation is made. A `complete` or `released` row under the same key is renamed for the audit trail, for
+  example on a deliberate re-send with cache mode `off`.
+- **Accounting.** `Response.cost_usd` carries the priced cost, so `CostLedger`, `real_spend_usd` and the `usd` budget
+  unit work unchanged. The `usd` budget estimate now uses the configured prices for hosted runs. Hosted ledger rows
+  also carry `provider_request_id` and `system_fingerprint`. Local rows and local cache entries are byte-identical to
+  before.
+
+### Failure semantics (`OpenAICompatBackend._complete_hosted`)
+
+| outcome | guard | retry |
+|---|---|---|
+| key variable not set | nothing reserved | no request sent |
+| estimate exceeds the cap | nothing reserved (`BudgetExhausted`) | no request sent |
+| HTTP 200 with usage | settled at the priced usage | none needed |
+| HTTP 200 with usage but no content | settled, then `BackendError` (malformed) | no |
+| HTTP 400 / 401 / 403 / 404 | released | none (`BackendError` names the status) |
+| HTTP 429, connection refused, DNS failure | released | backoff `min(60, 2^attempt)` s, at least `Retry-After`, up to `max_rate_limit_retries`, re-reserving each time |
+| 5xx, other 4xx, timeout, reset, malformed body, interrupt | uncertain | only with `retry_uncertain: true`; the old reservation is kept |
+
+### Parallel runs
+
+`run_experiment` gives every job of a hosted experiment the same absolute spend file, `<out>/spend.sqlite`, unless
+`base.llm.spend_file` is set. This happens before warm-start authoring and before the process pool starts, so
+`max_usd` caps the whole experiment across conditions, seeds and processes.
+
+`complete_batch` runs on a thread pool when `concurrency > 1` and returns results in request order. The
+`CachedBackend` sends its misses on that pool and writes cache entries and ledger rows in request order.
+
+**Caveat:** the generation loop calls `complete()` one call at a time today. Within a run, `concurrency` has no effect
+until the loop batches its calls. Parallelism across runs comes from the experiment's process pool.
+
+### Running the smoke check
+
+```
+export DEEPINFRA_API_KEY=...   # in your own terminal
+PYTHONPATH=src .venv/bin/python scripts/hosted_check.py --base-url https://api.deepinfra.com/v1/openai \
+    --model <provider model id> --api-key-env DEEPINFRA_API_KEY --price-in <$/Mtok> --price-out <$/Mtok> \
+    --max-usd 0.05 --n 1
+```
+
+- **What it sends.** `n` completions of a prompt of about 20 tokens with `max_tokens` 32, then one repeat of the first
+  prompt. There is no cache.
+- **What it prints.** Usage, cost, latency, provider request id, system fingerprint, the guard's totals before and
+  after, and `identical texts = True/False`. The last line answers whether the provider is deterministic at
+  temperature 0 with a seed.
+- **When it refuses.** Without `--max-usd`, or with `--max-usd` 0, it exits with status 2.
+- **Spend file.** The default is `runs/hosted_check/spend.sqlite`, and it is cumulative across checks.
+
+It has been run only against the fake server.
+
+### Config block for a hosted run
+
+The full example is `configs/hosted_example.yaml`. As shipped it refuses to load until the prices and cap are filled
+in.
+
+```yaml
+llm:
+  backend: openai_compat
+  base_url: "https://api.provider.example/v1"
+  model: <provider model id>
+  api_key_env: DEEPINFRA_API_KEY
+  price_in_per_mtok: <from the price page>
+  price_out_per_mtok: <from the price page>
+  max_usd: <authorized cap>
+  spend_file: ""            # experiments: <out>/spend.sqlite, shared by every job
+  temperature: 0.0
+  seed: 0
+  max_tokens: 8192
+```
+
+### Notes and decisions
+
+- **The estimate can under-count input.** Prompt tokens are estimated as chars/4 × 1.1 + 256, as specified. Text that
+  tokenizes more densely than 4 characters per token is under-estimated. The cap can then be exceeded, but only by
+  that input error on the calls in flight when it is reached. Output is bounded by `max_tokens`, so the output part of
+  the estimate is a true upper bound. Any overshoot shows in `totals()`, and every later reservation is refused.
+- **Pending rows after a crash.** A `pending` row left by a crashed process is treated as uncertain, following Diego's
+  guard.
+- **Other 4xx statuses.** Statuses outside 400/401/403/404 (for example 402 or 422) are treated as uncertain. This is
+  conservative: they keep their reservation until a human looks.
+- **Unbilled retries are re-reserved.** A 429 retry is re-reserved each time, so another process can take the
+  remaining budget in between.
+- **One existing test changed.** `tests/test_quarantine.py::test_config_flag_default_off_and_digest_stable` rebuilt the
+  digest from `to_dict()`, which now includes the new fields. It now strips them the same way the digest does, and it
+  pins the default digest value.
+
+Test suite at the end: **247 passed, 1 skipped** (214 before, plus 33 in `tests/test_hosted_backend.py`).
 
 ## Deviations from the spec
 

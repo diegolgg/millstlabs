@@ -22,7 +22,7 @@ from typing import Any
 
 from ..artifacts.schema import Artifact, artifact_id
 from ..llm import prompts
-from .config import ExperimentConfig, from_dict
+from .config import ExperimentConfig, from_dict, llm_hash_dict
 
 SET_FILE = "warm_start.json"
 
@@ -34,7 +34,7 @@ class WarmStartMismatch(RuntimeError):
 def warm_start_key(cfg: ExperimentConfig) -> str:
     """Hash of every input that can change the generation-0 artifacts. The condition and the organization policies
     are deliberately absent: they do not touch authoring."""
-    llm = asdict(cfg.llm)
+    llm = llm_hash_dict(asdict(cfg.llm))
     llm.pop("cache_mode", None)
     llm.pop("cache_dir", None)
     material = {
