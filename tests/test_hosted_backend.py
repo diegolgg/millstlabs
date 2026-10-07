@@ -445,3 +445,16 @@ def test_hosted_check_script(server, tmp_path, monkeypatch, capsys):
     assert len(server.requests) == 3 and all(r["body"]["max_tokens"] == 32 for r in server.requests)
     assert "identical texts = True" in out and "req-1" in out and "fp-1" in out and SECRET not in out
     assert SpendGuard(tmp_path / "s.sqlite", 0.05).totals()["calls"] == 3
+
+
+# ---------------------------------------------------------------- configs/hosted_example.yaml
+def test_hosted_example_config_refuses_until_filled():
+    from culture.run.config import load_config
+
+    path = ROOT / "configs" / "hosted_example.yaml"
+    with pytest.raises(ConfigError, match="price and a cap"):
+        load_config(path)  # as shipped: prices null, max_usd 0.0
+    d = yaml.safe_load(path.read_text())
+    d["llm"].update(price_in_per_mtok=0.1, price_out_per_mtok=0.4, max_usd=5.0)
+    cfg = from_dict(d)
+    assert cfg.llm.hosted and cfg.llm.api_key_env == "DEEPINFRA_API_KEY"

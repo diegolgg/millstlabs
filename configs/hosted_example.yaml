@@ -1,0 +1,37 @@
+# Example: a run on a HOSTED open-weight provider (any OpenAI-compatible chat-completions URL: DeepInfra, Fireworks,
+# OpenRouter, ...) through the openai_compat backend and the spend guard (docs/sandbox1-status.md "Hosted backend").
+#
+# As shipped this file REFUSES TO LOAD (ConfigError): the prices are null and max_usd is 0.0, and no paid call can be
+# made without both prices and a positive cap. To use it:
+#   1. set base_url and model to the provider's endpoint and model id;
+#   2. fill both prices from the provider's price page (dollars per million tokens);
+#   3. set max_usd to the cumulative cap you authorize for the spend file;
+#   4. export the key in your own terminal: export DEEPINFRA_API_KEY=...  (the config names the variable, never the key);
+#   5. smoke-check first: PYTHONPATH=src .venv/bin/python scripts/hosted_check.py --base-url ... --model ...
+#        --api-key-env DEEPINFRA_API_KEY --price-in ... --price-out ... --max-usd 0.05
+#   6. run: caffeinate -i -s & python -m culture.run --config configs/hosted_example.yaml --out runs/hosted_example
+#
+# For an experiment spec (scripts/run_experiment.py), put the llm block under `base:`. With spend_file empty every job
+# reserves against <out>/spend.sqlite, so max_usd caps the whole experiment across conditions, seeds and processes.
+name: hosted_example
+population: {groups: 2, agents_per_group: 4, seed: 0}
+evaluation: {selfplay_games: 200, crossplay_games: 50, anchor_games: 50, between_group_games: 50, workers: 8}
+runner: {generations: 10}
+llm:
+  backend: openai_compat
+  base_url: "https://api.provider.example/v1"   # placeholder: the provider's OpenAI-compatible base URL
+  model: deepseek-ai/DeepSeek-V4.1-Flash         # the provider's model id
+  api_key_env: DEEPINFRA_API_KEY                 # NAME of the env var holding the key; never put the key here
+  price_in_per_mtok: null    # fill from the provider's price page before the first call ($ per million input tokens)
+  price_out_per_mtok: null   # fill from the provider's price page before the first call ($ per million output tokens)
+  max_usd: 0.0               # cumulative cap for the spend file; 0.0 = no paid call is ever allowed
+  spend_file: ""             # "" = <run dir>/spend.sqlite; give one shared path to cap several runs together
+  retry_uncertain: false     # true re-sends a request whose earlier attempt may have been billed (5xx, timeout)
+  max_rate_limit_retries: 8  # unbilled retries on HTTP 429 or connection refused, exponential backoff
+  concurrency: 1             # threads for batched calls (the generation loop calls one at a time today)
+  temperature: 0.0
+  seed: 0                    # sent to the provider; hosted replay is not guaranteed bit-exact (check with hosted_check)
+  max_tokens: 8192
+  request_timeout_s: 600
+  cache_mode: replay         # a resumed run replays its own calls from the cache, paying nothing twice
+  extra_body: {}             # provider-specific fields merged into the request body verbatim
