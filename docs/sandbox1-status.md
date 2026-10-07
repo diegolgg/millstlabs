@@ -1,4 +1,4 @@
-Scope: engineering validation plus three pilots, all at $0 (zero paid API calls). Everything ran on the stub LLM backend or the engine alone, except two things that used a local open-weight model (Qwen3.6-35B-A3B 4-bit on mlx_lm.server, this machine, temperature 0): the step-9 backend check (a few revise calls) and the step-14 C1 pilot (80 replays, 74 model calls). The B1 SPRT study is engine-only on anchor-family bots, and the D1 pilot and the null calibration ran on the stub. The C1 pilot is n = 5 seeds per stratum, sized to plan the real run; it is not a test of any hypothesis. The other empirical claims are the engine/anchor ground truth, machine throughput, and the local model's measured cost, latency and reproducibility. Every "agent" score from a stub run is a perturbed copy of an anchor rule list.
+Scope: engineering validation, three pilots, and Overnight 2 (2026-10-07): the full C1 Arm 1, a C2 pilot and the A1 parameters, all at $0 (zero paid API calls). Model calls used only a local open-weight model (Qwen3.6-35B-A3B 4-bit on mlx_lm.server, this machine, seeded, temperature 0): the step-9 backend check, the C1 pilot (74 calls), and Overnight 2 (322 calls: C1 at the pre-registered R = 29 verified / 8 unverified, the C2 pilot on 5 seeds, A1 at 30 replicates per medium). That is one model block, so no estimator or claim is accepted; the Gemma replication block, C1 Arm 2, the full C2 and A1's check populations have not run. B1 is engine-only; D1, the null calibrations and every stub run prove pipelines only. Every "agent" score from a stub run is a perturbed copy of an anchor rule list.
 
 # Sandbox 1 build status (enrico branch)
 
@@ -14,6 +14,7 @@ Scope: engineering validation plus three pilots, all at $0 (zero paid API calls)
 | 6 baselines, export | `dfb75cc` | OpenEvolve runs on our Game with the stub LLM; hanab.live export round trip exact on 100 games; 111 tests |
 | fix round 1, steps 1 to 12 | `9fb78c6` to `f06372e` | the 8 review defects fixed with regression tests; local MLX backend (live-checked: bit-reproducible); disjoint feedback/verification/evaluation deals; null calibration (K=40); innovation base rate; 183 passed, 1 skipped (opt-in live test) |
 | fix round 1, steps 13 to 16 | `e3bd512` to `673178b` | C1 single-student driver with exact Shapley oracle; C1 pilot on stub and MLX (80 replays); B1 SPRT vs fixed N (SPRT passes the 30% rule); D1 pilot on the null stub; **205 passed, 1 skipped** |
+| Overnight 2 | `a970163` to `f374fb8` | quarantine policy (C2 stratum); C1 full on MLX: **no confirmatory credit estimator passes** (only exhaustive replay does); C2 pilot: primary mechanical at temperature 0; A1 parameters: medium-ordering rule not met; 322 model calls, $0; **214 passed, 1 skipped** |
 
 How to reproduce: `scripts/setup_env.sh`, then `.venv/bin/python -m pytest -q`. Runs: `python -m culture.run --config configs/<x>.yaml --out runs/<x>`, `scripts/run_experiment.py`, `scripts/kill_resume_check.py`, `scripts/phase4_dryruns.py`, `scripts/bench_engine.py`, `scripts/build_notebooks.py probe|transfer|analysis_p5`. Run outputs live in `runs/` (git-ignored).
 
@@ -355,6 +356,255 @@ whether verification is sufficient.
   and recreated quickly. I removed them (they were never committed and never counted in a reported test total). Watch
   for this when moving files in this directory.
 - Test count at the end: **205 passed, 1 skipped** (the skip is the opt-in live MLX test, `CULTURE_LIVE=1`).
+
+## Overnight 2 (2026-10-07, 01:02 to 06:04 unattended; analysis finished in the morning)
+
+Scope: one model block only (Qwen3.6-35B-A3B 4-bit on mlx_lm.server, this machine, seeded, temperature 0), one
+student, one generation, k = 3 fixed teachers, 300 held-out deals per evaluation. C1 Arm 1 ran in full at the
+pre-registered R. C2 is a 5-seed pilot. A1 measured the transmission parameters only; its check populations were not
+run. Nothing here is accepted for use, because acceptance needs the Gemma replication block, which has not been run.
+Estimators and claims can only be rejected, or pass this block. $0 spent; no paid API calls.
+
+Commits on `enrico`, each prefixed "Overnight 2:":
+- `a970163` step 1 setup;
+- `ce5a00b` step 2;
+- `404a659` step 5 preparation (A1 driver and amendments);
+- `5369d86` step 3, C1 analysis;
+- `f0c9963` step 4, C2 pilot;
+- `4b4f725` step 5, A1 parameters;
+- `f374fb8` C1 exploratory population-average errors;
+- this section.
+
+### What ran where
+
+| run | backend | design | backend calls | backend seconds | wall clock |
+|---|---|---|---|---|---|
+| C1 full (step 1) | MLX | k = 3, exhaustive (8 replays per seed per stratum); verified R = 29, unverified R = 8; the pilot's 5 seeds reused | 221 tonight (203 verified incl. 11 repairs; 18 unverified) plus 7 cross-stratum cache hits; 295 for all of C1 with the pilot | 10,795 tonight (about 49 s and 10.8k tokens per call) | 01:07 to 04:31 (3 h 24 min, of which about 22 min machine sleep) |
+| C2 pilot (step 4) | MLX | verified_quarantine, the 5 pilot seeds, exhaustive | 11 (10 revise, 1 repair) plus 33 within-run cache hits | 538 | 04:31 to 04:40 |
+| A1 parameters (step 5) | MLX | teacher Piers; media code / prose / both; 30 replicates each; one revision; verification off; no adoption | 90 (no repairs, no failed revisions) | 4,787 | 04:40 to 06:04 |
+| strict cache-replay check | cache only | the 80 C1 pilot replays replayed with the current code, misses forbidden | 0 | 0 | 49 s |
+| C2 on the stub (step 2) | stub | verified and verified_quarantine, 5 seeds | 0 | 0 | 83 s |
+| null stub (C1 and C2 bands) | stub, `null` mode | the C1 design, K = 20 seeds, strata verified, unverified, verified_quarantine (480 replays) | 0 | 0 | about 8 min |
+| A1 on the stub | stub | the A1 design (90 copies) | 0 | 0 | 7 min |
+
+MLX total tonight: **322 backend calls, 16,119 s of model time (4.5 h)**. Revisions admissible: 97% verified, 98%
+unverified, 100% in C2 and A1.
+
+### New code (step 2 and supporting)
+
+- **`org.quarantine_unverified`** (config; default off; left out of the config digest while off, so older configs keep
+  their digests).
+  - With it on, a received message is shown in the revision prompt only if the receiver's engine verification ran
+    and passed. Rejected, duplicate and unverified messages are withheld entirely: prose, evidence and verification
+    line.
+  - Applies in the generation loop and in the single-student driver. A revision's teaching sources list only the
+    messages it was shown.
+  - The re-sent own bot is a duplicate, never verified, so quarantine withholds it too.
+  - Tests in `tests/test_quarantine.py` (6):
+    - with quarantine on, the revise prompt of a student that rejected a message contains none of that message's
+      text; with it off, it does;
+    - the same holds in the generation loop under sabotage;
+    - the config flag and digest behave as described;
+    - the C2 analysis gives known answers on a synthetic game.
+- **Single-student driver.**
+  - The `replicates` setting can give a different seed list per stratum.
+  - Strata can be named from a catalogue that includes `verified_quarantine`.
+  - Each replay records which senders were withheld.
+- **`analysis/quarantine.py`, `scripts/c2_report.py`**: C2's paired quantities, intervals, implied R and the literal
+  decision rules.
+- **`culture.run.transmission`, `scripts/a1_report.py`**: the A1 driver and its report. Tests:
+  `tests/test_transmission.py` (2).
+- **`scripts/run_supervised.py`**: reruns a resumable command after a crash, and restarts the MLX server if
+  `/v1/models` stops answering.
+  - Long runs started from frozen copies of `src/culture` (`runs/c1-full/_code`, `runs/chain/_code`), so editing
+    code during the night could not reach the workers they spawn.
+  - Model calls ran strictly one at a time (`runs/chain/chain.sh`). Concurrent requests could be batched on the
+    server, which would break bit-reproducibility.
+- **`scripts/c1_full_report.py`**: the C1 analysis, figure and table.
+
+### C1 verdicts (files/prereg/C1-credit-estimators.md section 8, applied literally)
+
+Rule: accept an estimator if, in both model blocks, all three hold:
+- Spearman IQM >= 0.9 with bootstrap lower bound >= 0.8;
+- RMSE IQM <= 2.0 points;
+- sign error on T2 <= 5%.
+
+An estimator must pass in both strata. The pre-registration was silent on this; the planning session confirmed it
+on 2026-10-07, pending Enrico.
+
+Metrics are IQM over seeds, with a 95% bootstrap over seeds within each stratum. Sign error is counted over the
+seeds where |oracle| >= 0.5 (26 of 29 verified, 8 of 8 unverified).
+
+| estimator | role | replays/seed | RMSE verified | RMSE unverified | Spearman (lower bound) | sign error on Flawed | verdict |
+|---|---|---|---|---|---|---|---|
+| (i) leave-one-out | confirmatory | 4 | 2.83 [2.54, 3.23] | 4.50 [3.45, 5.32] | 0.87 (0.84) / 0.50 (0.50) | 88% / 0% | fails (all three rules verified; Spearman and RMSE unverified) |
+| (ii) equal split (paired_delta v0) | confirmatory | 1 | 3.49 [2.99, 4.00] | 7.22 [6.40, 7.97] | 0.87 / 0.00 | 100% / 50% | fails |
+| (iii) ridge on Bernoulli(1/2) delivery, pooled | confirmatory | 8 | 2.28 [1.98, 2.52] | 3.92 [3.36, 4.28] | 1.00 (0.90) / 1.00 (0.88) | 19% / 0% | fails (RMSE in both strata; sign error verified) |
+| exhaustive ITT (tau) | exploratory | 8 | 0.67 [0.53, 0.81] | 0.71 [0.27, 1.28] | 1.00 / 1.00 | 4% (1 of 26) / 0% | passes this block in both strata |
+| Plackett-Burman 8-run | exploratory | 8 | identical to tau (at k = 3 it is the full factorial) | | | | passes this block |
+| singles plus pairs | exploratory (pre-registered for Arm 2) | 7 | 2.67 [2.11, 3.26] | 2.83 [1.08, 5.11] | 1.00 / 1.00 | 23% / 0% | fails |
+
+- **Overall: no confirmatory estimator passes.** The only estimator that passes is exhaustive replay, which costs as
+  much as the oracle at k = 3.
+- **The section 8 fallback is not formally triggered.** "Causal credit is not available at this cost" is conditioned
+  on R = 60; we ran the power-rule R (29 and 8).
+- **More seeds would very likely not change these verdicts.**
+  - Leave-one-out and equal split do not pool, so their per-seed RMSE does not shrink with R.
+  - Any pooled estimator has a per-seed RMSE floor here of 2.19 (verified) and 3.20 (unverified): the oracle's own
+    seed-mean scores that, because the true credit varies between seeds.
+  - None of 200 alternative random Bernoulli draws for the ridge passes.
+- **Primary contrast**, RMSE(ridge) − RMSE(leave-one-out), paired two-sided t-test:
+  - verified: −0.69, 95% interval [−1.11, −0.27], p = 0.0023;
+  - unverified: −0.57 [−1.83, 0.69], p = 0.32.
+  - With a refitted-ridge bootstrap: [−1.09, −0.32] and [−1.73, 0.19].
+  - Ridge is better than leave-one-out, by less than the 1-point minimum effect the design was powered for.
+- **Multiplicity** (planning session ruling, pending Enrico):
+  - BH at q = 0.1 applies only to the tests that have p-values: the two primary contrasts. The adjusted p-values are
+    0.005 (verified, survives) and 0.32 (unverified).
+  - The section 8 thresholds are acceptance criteria, not tests.
+  - The Flawed-versus-placebo contrast below is exploratory: it is reported with its p-value but is outside the BH
+    family.
+- **Effects per teacher** (ITT tau, IQM [95% interval]):
+
+  | stratum | Piers | Flawed | re-sent own bot |
+  |---|---|---|---|
+  | verified | +10.0 [9.1, 10.8], adopted every time | −2.2 [−2.9, −1.4], never adopted, so the adopter effect is undefined | +0.7 [−0.5, 1.6] |
+  | unverified | +4.8 [3.2, 6.1] | −10.6 [−13.0, −6.3], adopted every time (adopter effect = ITT) | −0.3 [−4.3, 2.4] |
+
+  Shapley IQMs are within 0.9 of tau.
+- **Exploratory: rejected text still hurts.** With verification on, Flawed's effect minus the placebo's is −2.44
+  [−3.69, −1.19], p = 0.0004 (29 seeds).
+  - So a rejected message's prose changes the student's revision more than a generic text change does. This
+    resolves the pilot's open question: it is not prompt-perturbation noise.
+  - Piers × Flawed interaction (verified): +3.76 [2.15, 5.37]. Adopting Piers partly undoes the harm of Flawed's text.
+- **Null stub (K = 20).**
+  - With verification on, leave-one-out and equal split are near-exact when the model adds no text effect (null RMSE
+    0.08 and 0.10). Their failure on MLX therefore comes from the model's text effects.
+  - Without verification they fail even on the null (5.8 and 6.9). That failure is structural: under blind adoption
+    the last adopted bot wins, which leave-one-out cannot see.
+- **Exploratory, requested by the planning session for a possible C1b.**
+  - A pooled estimator targets the population-average credit E_seed[tau_j], not each seed's tau_j.
+  - Against that target (RMSE over teachers, seed bootstrap refitting the ridge):
+    - ridge: 0.47 [0.17, 1.10] verified, 1.28 [0.57, 2.36] unverified;
+    - seed-averaged leave-one-out: 1.43 [0.81, 2.21] and 2.41 [0.96, 4.68];
+    - seed-averaged equal split: 2.98 and 6.41.
+  - Not a verdict; it is in `strata.*.exploratory_population_average`.
+- **Operations.**
+  - Accepted candidates: 44% verified, 70% unverified.
+  - Generalization gap (held-out minus feedback-deal score): +0.11 and +0.05.
+  - The student's own revision alone (v(none)) ranges from 0 to 13.4 by seed; it was rejected outright on 9 of 29
+    seeds.
+- **Files.** `docs/results/c1-full.json` (scope line first), `c1-full.png` (estimate against oracle for every
+  estimator and stratum, identity line, null-stub envelope), `c1-full-table.md`, and ledger row C1.
+
+### C2 pilot (step 4; files/prereg/C2-quarantine.md)
+
+- **Not judged.** It is a pilot: the decision rules need the full R and two model blocks.
+- **The primary quantity is mechanical at temperature 0.**
+  - Quarantine withholds every message that did not pass verification, so the revision prompt depends only on the
+    delivered messages that passed. Flawed never passes.
+  - Under quarantine the 8 delivery subsets collapse to two distinct prompts per seed (nothing delivered, and Piers
+    only). On every seed, v(S) equals v(S restricted to Piers), with zero deviation.
+  - So tau_flawed(quarantine) = 0 by construction, and the rule "tau_flawed(quarantine) IQM in [−1, 1]" cannot fail.
+  - Primary = tau_flawed(quarantine) − tau_flawed(verified) = −tau_flawed(verified): IQM 2.75 [−0.53, 4.36] on 5
+    seeds. The implied R for 80% power at the 2-point minimum effect is 16.
+  - Projection, not a C2 run: on C1's 29 verified seeds the same quantity is 2.23 [1.35, 2.94].
+- **The empirical content is C1's Flawed-versus-placebo contrast** above: a rejected message's text lowers the
+  student, and quarantine removes that channel by construction.
+- **Secondary** (Piers under quarantine minus under verification): −2.67 [−5.59, 0.85].
+  - This is not a loss to the student. Piers' ITT under verification includes its interaction with Flawed's text,
+    which quarantine removes.
+  - Exploratory check of the student's own outcome: with all three messages delivered, quarantine equals
+    verification on 4 of 5 seeds and is +0.79 on the fifth.
+  - Averaged over the 8 subsets, quarantine is +1.27 (IQM 1.53 [−0.54, 2.79]).
+- **Cross-session reproducibility.**
+  - C2 ran under a new run name, so no C1 cache entry could be reused.
+  - Its 10 fresh calls (nothing delivered and Piers only, per seed) produced the same candidate artifacts and the
+    same scores as C1's calls hours earlier.
+- **Null stub band:** primary [−0.12, 0.16], secondary [−0.43, 0.27].
+- **Files.** `docs/results/c2-pilot.json` and ledger row C2.
+
+### A1 parameters (step 5; files/prereg/A1-transmission-fidelity.md sections 2, 3 and the section 8 amendments)
+
+Piers scores v_T = 16.7 on the common 300 deals, and the student's incumbent scores 2.5.
+
+| medium | copy loss alpha | Gumbel scale beta | rho = cross-play / v_T | delta(N = 4) | rule-list identical to Piers |
+|---|---|---|---|---|---|
+| code | 1.66 [0.49, 3.15] | 2.89 [1.13, 4.09] | 0.94 [0.88, 0.98] | +4.02 [1.57, 5.23] | 12 of 30 |
+| prose | 1.82 [1.00, 2.77] | 1.95 [0.88, 2.76] | 0.94 [0.90, 0.97] | +2.01 [0.46, 3.00] | 0 of 30 |
+| both | 1.19 [0.51, 2.25] | 2.01 [0.65, 3.21] | 0.96 [0.92, 0.98] | +2.75 [0.44, 4.35] | 1 of 30 |
+
+- **Medium-ordering rule** (claim "code transmits with less loss than prose" if alpha(prose) − alpha(code) >= 1
+  with the interval excluding 0): 0.16 [−1.51, 1.75]. **Not met; no claim.**
+- **Model-support rule: not judged.** The check populations were not run.
+- **The predicted sign at N = 4 is positive in every medium.** Caveat: the copy scores are a point mass near v_T
+  (copies that behave exactly like Piers) plus a heavy left tail of copies near the incumbent (2 to 5 points).
+  - beta comes from the SD, so that tail inflates beta, and with it delta. The left-tail copies are ones selection
+    would discard.
+  - Read delta as an upper bound until the check populations test it.
+- **Copy quality.**
+  - Prose copies had a 5% illegal-move rate, against 0% for code copies and 0.6% for both.
+  - Some copies score 17.6, above Piers.
+- **Files.** `docs/results/a1-params.json` and ledger row A1.
+
+### Amendments (logged in the pre-registration files, with times)
+
+- **A1-1** (2026-10-07 01:34, before any A1 call). At temperature 0 a sampling seed does not change the output, so
+  30 sampling seeds on one prompt would give identical copies (beta = 0 by construction).
+  - Replicate r instead uses experiment seed 300 + r, so the feedback traces in the prompt differ, as in C1.
+  - All copies, Piers and the incumbent are scored on one common set of 300 deals (experiment seed 299).
+  - beta is therefore dispersion across prompt contexts, not sampling noise.
+  - The planning session judged this sound; **it stays flagged for Enrico's sign-off.**
+- **A1-2** (same time). "Verification off" is implemented as verification none plus adoption `never`.
+  - The cover note carries no content and is identical across media.
+  - A failed revision leaves S' = S0, and parameters are also reported over admissible copies only. There were no
+    failures, so the two coincide.
+- **A1 scope note.** Student and teacher share one rule-bot template, and Piers' conventions name rule functions that
+  exist in the student's code. Copying is easier here than between unrelated codebases.
+- **No amendment to C1 or C2 tonight.** No decision rule was changed.
+
+### Deviations and notes
+
+- **C1 reused the pilot.** The full config keeps the pilot's run name, because the name enters the LLM cache key.
+  Before the pilot's 80 rows were copied in, a strict cache replay with the current code reproduced all 80
+  bit-identically (scores, adoptions, acceptances and request keys).
+- **The ridge draw depends on stratum order.** The ridge's Bernoulli subset per seed is seeded with the stratum's
+  index in the sorted `spec.json` (unverified 0, verified 1), as in the pilot report. The verdict does not depend on
+  the draw (0 of 200 draws pass).
+- **Counting fix in the C2 report.** A cache hit on an entry recorded by the same run id is ledgered as not cached
+  and carries no latency (the crash-resume convention in `llm/cache.py`). The first version of the report counted
+  those as backend calls; the committed version counts them as within-run hits. C1 and A1 counts are unaffected:
+  every one of their calls has a latency.
+- **Two idle-sleep gaps.** The Mac idle-slept 03:50 to 03:56 and 03:56 to 04:12 EDT after the display turned off,
+  while a C1 request was in flight.
+  - The request completed after wake. Latencies exclude the sleep (`perf_counter`).
+  - Outputs were unaffected; about 22 minutes of wall clock were lost.
+  - `caffeinate -i -s` was started at 04:14 for 4.5 h.
+  - Unattended runs on this machine need `caffeinate` from the start.
+- **One model stream at a time.** Steps 4 and 5 started automatically, in sequence, after C1. A1 began at 04:40 with
+  202 minutes remaining, satisfying the "more than 90 minutes" rule.
+
+### Open questions for Enrico
+
+1. **A1 amendments.** Sign off on A1-1 (temperature 0, so replicates vary the feedback deals) and A1-2 (no adoption;
+   a failed copy counts as S0).
+2. **C1b.**
+   - Should pooled estimators be judged against the population-average credit, the quantity they target, rather
+     than per-seed credit? The exploratory numbers are above: ridge 0.47 and 1.28.
+   - That would be an amendment for a new experiment, C1b, not a change to C1's verdict.
+3. **C2.** At temperature 0 the pre-registered primary quantity is mechanical. Options:
+   - run the full C2 anyway, which by projection gives 2.23 [1.35, 2.94];
+   - replace it with a pre-registered test of the Flawed-versus-placebo contrast;
+   - redefine the cost-to-good-teachers quantity on the student's outcome rather than on Piers' ITT;
+   - add a temperature > 0 block, where quarantine is not mechanical.
+4. **Gemma block.** C1 acceptance needs it. Exhaustive ITT is the only estimator that passes this block.
+5. **A1 check populations.** Should beta be estimated robustly before they run, given the bimodal copy
+   distribution? For example, from the upper part of the distribution or from a two-component mixture. That would
+   be an amendment before the run.
+6. **Rulings to confirm.** The planning session's rulings: an estimator must pass in both strata, and the BH family
+   is the two primary contrasts.
+
+Test suite at the end: **214 passed, 1 skipped** (the skip is the opt-in live MLX test, `CULTURE_LIVE=1`): the 205 from fix round 1 plus 9 new tests (1 per-stratum replicates, 6 quarantine, 2 transmission).
 
 ## Deviations from the spec
 
