@@ -124,6 +124,57 @@ def ridge_draws(rows_s: list[dict], spec: dict, si: int, sab: int, n_draws: int 
             "fraction_of_draws_rmse_le_2": float(np.mean([x <= 2.0 for x in rm]))}
 
 
+def population_average_errors(rows_s: list[dict], spec: dict, si: int, n_boot: int = 2000, seed: int = 0) -> dict:
+    """EXPLORATORY (requested 2026-10-07 by the planning session for a possible C1b; not a pre-registered metric).
+    A pooled estimator targets the population-average credit E_seed[tau_j], not each seed's tau_j. Error of the pooled
+    ridge against that target, RMSE over the k teachers, with a percentile bootstrap over seeds (ridge refitted and
+    the target recomputed in each resample). For comparison, the seed-average of each per-seed estimator against the
+    same target, and the ridge against E_seed[Shapley_j]."""
+    k = spec["k"]
+    v: dict[int, dict[int, float]] = {}
+    adopted: dict[int, dict[int, list[int]]] = {}
+    for x in rows_s:
+        v.setdefault(x["replicate"], {})[x["mask"]] = x["y"]
+        adopted.setdefault(x["replicate"], {})[x["mask"]] = x["adopted"]
+    reps = sorted(r for r in v if len(v[r]) == 1 << k)
+    bern, tau, phi, per_seed = {}, {}, {}, {}
+    for r in reps:
+        rng = np.random.default_rng([int(spec.get("ridge_seed", 0)), si, r])
+        bern[r] = [(m, v[r][m]) for m in C.bernoulli_masks(k, int(spec.get("ridge_runs", 8)), rng)]
+        tau[r], phi[r] = C.tau(v[r], k), C.shapley(v[r], k)
+        per_seed[r] = {"leave_one_out": C.leave_one_out(v[r], k),
+                       "equal_split": C.equal_split(v[r][C.full(k)], adopted[r].get(C.full(k), []), k),
+                       "singles_pairs": C.singles_pairs(v[r], k)}
+    lam = float(spec.get("ridge_lam", 1.0))
+
+    def stats(sample):
+        target = np.mean([tau[r] for r in sample], axis=0)
+        beta = C.ridge([row for r in sample for row in bern[r]], k, lam)
+        out = {"ridge_bernoulli": beta - target}
+        for n in ("leave_one_out", "equal_split", "singles_pairs"):
+            out[n] = np.mean([per_seed[r][n] for r in sample], axis=0) - target
+        out["ridge_vs_mean_shapley"] = beta - np.mean([phi[r] for r in sample], axis=0)
+        return out
+
+    point = stats(reps)
+    rng = np.random.default_rng(seed)
+    boots = [stats([reps[i] for i in rng.integers(0, len(reps), len(reps))]) for _ in range(n_boot)]
+    res = {}
+    for n, e in point.items():
+        b = np.array([x[n] for x in boots])
+        rm = np.sqrt((b ** 2).mean(1))
+        res[n] = {"rmse_over_teachers": float(np.sqrt(np.mean(e ** 2))),
+                  "rmse_interval_95": [float(np.quantile(rm, 0.025)), float(np.quantile(rm, 0.975))],
+                  "error_per_teacher": [float(x) for x in e],
+                  "error_per_teacher_interval_95": [[float(np.quantile(b[:, j], 0.025)),
+                                                     float(np.quantile(b[:, j], 0.975))] for j in range(k)]}
+    return {"label": "EXPLORATORY, not a pre-registered metric; the pre-registered per-seed verdict stands",
+            "target": "E_seed[tau_j] (population-average ITT credit) over this stratum's seeds",
+            "target_value": [float(x) for x in np.mean([tau[r] for r in reps], axis=0)],
+            "n_seeds": len(reps), "n_boot": n_boot, "estimators": res,
+            "note": "per-seed estimators enter as their seed-average, which is what pooling them would give"}
+
+
 def pooled_floor(reps: dict) -> dict:
     """The per-seed RMSE of the best seed-invariant estimator (the oracle's own mean over seeds): a floor for any
     pooled estimator such as ridge, set by between-seed heterogeneity of the oracle, not by estimation noise."""
@@ -347,6 +398,8 @@ def main() -> int:
                              "adopter_effect": [None if v is None else round(v, 3) for v in p["adopter_effect"]],
                              "v": p["v"]} for r, p in reps.items()},
             "pooled_estimator_floor": pooled_floor(reps),
+            "exploratory_population_average": population_average_errors(
+                [r for r in rows if r["stratum"] == stratum], spec, si),
             "ridge_pooled": s["ridge_pooled"], "ridge_draw_stratum_index": si,
             "ridge_draw_sensitivity": ridge_draws([r for r in rows if r["stratum"] == stratum], spec, si, sab),
             "operations": {**s["operations"], "by_source": operations(rows, stratum, pilot)},
