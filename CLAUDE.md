@@ -1,7 +1,9 @@
 # Mill Street Labs, Sandbox 1 (branch `enrico`) — working context
 
-Read this first in every session, then `files/sandbox-architecture.md` (build spec), `docs/sandbox1-status.md`
-(what is built and validated), `files/lit-map.md`, and `reports/Sandbox game selection lit review.md`.
+Read this first in every session, then `files/external.tex` (the company one-pager: vision, team, thesis, both
+sandboxes; read it before describing the company or writing anything outward-facing), then
+`files/sandbox-architecture.md` (build spec), `docs/sandbox1-status.md` (what is built and validated),
+`files/lit-map.md`, and `reports/Sandbox game selection lit review.md`.
 Diego's sandbox is on `main` (package `millstlabs`); ours is `src/culture/`. Never edit `src/millstlabs`.
 
 ## How to work with Enrico (learned 2026-10-05/06)

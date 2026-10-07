@@ -62,8 +62,12 @@ as the literature map states them, are five: the group as the unit that competes
 credit over a teaching graph with several teachers; controlled perturbation of the organization over long runs; a
 formal model that predicts when organization beats scale; and designing against persuasive-but-wrong ideas and against
 convergence. Rigor is itself part of the edge, since the adjacent literature runs single seeds, no counterfactuals and
-no pre-registration. Of the five, the ones that are cheap enough to test before funding are credit, the formal model,
-and robustness; the group-level and long-run claims need a factorial over organization rules and wait.
+no pre-registration. None of the five is gated by funding. The group-level and long-run claims were at first thought to
+be, on the arithmetic of one machine running one seeded call at a time; but that constraint belongs to the exact
+credit oracle of \S\ref{sec:est}, not to population experiments, which need paired seeds and replicates rather than
+bit-exact replay and run in parallel on a hosted open-weight model for tens of dollars. The headline for the
+pre-seed is therefore accumulation under organization (Experiments~\ref{exp:g1} to \ref{exp:i1}); credit and
+robustness are the instruments and the supporting figures.
 \end{remark}
 
 \section{The game and the population}\label{sec:game}
@@ -739,6 +743,63 @@ zero; model-support claim if the predicted sign matches the observed sign in at 
 per medium, in both blocks.
 \end{experiment}
 
+\begin{experiment}[G1: accumulation under organization]\label{exp:g1}\status{not run; headline}
+\emph{For.} The first edge claim, and the trajectory figure the pre-seed needs.
+\emph{What.} Three organizations at matched language-model budget: isolated agents; full sharing; groups with teaching,
+verification and migration. Eight agents, one hundred generations, five population seeds, on a hosted open-weight
+model with parallel calls; exact replay is not needed, and the model's randomness is part of the replicate variance.
+\emph{How.} Outcomes against the frozen ladder: best and mean self-play, within- and between-group cross-play,
+retained innovations, and the number of calls to reach fixed score thresholds ($17$, the Piers level, and $20$), so
+that the result is also an efficiency claim. All paired on deals and plotted against calls; null band from the null
+stub. The recombination test R1 is folded in by planting two complementary partial conventions in two agents at
+generation one. Pre-registered minimum effect: two points of mean self-play at generation one hundred between the
+organized and the isolated population; seeds by power from a three-seed pilot.
+\emph{Decision rule.} Claim that organization accumulates faster if the organized population's mean self-play exceeds
+the isolated population's by the minimum effect with the interval excluding zero, in both model blocks, and
+between-group cross-play does not fall below the isolated population's cross-play.
+\emph{Cost.} About twelve thousand calls; tens of dollars.
+\end{experiment}
+
+\begin{experiment}[P1: predicted against observed accumulation]\label{exp:p1}\status{not run}
+\emph{For.} The fourth edge claim: a model that predicts rather than describes.
+\emph{What.} Before G1 is unblinded, predict its trajectory from parameters measured in single-student runs: the
+innovation rate $\varepsilon$ (the probability that a revision improves the incumbent, per context), the fidelity
+mixture (the probability that a copy succeeds, and the loss within the success cluster), and the verification operating
+characteristics from B1. The model is copy-the-best among $N$ exemplars with a verification filter and an innovation
+step, a Henrich-style recursion for the skill distribution.
+\emph{Decision rule.} The model is supported if the predicted sign and order of the three organizations' mean
+trajectories match the observed ones and the predicted generation-one-hundred mean lies within the observed interval,
+in both blocks. A failure is reported with the first assumption suspected.
+\end{experiment}
+
+\begin{experiment}[S1: switchback perturbation of levers]\label{exp:s1}\status{not run}
+\emph{For.} The third edge claim, controlled perturbation over long runs, at the lowest cost per contrast.
+\emph{What.} One run of three hundred generations per seed, in which one lever (teaching, verification, quarantine,
+shrinkage selection, migration) is toggled on a fixed schedule every thirty generations, the other levers held fixed.
+\emph{How.} Interrupted-series estimates of the lever's effect from the within-run contrasts, with the switchback bias
+bound of W Theorem~15.5, at most $4M\lambda(1+t_0)$ for switch rate $\lambda$ and mixing time $t_0$, the mixing time
+estimated from the autocorrelation of the population mean. Ten contrasts per run at about five dollars per run.
+\emph{Decision rule.} A lever is credited with accumulation if its on-minus-off contrast in mean self-play, averaged
+over switches and seeds, exceeds one point with the interval excluding zero, in both blocks.
+\end{experiment}
+
+\begin{experiment}[I1: influence-bounded organizations]\label{exp:i1}\status{not run; novel framing}
+\emph{For.} The fifth edge claim stated as a guarantee rather than a tolerance.
+\emph{What.} Regard the organization as an estimator of ``the best artifact'' from noisy and partly adversarial
+messages. The per-message effect of \S\ref{sec:causal} is its influence function and the breakdown point of D1 is
+its breakdown point. The guarantee sought is of the differential-privacy kind: under a given reaction rule, no single
+message changes the law of the population's artifacts by more than $\epsilon$; the influence of a persistent saboteur
+over $T$ generations composes to at most the sum; and randomized delivery acts as amplification by subsampling, a
+message delivered with probability $q$ having influence of order $q\epsilon$.
+\emph{How.} Plant a persistent saboteur in the G1 or S1 population; measure its cumulative influence on the population
+mean under each reaction rule by replaying the population with the saboteur's messages removed (one additional run per
+seed); compare the measured cumulative influence with the per-generation bound times $T$, and with $q$ times that under
+Bernoulli delivery.
+\emph{Decision rule.} The framing is supported if the measured cumulative influence lies below the composed bound in
+every seed and scales with $q$ as predicted; the useful product is the reaction rule with the smallest bound at a
+given cost to good teachers.
+\end{experiment}
+
 \begin{experiment}[R1: recombination across lineages]\status{not run}
 \emph{For.} The claim that teaching combines discoveries from different lineages.
 \emph{What.} Plant two complementary partial conventions in two agents (one a good discard rule, one a good hint rule,
@@ -788,7 +849,9 @@ the credit identities, and crash-resume.
 
 \section{Next steps}
 \begin{enumerate}
-\item Pre-register D1 with the reaction-rule factor and C1b; run their pilots on the model.
+\item Hosted open-weight backend with a hard spend cap; pre-register G1 and S1; three-seed pilots.
+\item Measure the micro-parameters P1 needs; pre-register the prediction before G1 is unblinded.
+\item Pre-register D1 with the reaction-rule factor and C1b; run their pilots.
 \item Replicate C1 on the second model, so that an estimator verdict can be accepted rather than only rejected.
 \item Re-register C2 around the rejected-text contrast; re-register A1 around the mixture summary of fidelity.
 \item R1 and H1 on a small population once the single-student results are in.
