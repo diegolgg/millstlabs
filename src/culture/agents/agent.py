@@ -154,6 +154,27 @@ def ingest_text(msg: TeachingMessage, adopted: bool) -> str:
                           delta_text=msg.delta_text.strip(), evidence=ev, verification=vt)
 
 
+def passed_verification(msg: TeachingMessage) -> bool:
+    """True when the receiver's engine verification of the message ran and passed (C2's inclusion criterion)."""
+    v = msg.verification
+    return bool(v is not None and v.n_games and v.passed)
+
+
+def received_text(msgs: list[TeachingMessage], adopted: set[str], quarantine: bool) -> tuple[str, list[str]]:
+    """The revise prompt's block of received messages, and the ids withheld from it.
+
+    With `quarantine` (org.quarantine_unverified, C2) a message is shown only if it passed verification; a rejected,
+    duplicate or unverified message is withheld entirely: no prose, no evidence, no verification line. A message's code
+    reaches the prompt only as the current bot, i.e. through adoption, which quarantine does not change."""
+    shown, withheld = [], []
+    for m in msgs:
+        if quarantine and not passed_verification(m):
+            withheld.append(m.id)
+            continue
+        shown.append(ingest_text(m, m.id in adopted))
+    return "\n".join(shown), withheld
+
+
 def teach(ctx: "RunContext", sender: AgentState, receivers: list[str], art: Artifact, ev: Evaluation | None,
           generation: int) -> str | None:
     user = prompts.render("teach", generation=generation, agent=sender.id, receivers=", ".join(receivers),

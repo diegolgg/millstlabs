@@ -1,0 +1,15 @@
+# C2 on the stub (Overnight 2, step 2): proves the quarantine pipeline end to end. Same design as the C1 pilot (k = 3,
+# exhaustive delivery, 5 seeds), strata `verified` (C1's) and `verified_quarantine` (verification on plus
+# org.quarantine_unverified). Zero model calls.
+name: c2_pilot_stub
+k: 3
+teachers: [piers, flawed_persuasive, self]
+delivery: exhaustive
+replicates: [0, 1, 2, 3, 4]
+generation: 1
+ridge_lam: 1.0
+ridge_runs: 8
+base:
+  experiment_seed: 100
+  evaluation: {selfplay_games: 300, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0, workers: 4}
+strata: [verified, verified_quarantine]

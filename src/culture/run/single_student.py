@@ -4,7 +4,8 @@ One student (a weak rule list, self-play about 3) receives messages from k teach
 artifacts: T1 Piers with plain prose; T2 Flawed with persuasive prose and honest (low) evidence; T3 the student's own
 incumbent re-sent; teachers beyond 3 are null teachers (the student's incumbent, neutral prose). Each replay runs one
 generation of the student from the same state under one delivered subset S of the messages: verify and adopt (per the
-stratum; placebo messages first, see Setup.order), one LLM revise call (the delivered messages appear in the prompt),
+stratum; placebo messages first, see Setup.order), one LLM revise call (the delivered messages appear in the prompt,
+except those withheld under org.quarantine_unverified: the `verified_quarantine` stratum of C2),
 evaluate, accept if not worse. The outcome v(S) is the student's held-out paired self-play improvement: final incumbent minus starting incumbent on the
 generation's evaluation deals (disjoint from the feedback deals shown to the model).
 
@@ -53,11 +54,18 @@ TEACHERS: dict[str, dict[str, Any]] = {
     "self": {"anchor": None, "text": "Here is your own current bot back, unchanged. I have no improvement to suggest."},
     "null": {"anchor": None, "text": "No changes to suggest this round; keep what you have."},
 }
+# Named strata (config overrides). `verified_quarantine` is C2's stratum: verification on plus quarantine of every
+# message that did not pass it (files/prereg/C2-quarantine.md).
+STRATA: dict[str, dict[str, Any]] = {
+    "verified": {"org": {"verification": {"name": "selfplay", "n": 200}, "adoption": "replace_if_better"}},
+    "unverified": {"org": {"verification": "none", "adoption": "replace_if_better"}},
+    "verified_quarantine": {"org": {"verification": {"name": "selfplay", "n": 200}, "adoption": "replace_if_better",
+                                    "quarantine_unverified": True}},
+}
 DEFAULTS: dict[str, Any] = {
     "name": "c1", "k": 3, "teachers": ["piers", "flawed_persuasive", "self"], "delivery": "exhaustive",
     "replicates": [0, 1, 2, 3, 4], "generation": 1, "ridge_lam": 1.0, "ridge_runs": 8, "ridge_seed": 0, "base": {},
-    "strata": {"verified": {"org": {"verification": {"name": "selfplay", "n": 200}, "adoption": "replace_if_better"}},
-               "unverified": {"org": {"verification": "none", "adoption": "replace_if_better"}}},
+    "strata": {"verified": STRATA["verified"], "unverified": STRATA["unverified"]},
 }
 
 
@@ -65,6 +73,8 @@ def load_spec(spec: str | Path | dict) -> dict[str, Any]:
     d = spec if isinstance(spec, dict) else yaml.safe_load(Path(spec).read_text())
     out = copy.deepcopy(DEFAULTS)
     out.update(copy.deepcopy(d))
+    if isinstance(out["strata"], list):  # strata by name from STRATA
+        out["strata"] = {n: copy.deepcopy(STRATA[n]) for n in out["strata"]}
     teachers = list(out["teachers"])[: out["k"]]
     out["teachers"] = teachers + ["null"] * (out["k"] - len(teachers))
     for t in out["teachers"]:
@@ -176,11 +186,14 @@ def replay(ctx: RunContext, setup: Setup, mask: int, revise: bool = True) -> dic
             decisions[m.sender] = "rejected"
     parent_id = student.incumbent
     cand = None
+    withheld: list[str] = []
     if revise:
         parent = ctx.store.get(parent_id)
-        adopted_text = "\n".join(A.ingest_text(m, decisions[m.sender] == "adopted") for m in read)
+        adopted_ids = {m.id for m in read if decisions[m.sender] == "adopted"}
+        adopted_text, withheld = A.received_text(read, adopted_ids, ctx.cfg.org.quarantine_unverified)
         user = A.revise_prompt(ctx, student, parent, ctx.evals.get(parent_id), adopted_text, "", g)
-        art = A.produce(ctx, student, "revise", user, g, parent, [parent_id], [m.id for m in read], "revise")
+        art = A.produce(ctx, student, "revise", user, g, parent, [parent_id],
+                        [m.id for m in read if m.id not in withheld], "revise")
         if art is not None:
             ctx.add_artifact(art)
             cand = art.id
@@ -205,6 +218,7 @@ def replay(ctx: RunContext, setup: Setup, mask: int, revise: bool = True) -> dic
             "accepted": accepted, "final": final, "y": final_score - s0_score, "s0_score": s0_score,
             "incumbent_score": inc_score, "candidate_score": cand_score, "candidate_illegal_rate": cand_illegal,
             "final_score": final_score, "generalization_gap": gap, "calls": calls,
+            "withheld": [m.sender for m in read if m.id in withheld],
             "counters": dict(sorted(student.counters.items()))}
 
 

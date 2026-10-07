@@ -275,7 +275,8 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
                 continue
             parent_id = P["selection"].choose_parent(ag, rng) or ag.incumbent
             parent = ctx.store.get(parent_id)
-            adopted_text = "\n".join(A.ingest_text(m, m.id in adopted[a]) for m in read[a])
+            adopted_text, withheld = A.received_text(read[a], adopted[a], cfg.org.quarantine_unverified)
+            shown = [m for m in read[a] if m.id not in withheld]
             corpus_text, entries = "", []
             if cfg.corpus.enabled:
                 entries = ctx.corpora[ag.group].retrieve(a, g, cfg.corpus.retrieve_k, ctx.touch, exclude={parent_id},
@@ -285,10 +286,12 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
             user = A.revise_prompt(ctx, ag, parent, ctx.evals.get(parent_id), adopted_text, corpus_text, g)
             revise_context[a] = {"traces": bool(A.feedback_seeds(ctx, g)), "received": len(read[a]),
                                  "adopted": len(adopted[a]), "corpus": len(entries)}
-            art = A.produce(ctx, ag, "revise", user, g, parent, [parent_id], [m.id for m in read[a]], "revise")
+            if cfg.org.quarantine_unverified:
+                revise_context[a]["withheld"] = len(withheld)
+            art = A.produce(ctx, ag, "revise", user, g, parent, [parent_id], [m.id for m in shown], "revise")
             if art is not None:
                 teaching = [{"message": m.id, "sender": m.sender, "source": m.artifact_id,
-                             "adopted": m.id in adopted[a]} for m in read[a]]
+                             "adopted": m.id in adopted[a]} for m in shown]
                 ctx.add_artifact(art, teaching)
                 candidates[a] = (art.id, parent_id)
     maybe_kill(ctx, g, "revise")

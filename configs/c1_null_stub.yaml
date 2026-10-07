@@ -1,0 +1,18 @@
+# Null calibration for C1 and C2 (Overnight 2): the same single-student design with the stub in `null` mode (a
+# revision returns the parent's rule list with a fresh random stream: no real improvement, no text effect), K = 20
+# seeds, exhaustive delivery, strata verified, unverified and verified_quarantine. The only effects left are the planted
+# adoption effects and evaluation noise from accepting a same-policy candidate. Gives the null distributions of the
+# estimators' RMSE, Spearman and sign error (C1 section 10) and the C2 null band. Zero model calls.
+name: c1_null_stub
+k: 3
+teachers: [piers, flawed_persuasive, self]
+delivery: exhaustive
+replicates: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+generation: 1
+ridge_lam: 1.0
+ridge_runs: 8
+base:
+  experiment_seed: 100
+  evaluation: {selfplay_games: 300, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0, workers: 4}
+  llm: {stub: {mode: "null"}}
+strata: [verified, unverified, verified_quarantine]

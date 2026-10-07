@@ -110,6 +110,11 @@ class OrgConfig:
     migration: PolicySpec = field(default_factory=lambda: PolicySpec("none"))
     environment: PolicySpec = field(default_factory=lambda: PolicySpec("fixed"))
     teaching_cost: PolicySpec = field(default_factory=lambda: PolicySpec("free"))
+    # C2 (files/prereg/C2-quarantine.md): when True, a received message appears in the revision prompt only if it
+    # passed an engine verification (Verification with n_games > 0 and passed); rejected, duplicate and unverified
+    # messages are withheld entirely (their prose, evidence and verification line). Default off. Left out of the
+    # digest while off, so configs written before this flag keep their digests.
+    quarantine_unverified: bool = False
 
 
 @dataclass
@@ -174,6 +179,8 @@ class ExperimentConfig:
         d["runner"].pop("generations")
         d["runner"].pop("wall_clock_budget_s")
         d["evaluation"].pop("workers")
+        if not d["org"].get("quarantine_unverified"):
+            d["org"].pop("quarantine_unverified", None)
         return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:16]
 
 
@@ -270,6 +277,9 @@ def validate(cfg: ExperimentConfig) -> None:
         raise ConfigError("sabotage.payload must be a source anchor name")
     if cfg.budget.unit not in ("calls", "tokens", "usd"):
         raise ConfigError("budget.unit must be calls | tokens | usd")
+    if not isinstance(cfg.org.quarantine_unverified, bool):
+        raise ConfigError("org.quarantine_unverified must be true or false")
     for f in fields(cfg.org):
         spec = getattr(cfg.org, f.name)
-        registry.check(f.name, spec)
+        if isinstance(spec, PolicySpec):
+            registry.check(f.name, spec)
