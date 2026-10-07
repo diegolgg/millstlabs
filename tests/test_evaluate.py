@@ -54,7 +54,8 @@ def test_hc_detects_sparse_signal():
 def test_crossplay_alternates_seats_and_matrix(ev):
     a, b = BotSpec.anchor("piers"), BotSpec.anchor("iggi")
     res = crossplay(ev, a, b, list(range(10)))
-    assert [r.seats for r in res[:2]] == [["anchor:piers", "anchor:iggi"], ["anchor:iggi", "anchor:piers"]]
+    # canonical seats (fix round 1, step 6): lower key in seat 0 on even seeds, whatever the argument order
+    assert [r.seats for r in res[:2]] == [["anchor:iggi", "anchor:piers"], ["anchor:piers", "anchor:iggi"]]
     m = crossplay_matrix(ev, [a, b, BotSpec.anchor("flawed")], list(range(20)))
     assert np.allclose(m, m.T) and m[2, 2] == 0 and m[0, 0] > 14
 

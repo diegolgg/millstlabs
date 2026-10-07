@@ -1,4 +1,6 @@
-"""Cross-play on shared seeds. Seats alternate by seed index so neither artifact always moves first."""
+"""Cross-play on shared seeds. Pairs are canonical: the two bots are ordered by key, the lower key sits in seat 0 on
+even seeds and the higher key on odd seeds. So crossplay(A, B) and crossplay(B, A) are the same games, a pair is played
+once per seed (the evaluator's memo serves the second request), and neither artifact always moves first."""
 
 from __future__ import annotations
 
@@ -11,7 +13,9 @@ from .pool import Evaluator
 def pair_jobs(a: BotSpec, b: BotSpec, seeds: list[int]) -> list[tuple[tuple[BotSpec, ...], list[int]]]:
     if a.key == b.key:
         return [((a, a), seeds)]
-    return [((a, b), seeds[0::2]), ((b, a), seeds[1::2])]
+    lo, hi = (a, b) if a.key < b.key else (b, a)  # argument order never matters
+    even, odd = [s for s in seeds if s % 2 == 0], [s for s in seeds if s % 2 == 1]  # seats alternate by seed
+    return [job for job in (((lo, hi), even), ((hi, lo), odd)) if job[1]]
 
 
 def crossplay(ev: Evaluator, a: BotSpec, b: BotSpec, seeds: list[int]) -> list[GameResult]:
