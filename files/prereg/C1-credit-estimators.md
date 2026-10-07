@@ -114,3 +114,24 @@ MLX single-stream serving. If no runtime is bit-reproducible, xi is treated as r
 repeated replays per subset (r chosen from a pilot of the within-subset SD so that the SE of v(S) is below 0.5
 points), the oracle becomes the expected Shapley value, and the LLM noise enters the between-replicate variance that
 the power calculation already uses. Cost multiplies by r. The paired-deal design is unaffected.
+
+## 15. Amendments after the pilot (2026-10-07; logged, not silently edited)
+
+Pilot: 5 seeds x 2 strata on MLX, 80 replays, 74 model calls, 54 s and about 10.5k tokens per call, 97.5% of revisions
+admissible. Results in docs/results/c1-pilot.json.
+
+1. **T3 is a placebo, not a known zero.** The re-sent own incumbent moved outcomes by -2.9 to +1.9 points: any message
+   changes the LLM's revision. The oracle still defines the truth for T3; the sign-error check uses T2 only (as written
+   in section 8). No decision rule changes.
+2. **Finding to carry into D1 and a new lever.** With verification on, Flawed was never adopted (0 of 5) yet its
+   ITT effect was -3 to -5 points in 4 of 5 seeds: the message's prose and evidence sit in the revision prompt, so
+   verification gates code adoption but not ideas. Proposed new policy `quarantine_unverified` (rejected or
+   unverified messages are withheld from the revision prompt). To be pre-registered as C2, not folded into C1.
+3. **Estimators at k = 3.** Only the full-replay estimators (tau_itt, Plackett-Burman at k=3 = exhaustive) met
+   RMSE <= 2 (0.7). Ridge on Bernoulli deliveries 2.6 (verified) / 3.9 (unverified) with 5 pooled seeds; leave-one-out
+   3.2 / 4.4; singles-plus-pairs 3.0 / 2.9. Rank order was right for all but equal-split (Spearman 1.0). The full run
+   at R = 29 is the pre-registered test; ridge pools across seeds and may pass with R = 29, leave-one-out cannot pool.
+4. **Sample size.** Between-seed SD of the primary contrast 1.85 (verified) and 0.86 (unverified); R = 29 and 8 for
+   80% power at 1 point; about 300 model calls, 4.5 to 7 hours on MLX, $0.
+5. **Baseline is not weak.** v(none) was 7.2 to 11.9: the student's own single revision from a ~3 bot already reaches
+   7 to 12. Effects are measured relative to that, as the estimand says.

@@ -62,10 +62,18 @@ Diego's sandbox is on `main` (package `millstlabs`); ours is `src/culture/`. Nev
 - `.venv/bin/python -m pytest -q` (about 2 min). `python -m culture.run --config configs/<x>.yaml --out runs/<x>`.
 - Engine: HLE vendored at `third_party/hanabi-learning-environment` (commit 54e7959), built from source
   (`CMAKE_POLICY_VERSION_MINIMUM=3.5`). Anchors: Piers 16.99, IGGI 15.86, Flawed 0 over 1,000 games.
-- Stub backend is the only backend built as of 2026-10-06; Anthropic and OpenAI-compatible backends are not.
-- Known bugs from the 2026-10-06 review (fix before any paid run): sandbox escape via dunder strings and module
-  attributes; soft budget cap (`can_spend` checks `> 0`); bare `except` swallows the hard timeout; HGM success
-  labels compared on unpaired seeds; warm-start pairing races with a real backend.
+- Backends: stub (debugging, CI) and `openai_compat` targeting the local MLX server (seed in the cache key). No paid
+  backend is wired; none should be without an explicit, capped instruction.
+- Fix round 1 (2026-10-06/07, commits 9fb78c6..737194b): the eight review defects are fixed with regression tests;
+  disjoint feedback/verification/evaluation deals; null calibration (K=40); innovation base rate; C1 single-student
+  driver with exact Shapley oracle; C1 pilot on MLX (5 seeds x 2 strata); B1 SPRT study; D1 pilot on the null stub.
+  Suite: 205 passed, 1 skipped (opt-in live MLX test). Read docs/sandbox1-status.md "Fix round 1" and
+  docs/results/c1-pilot.json, b1-sprt.json, d1-pilot.json before planning the next run.
+- Known open sandbox gap: a bot can monkeypatch a shared stdlib class through an alias (recorded, not fixed).
+- C1 pilot findings that change design: a rejected (verified-off) Flawed message still lowers the student by 3 to 5
+  points because its prose and evidence sit in the revision prompt (verification gates code adoption, not ideas); the
+  "self" placebo is not a null (effects of -3 to +2); only full-replay estimators meet RMSE <= 2 at k=3 (ridge 2.6/3.9,
+  LOO 3.2/4.4) while rank order is right (Spearman 1.0); R for 80% power at 1 point = 29 (verified), 8 (unverified).
 - Local model (2026-10-06): Qwen3.6-35B-A3B. **Serve with MLX** (`.venv/bin/python -m mlx_lm.server --model
   mlx-community/Qwen3.6-35B-A3B-4bit --host 127.0.0.1 --port 8080 --max-tokens 8192 --chat-template-args
   '{"enable_thinking": false}'`): seeded temperature-0 requests are bit-reproducible, about 65 tok/s, runnable code.
