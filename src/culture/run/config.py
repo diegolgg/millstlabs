@@ -81,6 +81,36 @@ class LLMConfig:
     temperature: float = 0.0
     request_timeout_s: float = 1200.0
     extra_body: dict[str, Any] = field(default_factory=dict)  # merged verbatim into the request body
+    # hosted OpenAI-compatible provider (DeepInfra, Fireworks, OpenRouter, ...): docs/sandbox1-status.md "Hosted backend"
+    api_key_env: str = ""  # NAME of the env var holding the key; "" = local server (sends `Bearer local`)
+    price_in_per_mtok: float | None = None  # $ per million input tokens; None = unpriced
+    price_out_per_mtok: float | None = None  # $ per million output tokens; None = unpriced
+    max_usd: float = 0.0  # cumulative cap for the spend file; 0.0 = no paid call is ever allowed
+    spend_file: str = ""  # shared spend database; "" -> <run dir>/spend.sqlite
+    retry_uncertain: bool = False  # re-send a request whose earlier attempt has an uncertain billing outcome
+    max_rate_limit_retries: int = 8  # unbilled retries (HTTP 429, connection refused) with exponential backoff
+    concurrency: int = 1  # threads for complete_batch
+
+    @property
+    def hosted(self) -> bool:
+        return self.backend == "openai_compat" and bool(self.api_key_env)
+
+
+# LLMConfig fields that never change results (spend cap, spend file, retry and thread knobs, the key's variable
+# name): left out of the config digest and the warm-start key, so raising the cap or moving the spend file does not
+# block a resume. The prices are hashed only when set, so configs written before the hosted backend keep their digests.
+LLM_OPERATIONAL = ("api_key_env", "max_usd", "spend_file", "retry_uncertain", "max_rate_limit_retries", "concurrency")
+LLM_HASHED_IF_SET = ("price_in_per_mtok", "price_out_per_mtok")
+
+
+def llm_hash_dict(llm: dict[str, Any]) -> dict[str, Any]:
+    """The LLMConfig dict as it enters the config digest and the warm-start key (mutates and returns `llm`)."""
+    for k in LLM_OPERATIONAL:
+        llm.pop(k, None)
+    for k in LLM_HASHED_IF_SET:
+        if llm.get(k) is None:
+            llm.pop(k, None)
+    return llm
 
 
 @dataclass
@@ -179,6 +209,7 @@ class ExperimentConfig:
         d["runner"].pop("generations")
         d["runner"].pop("wall_clock_budget_s")
         d["evaluation"].pop("workers")
+        llm_hash_dict(d["llm"])
         if not d["org"].get("quarantine_unverified"):
             d["org"].pop("quarantine_unverified", None)
         return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:16]
@@ -250,6 +281,34 @@ def apply_dotted(cfg: ExperimentConfig, dotted: dict[str, Any]) -> ExperimentCon
     return from_dict(nested, cfg)
 
 
+def _validate_hosted(llm: LLMConfig) -> None:
+    for k in ("price_in_per_mtok", "price_out_per_mtok"):
+        v = getattr(llm, k)
+        if v is not None and (not isinstance(v, (int, float)) or isinstance(v, bool) or v < 0):
+            raise ConfigError(f"llm.{k} must be a non-negative number of dollars per million tokens, or null")
+    if not isinstance(llm.max_usd, (int, float)) or isinstance(llm.max_usd, bool) or llm.max_usd < 0:
+        raise ConfigError("llm.max_usd must be a non-negative number of dollars")
+    if not isinstance(llm.retry_uncertain, bool):
+        raise ConfigError("llm.retry_uncertain must be true or false")
+    if not isinstance(llm.max_rate_limit_retries, int) or llm.max_rate_limit_retries < 0:
+        raise ConfigError("llm.max_rate_limit_retries must be an integer >= 0")
+    if not isinstance(llm.concurrency, int) or llm.concurrency < 1:
+        raise ConfigError("llm.concurrency must be an integer >= 1")
+    if not isinstance(llm.api_key_env, str):
+        raise ConfigError("llm.api_key_env must be the NAME of an environment variable (a string), never the key")
+    if llm.concurrency > 1 and not llm.api_key_env:
+        raise ConfigError("llm.concurrency > 1 is for hosted providers only: concurrent requests to the local MLX "
+                          "server are batched and break bit-reproducibility (CLAUDE.md, one call at a time)")
+    if llm.api_key_env:
+        if llm.backend != "openai_compat":
+            raise ConfigError("llm.api_key_env is only used by the openai_compat backend")
+        if llm.price_in_per_mtok is None or llm.price_out_per_mtok is None or not llm.max_usd > 0:
+            raise ConfigError(
+                "llm.api_key_env is set (a hosted, paid provider) but no paid call can be made without a price and a "
+                "cap: set llm.price_in_per_mtok and llm.price_out_per_mtok (dollars per million tokens, from the "
+                "provider's price page) and llm.max_usd > 0 (the cumulative spend cap)")
+
+
 def validate(cfg: ExperimentConfig) -> None:
     from ..org import registry  # local import: org depends on config types only
 
@@ -267,8 +326,10 @@ def validate(cfg: ExperimentConfig) -> None:
     if cfg.llm.backend not in ("stub", "openai_compat"):
         raise ConfigError("llm.backend must be stub | openai_compat (no paid API backend exists in this build)")
     if cfg.llm.backend == "openai_compat" and cfg.llm.model.startswith("claude"):
-        raise ConfigError("openai_compat targets a local open-weight server: set llm.model to the served model "
-                          "(e.g. mlx-community/Qwen3.6-35B-A3B-4bit)")
+        raise ConfigError("openai_compat targets open-weight models (a local MLX server or a hosted OpenAI-compatible "
+                          "provider); claude-* models are not allowed: set llm.model to the served model "
+                          "(e.g. mlx-community/Qwen3.6-35B-A3B-4bit or the provider's model id)")
+    _validate_hosted(cfg.llm)
     if cfg.llm.cache_mode not in ("record", "replay", "replay_strict", "off"):
         raise ConfigError("llm.cache_mode must be record | replay | replay_strict | off")
     if not 0.0 <= cfg.sabotage.epsilon <= 1.0:

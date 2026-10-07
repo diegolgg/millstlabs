@@ -45,6 +45,20 @@ class OpenAICompatConfig:
     request_timeout_s: float = 1200.0
     extra_body: dict[str, Any] = field(default_factory=dict)
     api_key: str = "local"  # local servers ignore it; never a real key
+    # hosted provider (see run/config.py LLMConfig): the key is read from os.environ[api_key_env] at call time and is
+    # never stored on this object, logged, cached or hashed
+    api_key_env: str = ""
+    price_in_per_mtok: float | None = None
+    price_out_per_mtok: float | None = None
+    max_usd: float = 0.0
+    spend_file: str = ""  # resolved path of the shared spend database (required when api_key_env is set)
+    retry_uncertain: bool = False
+    max_rate_limit_retries: int = 8
+    concurrency: int = 1
+
+    @property
+    def hosted(self) -> bool:
+        return bool(self.api_key_env)
 
 
 class OpenAICompatBackend:

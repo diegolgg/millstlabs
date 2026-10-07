@@ -45,4 +45,14 @@ def build_manifest(cfg) -> dict:
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "llm_backend": cfg.llm.backend,
+        **({"llm_provider": provider_record(cfg)} if cfg.llm.backend == "openai_compat" else {}),
     }
+
+
+def provider_record(cfg) -> dict:
+    """Which provider served the run and under what price and cap. Records the NAME of the key's environment variable,
+    never its value."""
+    c = cfg.llm
+    return {"base_url": c.base_url, "model": c.model, "hosted": bool(c.api_key_env), "api_key_env": c.api_key_env,
+            "price_in_per_mtok": c.price_in_per_mtok, "price_out_per_mtok": c.price_out_per_mtok,
+            "max_usd": c.max_usd, "spend_file": c.spend_file}
