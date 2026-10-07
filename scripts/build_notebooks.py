@@ -56,6 +56,26 @@ PROBE = [
        "share card-index semantics, so they are mutually compatible. That is a property of the stub, not evidence about "
        "LLM-written conventions."),
     code("print(json.dumps({m: r['gates'] for m, r in results.items()}, indent=1))"),
+    md("## Innovation base rate (fix round 1, step 12)\n\n"
+       "epsilon = P(a revision beats its parent on held-out deals by more than a declared margin), per revise-context "
+       "condition: **nothing** (no feedback traces, nothing received), **feedback_only** (own failure traces on the "
+       "generation's feedback deals), **feedback_plus_received** (traces plus teaching messages and the group corpus). "
+       "Outcomes are paired: candidate and parent on the same held-out evaluation deals, disjoint from the feedback "
+       "deals. Beta(1, 1) prior, 95% equal-tailed credible interval.\n\n"
+       "**Stub only here**: the stub ignores the context (it mutates the rule list it finds), so the three rates "
+       "should agree up to noise; this cell proves the estimator and the plumbing. With a real backend the same cell "
+       "measures whether context changes epsilon."),
+    code("from culture.analysis.innovation import run_innovation_probe\n"
+         "from culture.run.config import load_config\n"
+         "base = load_config('configs/probe.yaml', {'name': 'probe_innovation', "
+         "'population': {'groups': 1, 'agents_per_group': 3}, "
+         "'evaluation': {'selfplay_games': 40, 'anchor_games': 20, 'between_group_games': 0}, "
+         "'runner': {'generations': 6}})\n"
+         "MARGIN = 0.5  # declared before running: a revision must gain more than half a point on held-out deals\n"
+         "inno = run_innovation_probe(base, 'runs/probe_innovation', margin=MARGIN, seeds=(0, 1))\n"
+         "for c, e in inno['by_context'].items():\n"
+         "    print(f\"{c:24s} n={e['n']:3d}  innovations={e['successes']:3d}  epsilon={e['mean']:.3f}  "
+         "95% CrI [{e['lo']:.3f}, {e['hi']:.3f}]\")"),
 ]
 
 ANALYSIS = [

@@ -237,6 +237,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
 
     # revise
     candidates: dict[str, tuple[str, str]] = {}
+    revise_context: dict[str, dict[str, Any]] = {}  # what each revise call saw (innovation base rate, step 12)
     if cfg.runner.revise:
         rng = ctx.rng(g, "selection")
         for a in sorted(ctx.agents):
@@ -246,13 +247,15 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
             parent_id = P["selection"].choose_parent(ag, rng) or ag.incumbent
             parent = ctx.store.get(parent_id)
             adopted_text = "\n".join(A.ingest_text(m, m.id in adopted[a]) for m in read[a])
-            corpus_text = ""
+            corpus_text, entries = "", []
             if cfg.corpus.enabled:
                 entries = ctx.corpora[ag.group].retrieve(a, g, cfg.corpus.retrieve_k, ctx.touch, exclude={parent_id},
                                                          policy=cfg.corpus.retrieve_policy)
                 corpus_text = "\n".join(f"- {e.artifact_id} from {e.depositor} (generation {e.generation}): {e.summary}"
                                         for e in entries)
             user = A.revise_prompt(ctx, ag, parent, ctx.evals.get(parent_id), adopted_text, corpus_text, g)
+            revise_context[a] = {"traces": bool(A.feedback_seeds(ctx, g)), "received": len(read[a]),
+                                 "adopted": len(adopted[a]), "corpus": len(entries)}
             art = A.produce(ctx, ag, "revise", user, g, parent, [parent_id], [m.id for m in read[a]], "revise")
             if art is not None:
                 teaching = [{"message": m.id, "sender": m.sender, "source": m.artifact_id,
@@ -320,6 +323,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
     extra_rec = {"teaching": counts | {"sent": len(sent)}, "credit_increments": increments, "allocation": alloc,
                  "parents": {a: p for a, (_, p) in sorted(candidates.items())},
                  "parent_scores": {a: round(v, 4) for a, v in sorted(parent_scores.items())},
+                 "revise_context": revise_context,
                  "credit_windows": credit_notes, "migrations": moves,
                  "accepted": accepted, "windows": [{"student": w.student, "before": w.before, "after": w.after,
                                                     "offers": [o.__dict__ for o in w.offers]} for w in windows]}
@@ -437,6 +441,7 @@ def _finish(ctx: RunContext, g: int, t0: float, extra: dict[str, Any], candidate
                        "parent": candidates[a][1] if a in candidates else None,
                        "candidate_score": (round(ctx.evals[candidates[a][0]].selfplay_mean, 4) if a in candidates else None),
                        "parent_score": extra.get("parent_scores", {}).get(a),
+                       "revise_context": extra.get("revise_context", {}).get(a),
                        "illegal_rate": ctx.evals[ag.incumbent].illegal_rate, "lines": ctx.evals[ag.incumbent].lines,
                        "start": starts.get(a)}
                    for a, ag in sorted(ctx.agents.items())},
