@@ -1,0 +1,1016 @@
+{
+ "scope": "Draft P1 micro-parameters from existing single-student runs on one model block (Qwen3.6-35B-A3B 4-bit on MLX, temperature 0). Zero model calls were made to produce this file. Not pre-registered.",
+ "generated_by": "scripts/p1_params.py",
+ "rules": {
+  "copy_success": "a copy succeeds if v_T - score <= 1.0 (one-sided: copies above the teacher are successes with negative loss); p_s posterior Beta(1 + successes, 1 + failures)",
+  "loss": "v_T - score within the success cluster",
+  "innovation": "see innovation.rule",
+  "intervals": "95% equal-tailed Beta posterior intervals"
+ },
+ "fidelity": {
+  "code": {
+   "n": 30,
+   "v_T": 16.699999999999996,
+   "v_S0": 2.493333333333334,
+   "p_s": {
+    "k": 19,
+    "n": 30,
+    "raw": 0.6333333333333333,
+    "posterior": "Beta(20, 12)",
+    "mean": 0.625,
+    "lo": 0.45369560195063835,
+    "hi": 0.7815004015014309
+   },
+   "loss_in_success_cluster": {
+    "mean": -0.17122807017544217,
+    "sd": 0.4391872551591372,
+    "n": 19,
+    "values": [
+     -0.9333,
+     -0.9333,
+     -0.9333,
+     -0.9333,
+     -0.2233,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     0.7033
+    ]
+   },
+   "failed_copies": {
+    "n": 11,
+    "mean_score": 11.873333333333333,
+    "scores": [
+     2.3333,
+     3.3967,
+     11.62,
+     11.62,
+     12.62,
+     12.74,
+     14.9067,
+     15.13,
+     15.3033,
+     15.3967,
+     15.54
+    ]
+   },
+   "all_losses": [
+    -0.9333,
+    -0.9333,
+    -0.9333,
+    -0.9333,
+    -0.2233,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    0.7033,
+    1.16,
+    1.3033,
+    1.3967,
+    1.57,
+    1.7933,
+    3.96,
+    4.08,
+    5.08,
+    5.08,
+    13.3033,
+    14.3667
+   ],
+   "em_mixture_sensitivity": {
+    "method": "EM, 2 Gaussians, 20 starts, sd floor 0.1",
+    "loglik": -59.22508388452908,
+    "upper_component": {
+     "weight": 0.7629257799786963,
+     "mean": 16.5668640654674,
+     "sd": 0.7385384687948428
+    },
+    "lower_component": {
+     "weight": 0.23707422002137057,
+     "mean": 10.12079245690497,
+     "sd": 4.761923848828224
+    },
+    "n_assigned_upper": 24
+   },
+   "provenance": {
+    "file": "docs/results/a1-params.json",
+    "field": "mlx.media.code.V_SS.values (copy self-play on the common 300 deals) and mlx.media.code.v_T",
+    "observations": 30
+   }
+  },
+  "prose": {
+   "n": 30,
+   "v_T": 16.699999999999996,
+   "v_S0": 2.493333333333334,
+   "p_s": {
+    "k": 12,
+    "n": 30,
+    "raw": 0.4,
+    "posterior": "Beta(13, 19)",
+    "mean": 0.40625,
+    "lo": 0.24547595073865158,
+    "hi": 0.5781304108659586
+   },
+   "loss_in_success_cluster": {
+    "mean": 0.05888888888888477,
+    "sd": 0.5514834600729259,
+    "n": 12,
+    "values": [
+     -0.9333,
+     -0.66,
+     -0.5267,
+     -0.0233,
+     -0.02,
+     -0.0067,
+     -0.0067,
+     0.42,
+     0.4533,
+     0.4533,
+     0.74,
+     0.8167
+    ]
+   },
+   "failed_copies": {
+    "n": 18,
+    "mean_score": 13.706851851851852,
+    "scores": [
+     5.4133,
+     9.1733,
+     11.48,
+     13.0033,
+     13.85,
+     13.9767,
+     14.3067,
+     14.6067,
+     14.8433,
+     14.9567,
+     15.0067,
+     15.0067,
+     15.01,
+     15.0133,
+     15.04,
+     15.0667,
+     15.4,
+     15.57
+    ]
+   },
+   "all_losses": [
+    -0.9333,
+    -0.66,
+    -0.5267,
+    -0.0233,
+    -0.02,
+    -0.0067,
+    -0.0067,
+    0.42,
+    0.4533,
+    0.4533,
+    0.74,
+    0.8167,
+    1.13,
+    1.3,
+    1.6333,
+    1.66,
+    1.6867,
+    1.69,
+    1.6933,
+    1.6933,
+    1.7433,
+    1.8567,
+    2.0933,
+    2.3933,
+    2.7233,
+    2.85,
+    3.6967,
+    5.22,
+    7.5267,
+    11.2867
+   ],
+   "em_mixture_sensitivity": {
+    "method": "EM, 2 Gaussians, 20 starts, sd floor 0.1",
+    "loglik": -57.958667858368,
+    "upper_component": {
+     "weight": 0.8764675895132625,
+     "mean": 15.604888041553716,
+     "sd": 1.1044499030342858
+    },
+    "lower_component": {
+     "weight": 0.12353241048680424,
+     "mean": 9.741386445941489,
+     "sd": 3.170081427642176
+    },
+    "n_assigned_upper": 27
+   },
+   "provenance": {
+    "file": "docs/results/a1-params.json",
+    "field": "mlx.media.prose.V_SS.values (copy self-play on the common 300 deals) and mlx.media.prose.v_T",
+    "observations": 30
+   }
+  },
+  "both": {
+   "n": 30,
+   "v_T": 16.699999999999996,
+   "v_S0": 2.493333333333334,
+   "p_s": {
+    "k": 17,
+    "n": 30,
+    "raw": 0.5666666666666667,
+    "posterior": "Beta(18, 14)",
+    "mean": 0.5625,
+    "lo": 0.39075922249209244,
+    "hi": 0.7268350139962649
+   },
+   "loss_in_success_cluster": {
+    "mean": 0.0680392156862701,
+    "sd": 0.55229453045093,
+    "n": 17,
+    "values": [
+     -1.12,
+     -0.6733,
+     -0.52,
+     -0.35,
+     -0.23,
+     -0.1733,
+     -0.0233,
+     -0.0133,
+     -0.0,
+     -0.0,
+     0.2867,
+     0.5467,
+     0.5733,
+     0.6067,
+     0.69,
+     0.71,
+     0.8467
+    ]
+   },
+   "failed_copies": {
+    "n": 13,
+    "mean_score": 14.035128205128204,
+    "scores": [
+     2.9767,
+     13.4633,
+     14.1133,
+     14.4033,
+     14.53,
+     14.6967,
+     15.1467,
+     15.3033,
+     15.41,
+     15.51,
+     15.5933,
+     15.65,
+     15.66
+    ]
+   },
+   "all_losses": [
+    -1.12,
+    -0.6733,
+    -0.52,
+    -0.35,
+    -0.23,
+    -0.1733,
+    -0.0233,
+    -0.0133,
+    -0.0,
+    -0.0,
+    0.2867,
+    0.5467,
+    0.5733,
+    0.6067,
+    0.69,
+    0.71,
+    0.8467,
+    1.04,
+    1.05,
+    1.1067,
+    1.19,
+    1.29,
+    1.3967,
+    1.5533,
+    2.0033,
+    2.17,
+    2.2967,
+    2.5867,
+    3.2367,
+    13.7233
+   ],
+   "em_mixture_sensitivity": {
+    "method": "EM, 2 Gaussians, 20 starts, sd floor 0.1",
+    "loglik": -44.72308316802919,
+    "upper_component": {
+     "weight": 0.9666666666667,
+     "mean": 15.93873563218336,
+     "sd": 1.0199610892559638
+    },
+    "lower_component": {
+     "weight": 0.03333333333336667,
+     "mean": 2.97666666666369,
+     "sd": 0.1
+    },
+    "n_assigned_upper": 29
+   },
+   "provenance": {
+    "file": "docs/results/a1-params.json",
+    "field": "mlx.media.both.V_SS.values (copy self-play on the common 300 deals) and mlx.media.both.v_T",
+    "observations": 30
+   }
+  }
+ },
+ "innovation": {
+  "weak": {
+   "epsilon": {
+    "0.5": {
+     "k": 20,
+     "n": 29,
+     "raw": 0.6896551724137931,
+     "posterior": "Beta(21, 10)",
+     "mean": 0.6774193548387096,
+     "lo": 0.5060409585374464,
+     "hi": 0.8271257784739607
+    },
+    "1.0": {
+     "k": 20,
+     "n": 29,
+     "raw": 0.6896551724137931,
+     "posterior": "Beta(21, 10)",
+     "mean": 0.6774193548387096,
+     "lo": 0.5060409585374464,
+     "hi": 0.8271257784739607
+    }
+   },
+   "gain_given_improvement": {
+    "0.5": {
+     "n": 20,
+     "mean": 8.727333333333332,
+     "sd": 3.2866740685301514,
+     "quantiles": {
+      "0.1": 3.747333333333334,
+      "0.25": 7.019166666666666,
+      "0.5": 9.508333333333333,
+      "0.75": 11.188333333333333,
+      "0.9": 11.996666666666666
+     },
+     "values": [
+      2.12,
+      2.7033,
+      3.8633,
+      4.7467,
+      6.5267,
+      7.1833,
+      7.84,
+      8.6767,
+      8.9867,
+      9.3567,
+      9.66,
+      9.7233,
+      10.3333,
+      10.5433,
+      11.0633,
+      11.5633,
+      11.71,
+      11.9233,
+      12.6567,
+      13.3667
+     ]
+    },
+    "1.0": {
+     "n": 20,
+     "mean": 8.727333333333332,
+     "sd": 3.2866740685301514,
+     "quantiles": {
+      "0.1": 3.747333333333334,
+      "0.25": 7.019166666666666,
+      "0.5": 9.508333333333333,
+      "0.75": 11.188333333333333,
+      "0.9": 11.996666666666666
+     },
+     "values": [
+      2.12,
+      2.7033,
+      3.8633,
+      4.7467,
+      6.5267,
+      7.1833,
+      7.84,
+      8.6767,
+      8.9867,
+      9.3567,
+      9.66,
+      9.7233,
+      10.3333,
+      10.5433,
+      11.0633,
+      11.5633,
+      11.71,
+      11.9233,
+      12.6567,
+      13.3667
+     ]
+    }
+   },
+   "all_gains": {
+    "n": 29,
+    "mean": 6.018850574712643,
+    "sd": 4.920797479879228,
+    "quantiles": {
+     "0.1": 0.0,
+     "0.25": 0.0,
+     "0.5": 7.183333333333333,
+     "0.75": 10.333333333333332,
+     "0.9": 11.752666666666666
+    },
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     2.12,
+     2.7033,
+     3.8633,
+     4.7467,
+     6.5267,
+     7.1833,
+     7.84,
+     8.6767,
+     8.9867,
+     9.3567,
+     9.66,
+     9.7233,
+     10.3333,
+     10.5433,
+     11.0633,
+     11.5633,
+     11.71,
+     11.9233,
+     12.6567,
+     13.3667
+    ]
+   },
+   "n_note": "29 unique seeds: 29 verified + 8 unverified, the 8 being the same prompts as verified seeds 0-7",
+   "context": "feedback only (nothing delivered), weak student",
+   "level": {
+    "mean": 2.7467816091954025,
+    "sd": 0.31666351221313654,
+    "n": 29,
+    "note": "student's starting self-play on each seed's 300 held-out deals; single_student.py documents 3.17 on its 200 calibration deals"
+   },
+   "rejected_outright": 9,
+   "duplicate_seeds_max_abs_diff": 0.0,
+   "provenance": {
+    "file": "docs/results/c1-full.json",
+    "field": "strata.{verified,unverified}.per_seed[seed].v['0'] (y for the empty delivery; y = final minus starting score, held-out 300 deals)",
+    "observations": 29,
+    "level_from": "runs/c1-full/replays.jsonl s0_score (gitignored run output; y cross-checked equal)"
+   }
+  },
+  "piers": {
+   "epsilon": {
+    "0.5": {
+     "k": 5,
+     "n": 29,
+     "raw": 0.1724137931034483,
+     "posterior": "Beta(6, 25)",
+     "mean": 0.1935483870967742,
+     "lo": 0.07713551200106561,
+     "hi": 0.34721169883414377
+    },
+    "1.0": {
+     "k": 0,
+     "n": 29,
+     "raw": 0.0,
+     "posterior": "Beta(1, 30)",
+     "mean": 0.03225806451612903,
+     "lo": 0.0008435709266304788,
+     "hi": 0.11570330822202778
+    }
+   },
+   "gain_given_improvement": {
+    "0.5": {
+     "n": 5,
+     "mean": 0.7120000000000004,
+     "sd": 0.10907693513194157,
+     "quantiles": {
+      "0.1": 0.606666666666667,
+      "0.25": 0.6466666666666647,
+      "0.5": 0.6933333333333351,
+      "0.75": 0.7866666666666653,
+      "0.9": 0.8266666666666673
+     },
+     "values": [
+      0.58,
+      0.6467,
+      0.6933,
+      0.7867,
+      0.8533
+     ]
+    },
+    "1.0": {
+     "n": 0,
+     "note": "no observations"
+    }
+   },
+   "all_gains": {
+    "n": 29,
+    "mean": 0.13999999999999996,
+    "sd": 0.27442146938084666,
+    "quantiles": {
+     "0.1": 0.0,
+     "0.25": 0.0,
+     "0.5": 0.0,
+     "0.75": 0.10333333333333172,
+     "0.9": 0.6559999999999988
+    },
+    "values": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.1033,
+     0.1467,
+     0.25,
+     0.58,
+     0.6467,
+     0.6933,
+     0.7867,
+     0.8533
+    ]
+   },
+   "n_note": "29 verified seeds, Piers delivered alone and adopted on every seed",
+   "context": "feedback plus a received good artifact (Piers adopted, its message in the revision prompt)",
+   "level": {
+    "mean": 17.002528735632186,
+    "sd": 0.11120428496231226,
+    "n": 29,
+    "note": "adopted Piers' held-out self-play per seed (A1's common deals give 16.7)"
+   },
+   "revisions_accepted": 12,
+   "accepted_but_worse_on_heldout": 0,
+   "provenance": {
+    "file": "runs/c1-full/replays.jsonl",
+    "field": "rows with stratum verified, mask 1, adopted [0]: final_score - incumbent_score (incumbent = adopted Piers); gitignored run output, its y column equals c1-full.json per_seed v['1']",
+    "observations": 29
+   },
+   "sensitivity": {
+    "both_strata_mask1": {
+     "epsilon_0.5": {
+      "k": 7,
+      "n": 37,
+      "raw": 0.1891891891891892,
+      "posterior": "Beta(8, 31)",
+      "mean": 0.20512820512820512,
+      "lo": 0.0955411154558742,
+      "hi": 0.34326199431092114
+     },
+     "epsilon_1.0": {
+      "k": 0,
+      "n": 37,
+      "raw": 0.0,
+      "posterior": "Beta(1, 38)",
+      "mean": 0.02564102564102564,
+      "lo": 0.0006660362042023656,
+      "hi": 0.09251276141587829
+     },
+     "note": "37 replays; the 8 unverified share seeds with verified 0-7 (correlated)"
+    },
+    "verified_piers_plus_self_mask5": {
+     "epsilon_0.5": {
+      "k": 2,
+      "n": 29,
+      "raw": 0.06896551724137931,
+      "posterior": "Beta(3, 28)",
+      "mean": 0.0967741935483871,
+      "lo": 0.02111713702972257,
+      "hi": 0.22073540152296187
+     },
+     "epsilon_1.0": {
+      "k": 0,
+      "n": 29,
+      "raw": 0.0,
+      "posterior": "Beta(1, 30)",
+      "mean": 0.03225806451612903,
+      "lo": 0.0008435709266304788,
+      "hi": 0.11570330822202778
+     },
+     "gains": {
+      "n": 2,
+      "mean": 0.7900000000000009,
+      "sd": 0.2545584412271592,
+      "quantiles": {
+       "0.1": 0.6459999999999997,
+       "0.25": 0.7000000000000002,
+       "0.5": 0.7900000000000009,
+       "0.75": 0.8800000000000017,
+       "0.9": 0.9340000000000022
+      },
+      "values": [
+       0.61,
+       0.97
+      ]
+     }
+    }
+   }
+  },
+  "rule": "epsilon(margin) = P(gain > margin) with a Beta(1,1) prior; gain = held-out (300 deals) self-play after the generation minus before. A rejected or not-better revision gives gain 0 (harness accept-if-not-worse on feedback deals)."
+ },
+ "verification": {
+  "current_rule_selfplay_n200_mean_gt_0": {
+   "procedure": "fixed N=200 (mean>0)",
+   "false_adoption": 0.061170212765957445,
+   "miss_near_delta1": 0.0,
+   "missed_improvement_delta_ge_1": 0.0,
+   "deals_mean": 200.0,
+   "deals_near_delta1": 200.0,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170,
+   "oc_curve": [
+    {
+     "delta_mid": -4.25,
+     "p_adopt": 0.0,
+     "n": 30
+    },
+    {
+     "delta_mid": -3.75,
+     "p_adopt": 0.0,
+     "n": 90
+    },
+    {
+     "delta_mid": -3.25,
+     "p_adopt": 0.0,
+     "n": 120
+    },
+    {
+     "delta_mid": -2.75,
+     "p_adopt": 0.0,
+     "n": 50
+    },
+    {
+     "delta_mid": -2.25,
+     "p_adopt": 0.0,
+     "n": 60
+    },
+    {
+     "delta_mid": -1.75,
+     "p_adopt": 0.0,
+     "n": 40
+    },
+    {
+     "delta_mid": -1.25,
+     "p_adopt": 0.0,
+     "n": 60
+    },
+    {
+     "delta_mid": -0.75,
+     "p_adopt": 0.0,
+     "n": 220
+    },
+    {
+     "delta_mid": -0.25,
+     "p_adopt": 0.19166666666666668,
+     "n": 600
+    },
+    {
+     "delta_mid": 0.25,
+     "p_adopt": 0.5986842105263158,
+     "n": 760
+    },
+    {
+     "delta_mid": 0.75,
+     "p_adopt": 1.0,
+     "n": 220
+    },
+    {
+     "delta_mid": 1.25,
+     "p_adopt": 1.0,
+     "n": 60
+    },
+    {
+     "delta_mid": 1.75,
+     "p_adopt": 1.0,
+     "n": 40
+    },
+    {
+     "delta_mid": 2.25,
+     "p_adopt": 1.0,
+     "n": 60
+    },
+    {
+     "delta_mid": 2.75,
+     "p_adopt": 1.0,
+     "n": 50
+    },
+    {
+     "delta_mid": 3.25,
+     "p_adopt": 1.0,
+     "n": 120
+    },
+    {
+     "delta_mid": 3.75,
+     "p_adopt": 1.0,
+     "n": 90
+    },
+    {
+     "delta_mid": 4.25,
+     "p_adopt": 1.0,
+     "n": 30
+    }
+   ],
+   "provenance": {
+    "file": "docs/results/b1-sprt.json",
+    "field": "operating_characteristics['fixed N=200 (mean>0)'] and curves['fixed N=200 (mean>0)']",
+    "observations": "1880 tests with delta <= 0, 900 with delta >= 1, 170 near delta = 1 (360 engine-bot pairs x 10 blocks of 600 deals)"
+   }
+  },
+  "sprt": {
+   "procedure": "SPRT",
+   "false_adoption": 0.0026595744680851063,
+   "miss_near_delta1": 0.1,
+   "missed_improvement_delta_ge_1": 0.01,
+   "deals_mean": 40.062777777777775,
+   "deals_near_delta1": 108.7764705882353,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170,
+   "oc_curve": [
+    {
+     "delta_mid": -4.25,
+     "p_adopt": 0.0,
+     "n": 30
+    },
+    {
+     "delta_mid": -3.75,
+     "p_adopt": 0.0,
+     "n": 90
+    },
+    {
+     "delta_mid": -3.25,
+     "p_adopt": 0.0,
+     "n": 120
+    },
+    {
+     "delta_mid": -2.75,
+     "p_adopt": 0.0,
+     "n": 50
+    },
+    {
+     "delta_mid": -2.25,
+     "p_adopt": 0.0,
+     "n": 60
+    },
+    {
+     "delta_mid": -1.75,
+     "p_adopt": 0.0,
+     "n": 40
+    },
+    {
+     "delta_mid": -1.25,
+     "p_adopt": 0.0,
+     "n": 60
+    },
+    {
+     "delta_mid": -0.75,
+     "p_adopt": 0.0,
+     "n": 220
+    },
+    {
+     "delta_mid": -0.25,
+     "p_adopt": 0.008333333333333333,
+     "n": 600
+    },
+    {
+     "delta_mid": 0.25,
+     "p_adopt": 0.11578947368421053,
+     "n": 760
+    },
+    {
+     "delta_mid": 0.75,
+     "p_adopt": 0.7681818181818182,
+     "n": 220
+    },
+    {
+     "delta_mid": 1.25,
+     "p_adopt": 0.9166666666666666,
+     "n": 60
+    },
+    {
+     "delta_mid": 1.75,
+     "p_adopt": 1.0,
+     "n": 40
+    },
+    {
+     "delta_mid": 2.25,
+     "p_adopt": 0.9333333333333333,
+     "n": 60
+    },
+    {
+     "delta_mid": 2.75,
+     "p_adopt": 1.0,
+     "n": 50
+    },
+    {
+     "delta_mid": 3.25,
+     "p_adopt": 1.0,
+     "n": 120
+    },
+    {
+     "delta_mid": 3.75,
+     "p_adopt": 1.0,
+     "n": 90
+    },
+    {
+     "delta_mid": 4.25,
+     "p_adopt": 1.0,
+     "n": 30
+    }
+   ],
+   "provenance": {
+    "file": "docs/results/b1-sprt.json",
+    "field": "operating_characteristics['SPRT'] and curves['SPRT']",
+    "observations": "1880 tests with delta <= 0, 900 with delta >= 1, 170 near delta = 1 (360 engine-bot pairs x 10 blocks of 600 deals)"
+   }
+  },
+  "fixed_n200_t_test": {
+   "procedure": "fixed N=200 (t-test)",
+   "false_adoption": 0.00425531914893617,
+   "miss_near_delta1": 0.12,
+   "missed_improvement_delta_ge_1": 0.006666666666666667,
+   "deals_mean": 200.0,
+   "deals_near_delta1": 200.0,
+   "n_h0": 1880,
+   "n_h1": 900,
+   "n_near_delta1": 170,
+   "oc_curve": [
+    {
+     "delta_mid": -4.25,
+     "p_adopt": 0.0,
+     "n": 30
+    },
+    {
+     "delta_mid": -3.75,
+     "p_adopt": 0.0,
+     "n": 90
+    },
+    {
+     "delta_mid": -3.25,
+     "p_adopt": 0.0,
+     "n": 120
+    },
+    {
+     "delta_mid": -2.75,
+     "p_adopt": 0.0,
+     "n": 50
+    },
+    {
+     "delta_mid": -2.25,
+     "p_adopt": 0.0,
+     "n": 60
+    },
+    {
+     "delta_mid": -1.75,
+     "p_adopt": 0.0,
+     "n": 40
+    },
+    {
+     "delta_mid": -1.25,
+     "p_adopt": 0.0,
+     "n": 60
+    },
+    {
+     "delta_mid": -0.75,
+     "p_adopt": 0.0,
+     "n": 220
+    },
+    {
+     "delta_mid": -0.25,
+     "p_adopt": 0.013333333333333334,
+     "n": 600
+    },
+    {
+     "delta_mid": 0.25,
+     "p_adopt": 0.30394736842105263,
+     "n": 760
+    },
+    {
+     "delta_mid": 0.75,
+     "p_adopt": 0.9590909090909091,
+     "n": 220
+    },
+    {
+     "delta_mid": 1.25,
+     "p_adopt": 0.9,
+     "n": 60
+    },
+    {
+     "delta_mid": 1.75,
+     "p_adopt": 1.0,
+     "n": 40
+    },
+    {
+     "delta_mid": 2.25,
+     "p_adopt": 1.0,
+     "n": 60
+    },
+    {
+     "delta_mid": 2.75,
+     "p_adopt": 1.0,
+     "n": 50
+    },
+    {
+     "delta_mid": 3.25,
+     "p_adopt": 1.0,
+     "n": 120
+    },
+    {
+     "delta_mid": 3.75,
+     "p_adopt": 1.0,
+     "n": 90
+    },
+    {
+     "delta_mid": 4.25,
+     "p_adopt": 1.0,
+     "n": 30
+    }
+   ],
+   "provenance": {
+    "file": "docs/results/b1-sprt.json",
+    "field": "operating_characteristics['fixed N=200 (t-test)'] and curves['fixed N=200 (t-test)']",
+    "observations": "1880 tests with delta <= 0, 900 with delta >= 1, 170 near delta = 1 (360 engine-bot pairs x 10 blocks of 600 deals)"
+   }
+  },
+  "caveat": "B1 is engine-only: anchor-family rule bots, not model-written candidates; median sigma 3.6. 'False adoption' pools all delta <= 0, most of which are far below 0; the OC curve gives P(adopt | delta) by delta bin."
+ },
+ "missing": [
+  {
+   "quantity": "epsilon at the Piers level, feedback only (no message in the prompt)",
+   "why": "C1 measures the Piers level only with Piers' own message in the revision prompt; an isolated agent at that level revises with feedback only",
+   "run": "30 revisions of a Piers-level incumbent with nothing delivered, local MLX model, seeds 300-329; about 30 model calls, 25 to 30 minutes, $0"
+  },
+  {
+   "quantity": "epsilon and gain distribution at intermediate levels (5 to 15) and above Piers (17 to 20)",
+   "why": "the model interpolates between two measured levels and holds the Piers-level value above 17; every generation-100 prediction depends on that extrapolation",
+   "run": "a level ladder: 30 revisions each from incumbents at about 8, 12 and 18 (Piers mutants or IGGI-family bots from the B1 bank), feedback only; about 90 calls, 75 minutes, $0"
+  },
+  {
+   "quantity": "copy fidelity for teachers other than Piers, and with several exemplars in the prompt",
+   "why": "A1 sends one teacher at 16.7 whose rule functions already exist in the student's template; the loss may scale with the teacher's level and with the number of messages",
+   "run": "A1 with a second teacher (IGGI, 15.9) and a weak teacher (about 8), 15 replicates each, medium both; about 30 calls, 25 minutes, $0"
+  },
+  {
+   "quantity": "verification operating characteristics on model-written candidates",
+   "why": "B1's bank is engine bots; model candidates may have a different sigma and delta distribution",
+   "run": "no new model calls: rescore the 90 A1 copies and the C1 candidates against their incumbents in 10 blocks of 200 deals each with the B1 code (engine only, minutes)"
+  },
+  {
+   "quantity": "every parameter on the model G1 will actually run (hosted open-weight model) and a second block",
+   "why": "these numbers come from one local model (Qwen3.6-35B-A3B 4-bit) and one student template",
+   "run": "repeat the C1 'none' and 'Piers only' cells (2 x 30 calls) and A1 'both' (30 calls) on the hosted model; about 90 calls, cents"
+  },
+  {
+   "quantity": "G1 warm-start skill distribution (generation 0 authored by the model)",
+   "why": "no authored warm start for 8 agents exists on disk (phase-4 warm starts are stub runs)",
+   "run": "author the G1 generation-0 set for 3 population seeds (24 calls) on the G1 model; about 20 minutes"
+  }
+ ]
+}
