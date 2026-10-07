@@ -1,0 +1,31 @@
+# P1 epsilon ladder probe on the local MLX server (scripts/p1_eps_probe.py; fills docs/results/p1-micro-params.json
+# "missing" items 1 and 2). A parameter measurement for the P1 model, not a confirmatory test. Zero cost.
+#
+# Design A (independent replicates at a fixed level): for each start anchor, replicate r is its own run with
+# experiment_seed = a_experiment_seed + r (the feedback traces in the prompt differ, as in A1-1 and C1; at temperature 0
+# a sampling seed alone gives identical outputs), 1 group x 1 agent, generation 0 = the anchor (no authoring call),
+# routing none, verification none, corpus off, generations 2 (one revise call). Outcome: delta = candidate - parent on
+# generation 1's held-out deals. Candidates and parents are also scored on one common 300-deal set (experiment seed
+# 299, generation 1, as A1).
+#
+# Design B (a chain): one agent from Piers, 40 revise generations, accept-if-not-worse (keep_best_k, the harness
+# default), one run per experiment seed.
+#
+# Model calls run strictly one at a time: runs are sequential in one process; evaluation workers are engine-only.
+name: p1_eps_probe
+llm: {backend: openai_compat, model: mlx-community/Qwen3.6-35B-A3B-4bit, base_url: "http://127.0.0.1:8080/v1",
+      temperature: 0.0, seed: 0, max_tokens: 8192, request_timeout_s: 1200, cache_mode: record}
+evaluation: {selfplay_games: 300, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0,
+             workers: 4}
+design_a:
+  anchors: [piers, iggi]
+  replicates: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+  experiment_seed: 400  # replicate r uses 400 + r
+  generations: 2
+common_eval: {experiment_seed: 299, generation: 1, games: 300}
+design_b:
+  anchor: piers
+  experiment_seeds: [450, 451]
+  generations: 41  # generation 0 is the anchor; 40 revise generations
+  level_bins: [17.0, 18.0, 19.0]  # bins <17, 17-18, 18-19, >=19 on the parent's held-out score
+margins: [0.5, 1.0]

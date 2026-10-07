@@ -4,7 +4,11 @@ Reads docs/results/p1-micro-params.json (scripts/p1_params.py), runs the accumul
 (src/culture/analysis/accumulation_model.py) for the three G1 organizations, N = 8, 100 generations, 1,000 Monte Carlo
 seeds, and writes docs/results/p1-prediction.json and docs/results/p1-prediction.png.
 
-Usage: .venv/bin/python scripts/p1_predict.py [--runs 1000] [--generations 100]
+When docs/results/p1-eps-ladder.json (scripts/p1_eps_probe.py) exists, the script also runs the model with the measured
+epsilon ladder as the innovation function (weak level from C1, IGGI and Piers from the probe's Design A, the chain's
+binned rates at or above 17 from Design B) and writes docs/results/p1-prediction-ladder.json and .png alongside.
+
+Usage: .venv/bin/python scripts/p1_predict.py [--runs 1000] [--generations 100] [--ladder PATH | --no-ladder]
 """
 
 from __future__ import annotations
@@ -27,6 +31,9 @@ RES = ROOT / "docs" / "results"
 PARAMS = RES / "p1-micro-params.json"
 OUT = RES / "p1-prediction.json"
 FIG = RES / "p1-prediction.png"
+LADDER = RES / "p1-eps-ladder.json"
+OUT_L = RES / "p1-prediction-ladder.json"
+FIG_L = RES / "p1-prediction-ladder.png"
 N = 8
 SEEDS_G1 = 5
 MEDIUM = "both"  # the harness sends bot.py and conventions.md
@@ -78,8 +85,10 @@ def build(P: dict, *, medium=MEDIUM, p_s=None, eps_scale=None, eps_override=None
     return fid, ver, inn, levels
 
 
-def run_all(P, init, runs, gens, seed=0, orgs=G1_ORGANIZATIONS, **kw):
+def run_all(P, init, runs, gens, seed=0, orgs=G1_ORGANIZATIONS, innovation=None, **kw):
     fid, ver, inn, _ = build(P, **kw)
+    if innovation is not None:
+        inn = innovation
     res = {o.name: simulate(o, init, fid, ver, inn, generations=gens, runs=runs, seed=seed) for o in orgs}
     return res, (fid, ver, inn)
 
@@ -124,6 +133,8 @@ def main() -> int:
     ap.add_argument("--runs", type=int, default=1000)
     ap.add_argument("--generations", type=int, default=100)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--ladder", default=str(LADDER), help="epsilon ladder from scripts/p1_eps_probe.py")
+    ap.add_argument("--no-ladder", action="store_true")
     a = ap.parse_args()
     t0 = time.perf_counter()
     P = json.loads(PARAMS.read_text())
@@ -280,10 +291,104 @@ def main() -> int:
               f"{r['organized_minus_isolated']['peak']:.2f}@{r['organized_minus_isolated']['peak_generation']}, "
               f"at 100 {r['organized_minus_isolated']['at_100']:.2f}")
     print(f"\nWrote {OUT.relative_to(ROOT)} and {FIG.relative_to(ROOT)}")
+    if not a.no_ladder and Path(a.ladder).exists():
+        ladder_prediction(P, json.loads(Path(a.ladder).read_text()), init, a)
     return 0
 
 
-def plot(summaries, gaps, gens):
+def ladder_points(P: dict, L: dict, margin: str = MARGIN, bound: str | None = None, min_n: int = 3) -> list[dict]:
+    """Anchor points (level, epsilon, gain sample) for the measured ladder: the C1 weak student plus the probe's
+    points. `bound` = "lo" or "hi" takes each point's 95% posterior bound instead of the raw rate. Points closer than
+    0.05 in level are merged (the larger n wins); points with fewer than `min_n` revisions are dropped."""
+    w = P["innovation"]["weak"]
+    e = w["epsilon"][margin]
+    pts = [{"source": "c1:weak", "level": w["level"]["mean"], "n": e["n"],
+            "eps": e[bound] if bound else e["raw"], "gains": w["gain_given_improvement"][margin].get("values") or [0.0]}]
+    for p in L.get("ladder", []):
+        x = p.get(margin) or {}
+        ep = x.get("epsilon")
+        if not ep or p["n"] < min_n:
+            continue
+        pts.append({"source": p["source"], "level": p["level"], "n": p["n"],
+                    "eps": ep[bound] if bound else ep["successes"] / ep["n"], "gains": x.get("gains") or [0.0]})
+    pts.sort(key=lambda q: q["level"])
+    merged: list[dict] = []
+    for q in pts:
+        if merged and q["level"] - merged[-1]["level"] < 0.05:
+            if q["n"] > merged[-1]["n"]:
+                merged[-1] = q
+            continue
+        merged.append(q)
+    return merged
+
+
+def ladder_prediction(P: dict, L: dict, init, a) -> None:
+    pts = ladder_points(P, L)
+    if len(pts) < 2:
+        print("ladder: fewer than two usable points; skipped")
+        return
+
+    def inn(points, beyond="flat"):
+        return Innovation(levels=[q["level"] for q in points], eps=[q["eps"] for q in points],
+                          gains=[q["gains"] for q in points], beyond=beyond)
+
+    res, _ = run_all(P, init, a.runs, a.generations, a.seed, innovation=inn(pts))
+    checkpoints = [g for g in (10, 30) if g < a.generations]
+    summaries = {k: summarize(r, SEEDS_G1, checkpoints=checkpoints) for k, r in res.items()}
+    gaps = {k: gap(res[k], res["isolated"]) for k in ("full", "organized")}
+    order = predicted_order(res, SEEDS_G1)
+    rows = []
+    for label, what, kw in (
+            ("ladder baseline", "measured ladder, flat beyond the top point", {"innovation": inn(pts)}),
+            ("ladder epsilon low", "each point at its 95% lower bound", {"innovation": inn(ladder_points(P, L, bound="lo"))}),
+            ("ladder epsilon high", "each point at its 95% upper bound",
+             {"innovation": inn(ladder_points(P, L, bound="hi"))}),
+            ("ladder, falls to 0 at cap", "above the top point epsilon falls linearly to 0 at 25",
+             {"innovation": inn(pts, "linear_to_cap")}),
+            ("ladder, copies never exceed teacher", "copy loss floored at 0", {"innovation": inn(pts), "loss_floor": 0.0}),
+            ("ladder, copy exact (harness)", "p_s = 1, loss 0", {"innovation": inn(pts), "fid_mode": "exact"}),
+            ("ladder, margin 1.0", "margin 1.0 at every point",
+             {"innovation": inn(ladder_points(P, L, margin="1.0"))})):
+        r, _ = run_all(P, init, a.runs, a.generations, a.seed, **kw)
+        g_o = gap(r["organized"], r["isolated"])
+        rows.append({"row": label, "changed": what, **short(r),
+                     "organized_minus_isolated": {"peak": round(g_o["peak"], 2), "peak_generation": g_o["peak_generation"],
+                                                  "at_100": round(g_o["at_100"], 2),
+                                                  "last_generation_ge_2": g_o["last_generation_ge_2"]}})
+    out = {
+        "scope": "DRAFT prediction with the measured epsilon ladder, not pre-registered until Enrico signs off. One "
+                 "model block (local Qwen, temperature 0); innovation from C1 (weak level) and the P1 probe "
+                 f"({L.get('backend')} backend, updated {L.get('updated')}); fidelity and verification as in "
+                 "p1-prediction.json. Zero model calls in this script.",
+        "ladder_source": str(Path(a.ladder)),
+        "ladder_points": [{k: v for k, v in q.items() if k != "gains"} | {"gain_mean": float(np.mean(q["gains"]))}
+                          for q in pts],
+        "prediction": {"generation_final_mean": {k: s["final_mean"] for k, s in summaries.items()},
+                       "mean_at_checkpoints": {k: s["mean_at"] for k, s in summaries.items()},
+                       "order": order,
+                       "generations_to_mean_17": {k: first_gen(s["mean_trajectory"]["expected"], 17.0)
+                                                  for k, s in summaries.items()},
+                       "generations_to_mean_20": {k: first_gen(s["mean_trajectory"]["expected"], 20.0)
+                                                  for k, s in summaries.items()},
+                       "paired_gap_vs_isolated": {k: {kk: v for kk, v in g.items() if not isinstance(v, list)}
+                                                  for k, g in gaps.items()}},
+        "trajectories": {k: {"mean": s["mean_trajectory"], "best": s["best_trajectory"]} for k, s in summaries.items()},
+        "gap_trajectories_vs_isolated": gaps,
+        "sensitivity": rows,
+    }
+    OUT_L.write_text(json.dumps(out, indent=1))
+    plot(summaries, gaps, a.generations, FIG_L, "P1 DRAFT with the measured epsilon ladder (local Qwen); not "
+         "pre-registered; skill capped at 25.")
+    print("\nLadder points: " + ", ".join(f"{q['source']} {q['level']:.2f}: eps {q['eps']:.3f} (n {q['n']})" for q in pts))
+    for k, s in summaries.items():
+        print(f"ladder {k:10} gen-100 mean {s['final_mean']['expected']:.2f}")
+    for r in rows:
+        print(f"{r['row']:36} g30 {r['mean_at_30']} g100 {r['final_mean']} org-iso peak "
+              f"{r['organized_minus_isolated']['peak']}@{r['organized_minus_isolated']['peak_generation']}")
+    print(f"Wrote {OUT_L.relative_to(ROOT)} and {FIG_L.relative_to(ROOT)}")
+
+
+def plot(summaries, gaps, gens, path=FIG, note=None):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -321,10 +426,11 @@ def plot(summaries, gaps, gens):
         a_.grid(axis="y", color="#e5e5e5", linewidth=0.6)
         for sp in ("top", "right"):
             a_.spines[sp].set_visible(False)
-    fig.text(0.01, 0.01, "P1 DRAFT, not pre-registered. One model block (local Qwen), single-student parameters; "
-             "epsilon above 17 is extrapolated; skill capped at 25.", fontsize=7, color="#666666")
+    fig.text(0.01, 0.01, note or ("P1 DRAFT, not pre-registered. One model block (local Qwen), single-student "
+                                  "parameters; epsilon above 17 is extrapolated; skill capped at 25."),
+             fontsize=7, color="#666666")
     fig.tight_layout(rect=(0, 0.04, 1, 1))
-    fig.savefig(FIG)
+    fig.savefig(path)
     plt.close(fig)
 
 
