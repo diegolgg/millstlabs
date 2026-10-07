@@ -1,0 +1,959 @@
+{
+ "scope": "Scope: C2 pilot only (files/prereg/C2-quarantine.md section 4): one student, k = 3 fixed teachers, 5 seeds, one model (Qwen3.6-35B-A3B 4-bit on MLX, seeded, temperature 0), one generation, 300 held-out deals. The decision rules need the full R and two model blocks, so no claim is judged here; the stub section only proves the pipeline.",
+ "design": "k = 3 (Piers; Flawed with persuasive prose and honest evidence; the student's own bot re-sent), exhaustive delivery (8 replays per seed), stratum verified_quarantine (selfplay n = 200, replace_if_better, org.quarantine_unverified) against C1's verified stratum on the same seeds (same deals, same sampling seed). Primary: tau_flawed(q) - tau_flawed(v); secondary: tau_piers(q) - tau_piers(v); implied R at a 2-point minimum effect, 80% power, capped at 29.",
+ "stub": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "primary": {
+   "definition": "tau_flawed(quarantine) - tau_flawed(verified), paired by seed",
+   "iqm": -0.01111111111111096,
+   "lo": -1.6813888888888888,
+   "hi": 0.5563888888888894,
+   "n": 5,
+   "mean": -0.32049999999999984,
+   "sd": 1.1651684725585587,
+   "t_interval": [
+    -1.7672477442180325,
+    1.126247744218033
+   ],
+   "t_test_p": 0.5717768753869114,
+   "R_for_80pct_power": 5,
+   "R_capped": 5,
+   "mde": 2.0
+  },
+  "secondary": {
+   "definition": "tau_piers(quarantine) - tau_piers(verified), paired by seed",
+   "iqm": 0.6830555555555554,
+   "lo": -2.136388888888888,
+   "hi": 2.4086111111111106,
+   "n": 5,
+   "mean": 0.3421666666666667,
+   "sd": 2.2106401944786134,
+   "t_interval": [
+    -2.402705675799595,
+    3.087039009132928
+   ],
+   "t_test_p": 0.7467037202182232
+  },
+  "tau_flawed_quarantine": {
+   "iqm": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "n": 5,
+   "mean": 0.0,
+   "sd": 0.0,
+   "t_interval": null,
+   "t_test_p": null
+  },
+  "tau_flawed_verified": {
+   "iqm": 0.01111111111111096,
+   "lo": -0.5563888888888894,
+   "hi": 1.6813888888888888,
+   "n": 5,
+   "mean": 0.32049999999999984,
+   "sd": 1.1651684725585587,
+   "t_interval": [
+    -1.126247744218033,
+    1.7672477442180325
+   ],
+   "t_test_p": 0.5717768753869114
+  },
+  "tau_piers_quarantine": {
+   "iqm": 13.795555555555557,
+   "lo": 10.846666666666666,
+   "hi": 14.294444444444444,
+   "n": 5,
+   "mean": 13.042000000000002,
+   "sd": 2.021815191026784,
+   "t_interval": [
+    10.531584866280578,
+    15.552415133719425
+   ],
+   "t_test_p": 0.00013427983202425291
+  },
+  "tau_piers_verified": {
+   "iqm": 12.46888888888889,
+   "lo": 11.83361111111111,
+   "hi": 13.686666666666667,
+   "n": 5,
+   "mean": 12.699833333333334,
+   "sd": 1.0568525401713653,
+   "t_interval": [
+    11.387577582792353,
+    14.012089083874315
+   ],
+   "t_test_p": 1.1404525997240604e-05
+  },
+  "collapse_max_abs_over_seeds": 0.0,
+  "decision_rules": {
+   "removes_influence": {
+    "rule": "primary IQM >= 2 with bootstrap 95% interval excluding 0, and tau_flawed(quarantine) IQM in [-1, 1]; both model blocks",
+    "met_on_these_seeds": false,
+    "verdict": "not judged (pilot)"
+   },
+   "costless_for_good_teachers": {
+    "rule": "secondary bootstrap 95% interval contains 0 and IQM > -1; both model blocks",
+    "met_on_these_seeds": true,
+    "verdict": "not judged (pilot)"
+   }
+  },
+  "per_seed": {
+   "0": {
+    "tau_quarantine": [
+     13.61,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     14.383,
+     -0.319,
+     -0.319
+    ],
+    "shapley_quarantine": [
+     13.61,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     14.297,
+     -0.405,
+     -0.405
+    ],
+    "primary": 0.319,
+    "secondary": -0.772,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "1": {
+    "tau_quarantine": [
+     13.587,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     13.031,
+     0.556,
+     0.556
+    ],
+    "shapley_quarantine": [
+     13.587,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     12.846,
+     0.371,
+     0.371
+    ],
+    "primary": -0.556,
+    "secondary": 0.556,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "2": {
+    "tau_quarantine": [
+     9.477,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     12.295,
+     -0.675,
+     -1.445
+    ],
+    "shapley_quarantine": [
+     9.477,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     12.07,
+     -0.9,
+     -1.67
+    ],
+    "primary": 0.675,
+    "secondary": -2.818,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "3": {
+    "tau_quarantine": [
+     14.19,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     11.71,
+     -0.203,
+     0.203
+    ],
+    "shapley_quarantine": [
+     14.19,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     12.537,
+     0.623,
+     1.03
+    ],
+    "primary": 0.203,
+    "secondary": 2.48,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "4": {
+    "tau_quarantine": [
+     14.347,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     12.081,
+     2.244,
+     -0.084
+    ],
+    "shapley_quarantine": [
+     14.347,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     12.116,
+     2.279,
+     -0.049
+    ],
+    "primary": -2.244,
+    "secondary": 2.266,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   }
+  },
+  "per_seed_v": {
+   "0": {
+    "quarantine": {
+     "0": 1.1533333333333333,
+     "1": 14.763333333333335,
+     "2": 1.1533333333333333,
+     "3": 14.763333333333335,
+     "4": 1.1533333333333333,
+     "5": 14.763333333333335,
+     "6": 1.1533333333333333,
+     "7": 14.763333333333335
+    },
+    "verified": {
+     "0": 1.1533333333333333,
+     "1": 14.763333333333335,
+     "2": 0.0,
+     "3": 14.64,
+     "4": 0.0,
+     "5": 14.64,
+     "6": 0.0,
+     "7": 14.64
+    }
+   },
+   "1": {
+    "quarantine": {
+     "0": 0.0,
+     "1": 13.586666666666668,
+     "2": 0.0,
+     "3": 13.586666666666668,
+     "4": 0.0,
+     "5": 13.586666666666668,
+     "6": 0.0,
+     "7": 13.586666666666668
+    },
+    "verified": {
+     "0": 0.0,
+     "1": 13.586666666666668,
+     "2": 0.0,
+     "3": 13.586666666666668,
+     "4": 0.0,
+     "5": 13.586666666666668,
+     "6": 2.223333333333333,
+     "7": 13.586666666666668
+    }
+   },
+   "2": {
+    "quarantine": {
+     "0": 4.263333333333334,
+     "1": 13.739999999999998,
+     "2": 4.263333333333334,
+     "3": 13.739999999999998,
+     "4": 4.263333333333334,
+     "5": 13.739999999999998,
+     "6": 4.263333333333334,
+     "7": 13.739999999999998
+    },
+    "verified": {
+     "0": 4.263333333333334,
+     "1": 13.739999999999998,
+     "2": 1.913333333333333,
+     "3": 13.739999999999998,
+     "4": 0.0,
+     "5": 14.113333333333333,
+     "6": 0.0,
+     "7": 13.763333333333332
+    }
+   },
+   "3": {
+    "quarantine": {
+     "0": 0.0,
+     "1": 14.19,
+     "2": 0.0,
+     "3": 14.19,
+     "4": 0.0,
+     "5": 14.19,
+     "6": 0.0,
+     "7": 14.19
+    },
+    "verified": {
+     "0": 0.0,
+     "1": 14.19,
+     "2": 4.553333333333334,
+     "3": 14.19,
+     "4": 5.366666666666667,
+     "5": 14.19,
+     "6": 0.0,
+     "7": 14.19
+    }
+   },
+   "4": {
+    "quarantine": {
+     "0": 0.0,
+     "1": 14.346666666666666,
+     "2": 0.0,
+     "3": 14.346666666666666,
+     "4": 0.0,
+     "5": 14.346666666666666,
+     "6": 0.0,
+     "7": 14.346666666666666
+    },
+    "verified": {
+     "0": 0.0,
+     "1": 14.346666666666666,
+     "2": 4.763333333333333,
+     "3": 14.346666666666666,
+     "4": 0.043333333333333,
+     "5": 14.409999999999998,
+     "6": 4.319999999999999,
+     "7": 14.346666666666666
+    }
+   }
+  },
+  "operations": {
+   "replays": 40,
+   "llm_calls": 40,
+   "backend_calls": 0,
+   "cache_hits_within_run": 0,
+   "cache_hits_other_runs": 40,
+   "backend_seconds": 0,
+   "seconds_per_backend_call": null,
+   "admissible_rate": 1.0,
+   "withheld_by_teacher": {
+    "T1": 0,
+    "T2": 20,
+    "T3": 20
+   }
+  }
+ },
+ "mlx": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "primary": {
+   "definition": "tau_flawed(quarantine) - tau_flawed(verified), paired by seed",
+   "iqm": 2.7452777777777775,
+   "lo": -0.526666666666667,
+   "hi": 4.355833333333333,
+   "n": 5,
+   "mean": 2.279,
+   "sd": 2.61070894213728,
+   "t_interval": [
+    -0.9626233032404947,
+    5.5206233032404946
+   ],
+   "t_test_p": 0.1226809286017784,
+   "R_for_80pct_power": 16,
+   "R_capped": 16,
+   "mde": 2.0
+  },
+  "secondary": {
+   "definition": "tau_piers(quarantine) - tau_piers(verified), paired by seed",
+   "iqm": -2.6680555555555556,
+   "lo": -5.585277777777779,
+   "hi": 0.8466666666666672,
+   "n": 5,
+   "mean": -2.3643333333333336,
+   "sd": 3.246786199459398,
+   "t_interval": [
+    -6.395750867066893,
+    1.6670842004002262
+   ],
+   "t_test_p": 0.17878775617110468
+  },
+  "tau_flawed_quarantine": {
+   "iqm": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "n": 5,
+   "mean": 0.0,
+   "sd": 0.0,
+   "t_interval": null,
+   "t_test_p": null
+  },
+  "tau_flawed_verified": {
+   "iqm": -2.7452777777777775,
+   "lo": -4.355833333333333,
+   "hi": 0.526666666666667,
+   "n": 5,
+   "mean": -2.279,
+   "sd": 2.61070894213728,
+   "t_interval": [
+    -5.5206233032404946,
+    0.9626233032404947
+   ],
+   "t_test_p": 0.1226809286017784
+  },
+  "tau_piers_quarantine": {
+   "iqm": 4.895555555555554,
+   "lo": 1.6811111111111117,
+   "hi": 11.044444444444443,
+   "n": 5,
+   "mean": 6.108,
+   "sd": 5.267525035536139,
+   "t_interval": [
+    -0.43249619626222735,
+    12.648496196262226
+   ],
+   "t_test_p": 0.06050192048283594
+  },
+  "tau_piers_verified": {
+   "iqm": 8.886666666666665,
+   "lo": 5.322777777777778,
+   "hi": 11.520833333333334,
+   "n": 5,
+   "mean": 8.472333333333333,
+   "sd": 3.374393330248004,
+   "t_interval": [
+    4.2824706193854825,
+    12.662196047281185
+   ],
+   "t_test_p": 0.004946378743342697
+  },
+  "collapse_max_abs_over_seeds": 0.0,
+  "decision_rules": {
+   "removes_influence": {
+    "rule": "primary IQM >= 2 with bootstrap 95% interval excluding 0, and tau_flawed(quarantine) IQM in [-1, 1]; both model blocks",
+    "met_on_these_seeds": false,
+    "verdict": "not judged (pilot)"
+   },
+   "costless_for_good_teachers": {
+    "rule": "secondary bootstrap 95% interval contains 0 and IQM > -1; both model blocks",
+    "met_on_these_seeds": false,
+    "verdict": "not judged (pilot)"
+   }
+  },
+  "per_seed": {
+   "0": {
+    "tau_quarantine": [
+     8.243,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     9.667,
+     -5.143,
+     1.382
+    ],
+    "shapley_quarantine": [
+     8.243,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     10.184,
+     -4.626,
+     1.899
+    ],
+    "primary": 5.143,
+    "secondary": -1.423,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "1": {
+    "tau_quarantine": [
+     1.663,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     3.9,
+     -3.067,
+     -2.895
+    ],
+    "shapley_quarantine": [
+     1.663,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     5.142,
+     -1.825,
+     -1.653
+    ],
+    "primary": 3.067,
+    "secondary": -2.237,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "2": {
+    "tau_quarantine": [
+     4.753,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     10.959,
+     -2.781,
+     -1.713
+    ],
+    "shapley_quarantine": [
+     4.753,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     10.388,
+     -3.352,
+     -2.283
+    ],
+    "primary": 2.781,
+    "secondary": -6.206,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "3": {
+    "tau_quarantine": [
+     14.19,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     11.802,
+     -2.388,
+     2.388
+    ],
+    "shapley_quarantine": [
+     14.19,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     12.598,
+     -1.592,
+     3.184
+    ],
+    "primary": 2.388,
+    "secondary": 2.388,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   },
+   "4": {
+    "tau_quarantine": [
+     1.69,
+     0.0,
+     0.0
+    ],
+    "tau_verified": [
+     6.034,
+     1.984,
+     -3.782
+    ],
+    "shapley_quarantine": [
+     1.69,
+     0.0,
+     0.0
+    ],
+    "shapley_verified": [
+     5.186,
+     1.136,
+     -4.631
+    ],
+    "primary": -1.984,
+    "secondary": -4.344,
+    "passed_mask": 1,
+    "collapse_max_abs": 0.0
+   }
+  },
+  "per_seed_v": {
+   "0": {
+    "quarantine": {
+     "0": 7.183333333333333,
+     "1": 15.426666666666666,
+     "2": 7.183333333333333,
+     "3": 15.426666666666666,
+     "4": 7.183333333333333,
+     "5": 15.426666666666666,
+     "6": 7.183333333333333,
+     "7": 15.426666666666666
+    },
+    "verified": {
+     "0": 7.183333333333333,
+     "1": 15.426666666666666,
+     "2": 0.0,
+     "3": 14.64,
+     "4": 13.05,
+     "5": 14.64,
+     "6": 0.44666666666666677,
+     "7": 14.64
+    }
+   },
+   "1": {
+    "quarantine": {
+     "0": 11.923333333333332,
+     "1": 13.586666666666668,
+     "2": 11.923333333333332,
+     "3": 13.586666666666668,
+     "4": 11.923333333333332,
+     "5": 13.586666666666668,
+     "6": 11.923333333333332,
+     "7": 13.586666666666668
+    },
+    "verified": {
+     "0": 11.923333333333332,
+     "1": 13.586666666666668,
+     "2": 13.24,
+     "3": 13.586666666666668,
+     "4": 13.583333333333334,
+     "5": 13.586666666666668,
+     "6": 0.0,
+     "7": 13.586666666666668
+    }
+   },
+   "2": {
+    "quarantine": {
+     "0": 8.986666666666668,
+     "1": 13.739999999999998,
+     "2": 8.986666666666668,
+     "3": 13.739999999999998,
+     "4": 8.986666666666668,
+     "5": 13.739999999999998,
+     "6": 8.986666666666668,
+     "7": 13.739999999999998
+    },
+    "verified": {
+     "0": 8.986666666666668,
+     "1": 13.739999999999998,
+     "2": 0.0,
+     "3": 13.739999999999998,
+     "4": 2.1366666666666667,
+     "5": 13.739999999999998,
+     "6": 0.0,
+     "7": 13.739999999999998
+    }
+   },
+   "3": {
+    "quarantine": {
+     "0": 0.0,
+     "1": 14.19,
+     "2": 0.0,
+     "3": 14.19,
+     "4": 0.0,
+     "5": 14.19,
+     "6": 0.0,
+     "7": 14.19
+    },
+    "verified": {
+     "0": 0.0,
+     "1": 14.19,
+     "2": 0.0,
+     "3": 14.883333333333335,
+     "4": 10.246666666666666,
+     "5": 14.19,
+     "6": 0.0,
+     "7": 14.19
+    }
+   },
+   "4": {
+    "quarantine": {
+     "0": 12.656666666666666,
+     "1": 14.346666666666666,
+     "2": 12.656666666666666,
+     "3": 14.346666666666666,
+     "4": 12.656666666666666,
+     "5": 14.346666666666666,
+     "6": 12.656666666666666,
+     "7": 14.346666666666666
+    },
+    "verified": {
+     "0": 12.656666666666666,
+     "1": 14.346666666666666,
+     "2": 11.533333333333333,
+     "3": 14.346666666666666,
+     "4": 0.0,
+     "5": 14.346666666666666,
+     "6": 9.06,
+     "7": 14.346666666666666
+    }
+   }
+  },
+  "operations": {
+   "verified_quarantine": {
+    "replays": 40,
+    "llm_calls": 44,
+    "backend_calls": 11,
+    "cache_hits_within_run": 33,
+    "cache_hits_other_runs": 0,
+    "backend_seconds": 537.5,
+    "seconds_per_backend_call": 48.9,
+    "admissible_rate": 1.0,
+    "withheld_by_teacher": {
+     "T1": 0,
+     "T2": 20,
+     "T3": 20
+    }
+   }
+  },
+  "mechanical_note": "At temperature 0 with seeded sampling, quarantine withholds every message that did not pass verification, so the revision prompt, and hence v(S), depends only on the delivered messages that passed. Flawed never passes, so tau_flawed(quarantine) = 0 by construction (collapse_max_abs_over_seeds = 0.0: on every seed v(S) = v(S restricted to Piers)). The primary quantity is therefore minus C1's tau_flawed(verified) on the same seeds, and the pre-registered rule tau_flawed(quarantine) in [-1, 1] cannot fail. The empirical content is C1's Flawed-versus-placebo contrast (docs/results/c1-full.json, strata.verified.exploratory.flawed_minus_placebo_tau: -2.44, t interval [-3.69, -1.19], p = 0.0004, 29 seeds, exploratory): a rejected message's text lowers the student more than a generic text perturbation does, and quarantine removes that channel by construction.",
+  "cross_session_reproducibility": {
+   "what": "C2 ran under a different run name, so no C1 cache entry could be reused; its fresh calls for nothing delivered (mask 0) and Piers only (mask 1) are byte-identical requests to C1's. Same candidate artifact id means the model wrote the same code and conventions.",
+   "all_identical": true,
+   "per_seed": {
+    "0": {
+     "0": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     },
+     "1": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     }
+    },
+    "1": {
+     "0": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     },
+     "1": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     }
+    },
+    "2": {
+     "0": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     },
+     "1": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     }
+    },
+    "3": {
+     "0": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     },
+     "1": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     }
+    },
+    "4": {
+     "0": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     },
+     "1": {
+      "same_candidate_artifact": true,
+      "same_y": true
+     }
+    }
+   }
+  },
+  "projection_primary_from_c1_29_seeds": {
+   "note": "not a C2 run: under the collapse identity the primary quantity equals -tau_flawed(verified), so C1's 29 verified seeds show what the full C2 would report in this model block",
+   "iqm": 2.2292777777777775,
+   "lo": 1.348406944444444,
+   "hi": 2.9430763888888887,
+   "n": 29,
+   "mean": 1.9132183908045972,
+   "sd": 2.1421054734378133,
+   "t_interval": [
+    1.0984050457319614,
+    2.728031735877233
+   ],
+   "t_test_p": 4.665596841654475e-05
+  },
+  "exploratory_outcome_contrasts": {
+   "note": "Exploratory, not pre-registered. The secondary quantity is negative because tau_piers(verified) averages over deliveries of the others and includes Piers' interaction with Flawed's text (C1 exploratory interaction +3.76 [2.15, 5.37]): adopting Piers partly undoes the harm of Flawed's prose, a harm quarantine removes. The student's outcomes themselves:",
+   "v_all_quarantine_minus_verified": {
+    "iqm": 0.0,
+    "lo": 0.0,
+    "hi": 0.5244444444444435,
+    "n": 5,
+    "mean": 0.15733333333333305,
+    "sd": 0.3518080284599663,
+    "t_interval": [
+     -0.2794940298844523,
+     0.5941606965511184
+    ],
+    "t_test_p": 0.37390096630005887,
+    "values": [
+     0.7866666666666653,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "mean_v_over_8_subsets_quarantine_minus_verified": {
+    "iqm": 1.5306944444444437,
+    "lo": -0.5388888888888896,
+    "hi": 2.7926388888888893,
+    "n": 5,
+    "mean": 1.2654999999999996,
+    "sd": 1.6698539159742223,
+    "t_interval": [
+     -0.8078974897247659,
+     3.338897489724765
+    ],
+    "t_test_p": 0.165397356959017,
+    "values": [
+     1.3016666666666659,
+     1.1183333333333323,
+     3.102916666666667,
+     -1.3675000000000006,
+     2.172083333333333
+    ]
+   }
+  }
+ },
+ "null_stub": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "primary": {
+   "definition": "tau_flawed(quarantine) - tau_flawed(verified), paired by seed",
+   "iqm": -0.01766666666666663,
+   "lo": -0.0489250000000003,
+   "hi": 0.021250000000000224,
+   "n": 20,
+   "mean": -0.0067500000000000285,
+   "sd": 0.07714614557952842,
+   "t_interval": [
+    -0.04285550753098773,
+    0.029355507530987673
+   ],
+   "t_test_p": 0.6999325656431946,
+   "R_for_80pct_power": 3,
+   "R_capped": 3,
+   "mde": 2.0
+  },
+  "secondary": {
+   "definition": "tau_piers(quarantine) - tau_piers(verified), paired by seed",
+   "iqm": 0.037916666666667,
+   "lo": 0.0010812500000002602,
+   "hi": 0.0922541666666666,
+   "n": 20,
+   "mean": 0.03775000000000013,
+   "sd": 0.1398898114829134,
+   "t_interval": [
+    -0.02772044708537004,
+    0.1032204470853703
+   ],
+   "t_test_p": 0.24230908545449842
+  },
+  "tau_flawed_quarantine": {
+   "iqm": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "n": 20,
+   "mean": 0.0,
+   "sd": 0.0,
+   "t_interval": null,
+   "t_test_p": null
+  },
+  "per_seed_primary": [
+   0.01749999999999996,
+   -0.008333333333333193,
+   0.14249999999999996,
+   -0.009166666666666656,
+   0.08500000000000019,
+   0.004166666666667318,
+   -0.07833333333333359,
+   -0.060833333333333295,
+   3.3306690738754696e-16,
+   -0.07083333333333386,
+   -0.045000000000000706,
+   -0.06916666666666671,
+   0.07166666666666721,
+   -0.005833333333333357,
+   -0.12166666666666659,
+   -0.10916666666666652,
+   0.16333333333333322,
+   0.029166666666666674,
+   0.0,
+   -0.07000000000000095
+  ],
+  "per_seed_secondary": [
+   0.0024999999999995026,
+   0.0033333333333356308,
+   -0.42749999999999844,
+   -0.07583333333333364,
+   -0.011666666666666714,
+   -0.0041666666666646535,
+   0.09833333333333272,
+   0.100833333333334,
+   -0.015000000000000568,
+   0.0224999999999973,
+   0.16666666666666785,
+   0.12916666666666643,
+   0.09500000000000064,
+   -0.005833333333333357,
+   0.04333333333333478,
+   0.19416666666666593,
+   0.2749999999999986,
+   0.14750000000000085,
+   -0.006666666666667709,
+   0.023333333333333428
+  ],
+  "band_primary": [
+   -0.12166666666666659,
+   0.16333333333333322
+  ],
+  "band_secondary": [
+   -0.42749999999999844,
+   0.2749999999999986
+  ]
+ }
+}
