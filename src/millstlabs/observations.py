@@ -6,7 +6,7 @@ import numpy as np
 from .env import DELTAS, FEED, REST, WATCH, distance
 
 
-def observation_text(obs):
+def observation_text(obs, include_survival_note=True):
     s = obs["self"]
     terrain = "".join("? .#Fpxa".replace(" ", "")[int(v) + 1] for v in obs["local"].flat)
     food = ";".join(",".join(str(int(v)) for v in row) for row in obs["stations"])
@@ -34,19 +34,21 @@ def observation_text(obs):
             from .knowledge import Fact
             from .notes import evidence_text
             radio += "Available to publish: " + evidence_text([Fact(**f) for f in obs["note_candidate"]]) + ". "
-    return (radio + f"energy={s[0]:.1f} age={int(s[1])} xy={int(s[2])},{int(s[3])} "
+    inherited = f" survival_note={obs['survival_note']}" if include_survival_note and obs.get("survival_note") else ""
+    pregnancy = f"pregnant={int(s[10])} gestation_remaining={int(s[11])} " if len(s) > 10 else ""
+    return (radio + pregnancy + f"energy={s[0]:.1f} age={int(s[1])} xy={int(s[2])},{int(s[3])} "
             f"cooldown={int(s[4])} fertile={int(s[5])} tick={int(s[6])} "
             f"alert={int(s[7])} outcome={int(s[8])} size={int(s[9])} "
             f"grid={terrain} food_xy_stock_seen={food} predator={threats} "
             f"peers={len(peers)} watchers={int(peers[:, 3].sum()) if len(peers) else 0} "
             f"weakest={int(weakest[0])},{int(weakest[1])},{int(weakest[2])} "
-            f"legal={''.join(str(int(v)) for v in obs['action_mask'][:7])}")
+            f"legal={''.join(str(int(v)) for v in obs['action_mask'][:7])}" + inherited)
 
 
 def vector_observation(obs):
     # Cheap offline backend only; no privileged state is introduced.
     s = obs["self"].copy()
-    s /= np.asarray([100, 2048, 20, 20, 128, 1, 2048, 1, 2, 20])
+    s /= np.asarray([100, 2048, 20, 20, 128, 1, 2048, 1, 2, 20, 1, 16][:len(s)])
     stations = obs["stations"] / np.asarray([20, 20, 60, 2048])
     companions = obs["companions"] / np.asarray([20, 20, 100, 1])
     return np.concatenate([s, obs["local"].flatten() / 5, stations.flatten(),

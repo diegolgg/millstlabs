@@ -16,7 +16,15 @@ No ecological parameters were tuned after seeing held-out learned-policy evaluat
 
 ## Simulator conventions
 
-Ticks resolve movement, WATCH/alarms, feeding, energy/starvation, predator movement/attack, births, and station replenishment in that order. Births act next tick. Every founder is mature, fertile in reproduction methods, and has no initial birth cooldown.
+Ticks resolve movement, WATCH/alarms, feeding, energy/starvation, predator movement/attack, completed gestations/births and new conceptions, and station replenishment in that order. Births act next tick. Every founder is mature, fertile in reproduction methods, and has no initial birth cooldown.
+
+Reproduction uses `environment.reproduction_mode: gestation` by default, with `gestation_ticks: 16`. Set `reproduction_mode: immediate` to run the original birth process. Both reproduction methods (`r_adult` and `r_initial`) use the selected mode; iteration disables reproduction. The frozen overnight CPU and cooperative pilot presets explicitly retain immediate mode and their original configuration digests.
+
+In gestation mode, eligible mature prey pay 40 energy at conception, then continue ordinary actions and learning. A pregnancy conceived at simulator tick t completes at t + 16. Completed pregnancies are resolved before new conceptions. Birth requires capacity and a free adjacent cell, but does not recheck energy or charge again. Blocked births remain pending; cooldown starts at successful birth. Parent death records a pregnancy loss without refund. Pending pregnancies, private histories and prepared notes are part of simulator checkpoints and forks.
+
+At completion, the trainer writes one private survival note using the frozen backbone with action adapters disabled, fixed greedy decoding and a 64-token limit. The writer receives the latest 128 ticks of the mother's private observations/outcomes and her inherited note; each tick's text is bounded to fit the model context, prioritizing actions, outcomes, food and threats. It runs once even if birth remains blocked. The child receives this persistent observation separately from reset recurrent memory. Text policies reserve up to 64 additional input tokens for advice. Tiny/structured development backends use a bounded observation extract instead of neural generation; their numeric controllers expose pregnancy status but do not interpret prose. Direct simulator clients may inject a `note_writer` callback; without one, notes are empty. Neural note tokens and time are recorded separately. Notes persist through recovery, standardized evaluation and controlled probes.
+
+Immediate mode retains the old ten-value self observation and birth-time energy charge, and writes no survival notes. Gestation adds pregnancy status and ticks remaining to the self observation. Create a warm start for the selected observation layout; weights from the two layouts are not interchangeable.
 
 Movement conflicts select random winners per destination. Chains into occupied stationary cells fail; chains into vacated cells and simultaneous swaps/cycles succeed. Failed attempted moves still incur movement cost. Feeding uses equal-share water filling with per-agent intake/energy caps; unused allocations are redistributed. Multiple reachable stations choose the most stocked with random ties.
 

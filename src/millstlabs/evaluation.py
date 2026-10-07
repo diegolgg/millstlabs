@@ -31,7 +31,7 @@ def calibration_histories(env_cfg, seed=8675309, training=None):
     return list(histories.values())
 
 
-def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, deliver_messages=None):
+def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, deliver_messages=None, survival_notes=None):
     """Same unseen environments, body resets, and action RNG seeds for all conditions."""
     count = train_cfg.final_evaluation_maps if final else train_cfg.evaluation_maps
     rng = np.random.default_rng(train_cfg.evaluation_seed)
@@ -45,6 +45,10 @@ def evaluate(bank, policies, env_cfg, train_cfg, checkpoint, final=False, delive
         env = PopulationEnv(replace(env_cfg, founders=len(selected), max_individuals=1000), reproduction=False,
                             deliver_messages=delivery)
         observations, _ = env.reset(seed=seed)
+        for i, policy in zip(env.agents, selected):
+            env.prey[i].survival_note = (survival_notes or {}).get(policy, "")
+            if env.cfg.reproduction_mode == "gestation":
+                observations[i]["survival_note"] = env.prey[i].survival_note
         corpus, observations = make_corpus(train_cfg, observations)
         discovery_curve = [{"tick": 0, "decisions": 0, **corpus.metrics()}] if corpus is not None else []
         discovery_area = 0
@@ -151,7 +155,13 @@ def probe_histories(histories):
     return variants
 
 
-def probe(bank, policies, histories):
+def probe(bank, policies, histories, survival_notes=None):
     variants = probe_histories(histories)
-    return {name: np.mean([bank.probabilities(i, [h])[-1].numpy().reshape(-1, 7).sum(0) for i in policies], axis=0).tolist()
-            for name, h in variants.items()}
+    result = {}
+    for name, history in variants.items():
+        probabilities = []
+        for i in policies:
+            own = [{**obs, "survival_note": (survival_notes or {}).get(i, "")} for obs in history]
+            probabilities.append(bank.probabilities(i, [own])[-1].numpy().reshape(-1, 7).sum(0))
+        result[name] = np.mean(probabilities, axis=0).tolist()
+    return result

@@ -8,7 +8,7 @@ from torch.distributions import Categorical
 def features(obs):
     s = obs["self"]
     size = float(s[9])
-    own = s / np.asarray([100, 512, size, size, 128, 1, 512, 1, 2, size])
+    own = s / np.asarray([100, 512, size, size, 128, 1, 512, 1, 2, size, 1, 16][:len(s)])
     own = np.clip(own, -1, 4)
     local = np.eye(7, dtype=np.float32)[obs["local"].astype(int) + 1].ravel()
     food = []

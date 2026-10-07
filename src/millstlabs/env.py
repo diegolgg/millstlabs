@@ -9,6 +9,7 @@ from gymnasium import spaces
 from pettingzoo import ParallelEnv
 
 from .config import EnvironmentConfig
+from .reproduction import Pregnancy, SurvivalNoteSpace, resolve_immediate_reproduction, resolve_reproduction
 
 NORTH, SOUTH, EAST, WEST, FEED, WATCH, REST = range(7)
 DELTAS = [(0, -1), (0, 1), (1, 0), (-1, 0)]
@@ -48,6 +49,9 @@ class Prey:
     born_tick: int = 0
     last_action: int = REST
     messages: list = field(default_factory=list)
+    pregnancy: Pregnancy | None = None
+    survival_note: str = ""
+    history: deque = field(default_factory=lambda: deque(maxlen=128))
 
 
 class PopulationEnv(ParallelEnv):
@@ -71,13 +75,17 @@ class PopulationEnv(ParallelEnv):
         self._action_space = spaces.Discrete(7 * self.cfg.message_symbols)
         n = self.cfg.size
         self._observation_space = spaces.Dict({
-            "self": spaces.Box(-1, np.inf, (10,), np.float32),
+            "self": spaces.Box(-1, np.inf, (12,), np.float32),
+            "survival_note": SurvivalNoteSpace(),
             "local": spaces.Box(-1, 5, (5, 5), np.int8),
             "stations": spaces.Box(-1, np.inf, (self.cfg.stations, 4), np.float32),
             "threats": spaces.Box(-1, n, (self.cfg.predators, 2), np.int16),
             "companions": spaces.Box(-1, np.inf, (24, 4), np.float32),
             "action_mask": spaces.MultiBinary(7 * self.cfg.message_symbols),
         })
+        if self.cfg.reproduction_mode == "immediate":
+            self._observation_space.spaces["self"] = spaces.Box(-1, np.inf, (10,), np.float32)
+            del self._observation_space.spaces["survival_note"]
         if self.cfg.message_symbols > 1:
             self._observation_space.spaces["messages"] = spaces.Box(-1, max(n, self.cfg.message_symbols),
                                                                    (self.cfg.message_capacity, 3), np.int16)
@@ -132,6 +140,7 @@ class PopulationEnv(ParallelEnv):
         self.events = []
         self.attack_ready = 0
         self.total_births = 0
+        self.total_conceptions = self.pregnancy_losses = self.birth_wait_ticks = 0
         self.total_matured = 0
         self.total_consumption = 0.0
         self.messages_sent = self.messages_delivered = 0
@@ -236,9 +245,15 @@ class PopulationEnv(ParallelEnv):
             mask[k] = self.legal((p.pos[0] + dx, p.pos[1] + dy))
         mask[FEED] = any(distance(p.pos, s) <= 1 for s in self.station_positions)
         result = {"self": np.asarray([p.energy, p.age, *p.pos, p.cooldown, self.reproduction,
-                                    self.tick, p.alert_until >= self.tick, p.outcome, self.cfg.size], np.float32),
+                                    self.tick, p.alert_until >= self.tick, p.outcome, self.cfg.size,
+                                    p.pregnancy is not None,
+                                    p.pregnancy.remaining(self.tick) if p.pregnancy else 0], np.float32),
+                "survival_note": p.survival_note,
                 "local": local, "stations": np.asarray(station_obs, np.float32),
                 "threats": threat_array, "companions": companions, "action_mask": np.tile(mask, self.cfg.message_symbols)}
+        if self.cfg.reproduction_mode == "immediate":
+            result["self"] = result["self"][:10]
+            del result["survival_note"]
         if self.cfg.message_symbols > 1:
             messages = np.full((self.cfg.message_capacity, 3), -1, np.int16)
             messages[:, 2] = 0
@@ -301,6 +316,11 @@ class PopulationEnv(ParallelEnv):
     def _kill(self, i, cause):
         p = self.prey.pop(i)
         self.deaths[cause] += 1
+        if p.pregnancy is not None:
+            self.pregnancy_losses += 1
+            self.events.append({"type": "pregnancy_loss", "id": i, "cause": cause,
+                                "tick": self.tick, "conception_tick": p.pregnancy.conceived_tick,
+                                "gestation_completion_tick": p.pregnancy.completion_tick})
         self.events.append({"type": "death", "id": i, "cause": cause, "age": p.age,
                             "lineage": p.lineage, "generation": p.generation, "tick": self.tick})
 
@@ -351,7 +371,7 @@ class PopulationEnv(ParallelEnv):
             if died:
                 self._kill(i, "predation")
 
-    def step(self, actions):
+    def step(self, actions, note_writer=None, private_observations=None):
         if set(actions) != set(self.agents):
             raise ValueError("Supply exactly one action for every current living prey")
         if any(not self._action_space.contains(a) for a in actions.values()):
@@ -403,22 +423,22 @@ class PopulationEnv(ParallelEnv):
             if p.energy <= 0:
                 self._kill(i, "starvation")
         self._predator()
-        if self.reproduction:
-            # Random order avoids identity/age priority when the cap is nearly full.
-            for i in self.rng.permutation(list(self.prey)):
-                p = self.prey[i]
-                if p.age < self.cfg.maturity or p.cooldown or p.energy < self.cfg.birth_energy:
-                    continue
-                occupied = {q.pos for q in self.prey.values()} | {self.predator}
-                free = [c for c in self.neighbors(p.pos) if c not in occupied]
-                if not free or len(self.prey) >= self.cfg.population_cap:
-                    continue
-                p.energy -= self.cfg.birth_cost
-                p.cooldown = self.cfg.birth_cooldown
-                child = self._spawn(free[int(self.rng.integers(len(free)))], p)
-                self.total_births += 1
-                self.events.append({"type": "birth", "id": child.id, "parent": p.id,
-                                    "lineage": child.lineage, "generation": child.generation, "tick": self.tick})
+        if self.reproduction and self.cfg.reproduction_mode == "immediate":
+            resolve_immediate_reproduction(self)
+        elif self.reproduction:
+            from .observations import observation_text
+            for i in acting:
+                if i in self.prey:
+                    p = self.prey[i]
+                    observed = (private_observations or terminal_observations)[i]
+                    # The inherited note is supplied separately; never recursively log it.
+                    observed = {**observed, "survival_note": ""}
+                    food = observed["stations"][:, 2].tolist()
+                    threats = observed["threats"].tolist()
+                    p.history.append(f"tick={self.tick} action={ACTION_NAMES[actions[i]]} "
+                                     f"outcome={p.outcome} energy_after={p.energy:.1f} "
+                                     f"food={food} threats={threats} {observation_text(observed)}")
+            resolve_reproduction(self, note_writer)
         for j in range(self.cfg.stations):
             if self.rng.random() < self.cfg.rate_change_probability:
                 self.rates[j] = self.rng.choice(self.cfg.replenishment_rates)
@@ -454,6 +474,9 @@ class PopulationEnv(ParallelEnv):
             extra.update(predator_temperature=self.cfg.predator_temperature,
                          predator_move_entropy=self.predator_entropy_sum / max(1, self.predator_kernel_ticks))
         return {**extra, "tick": self.tick, "population": len(self.prey), "births": self.total_births,
+                "conceptions": self.total_conceptions, "pregnancy_losses": self.pregnancy_losses,
+                "pregnant": sum(p.pregnancy is not None for p in self.prey.values()),
+                "birth_wait_ticks": self.birth_wait_ticks,
                 "matured": self.total_matured, "consumption": self.total_consumption, **self.deaths,
                 "at_cap": len(self.prey) == self.cfg.population_cap,
                 "lineages": len(counts), "lineage_entropy": -sum(c / len(lineages) * math.log(c / len(lineages))

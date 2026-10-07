@@ -1,5 +1,6 @@
 # Focused learning test: one cooperative R-adult condition, double the core per-run budget.
 environment:
+  reproduction_mode: immediate  # Preserve this frozen pilot and its checkpoints.
   founders: 8
   population_cap: 16
   social_denominator: 16

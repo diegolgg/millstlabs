@@ -146,7 +146,8 @@ class Trainer:
         for field in ["backend", "model_id", "revision", "max_tokens", "warmstart_transitions"]:
             if warm["config"]["training"][field] != getattr(cfg.training, field):
                 raise ValueError(f"Warm-start mismatch: {field}")
-        if asdict(EnvironmentConfig(**warm["config"]["environment"])) != asdict(cfg.environment):
+        warm_environment = {"reproduction_mode": "immediate", **warm["config"]["environment"]}
+        if asdict(EnvironmentConfig(**warm_environment)) != asdict(cfg.environment):
             raise ValueError("Warm-start environment differs from frozen configuration")
         prior = TrainingConfig(**warm["config"]["training"])
         if prior.controller_architecture != cfg.training.controller_architecture:
@@ -251,6 +252,10 @@ class Trainer:
                     "world_ticks", "restarts", "completed_evaluations", "elapsed_seconds", "newborn_tracking",
                     "births_total", "evaluation_decisions"]:
             setattr(self, key, p[key])
+        self.env.cfg = replace(self.cfg.environment)
+        for field in ["total_conceptions", "pregnancy_losses", "birth_wait_ticks"]:
+            if not hasattr(self.env, field):
+                setattr(self.env, field, 0)
         self.corpus = p.get("corpus")
         self.novelty = p.get("novelty", CountNovelty())
         if "tiny_base" in p:
@@ -263,6 +268,8 @@ class Trainer:
                                ("gradient_updates", "gradient_updates"), ("inference_seconds", "inference_seconds"),
                                ("observations_at_token_cap", "truncated_observations")]:
             setattr(self.bank, attribute, p["resources"][key])
+        self.bank.survival_note_tokens = p["resources"].get("survival_note_tokens", 0)
+        self.bank.survival_note_seconds = p["resources"].get("survival_note_seconds", 0.0)
         self.bank.cuda_stream_seconds = p["resources"].get("cuda_model_stream_seconds", 0.0)
         torch.set_rng_state(p["torch_rng"])
         if "cuda_rng" in p and self.bank.device.type == "cuda":
@@ -311,6 +318,9 @@ class Trainer:
             self.hidden[i] = self.bank.zero_hidden()
             self.env.prey[i].lineage = archived["lineage"]
             self.env.prey[i].generation = archived["generation"]
+            self.env.prey[i].survival_note = archived.get("survival_note", "")
+            if self.env.cfg.reproduction_mode == "gestation":
+                self.obs[i]["survival_note"] = self.env.prey[i].survival_note
         self.log("recovery", {"restored_death_serials": [a["serial"] for a in self.archive]})
 
     def step(self):
@@ -333,10 +343,11 @@ class Trainer:
             writes[i], write_logps[i] = publication
             actions[i] = action
             records[i] = (copy.deepcopy(self.obs[i]), h.cpu(), action, logp, vp, vs)
-        prior_metadata = {i: {"lineage": p.lineage, "generation": p.generation} for i, p in self.env.prey.items()}
+        prior_metadata = {i: {"lineage": p.lineage, "generation": p.generation, "survival_note": p.survival_note} for i, p in self.env.prey.items()}
         publication_rewards = publish_notes(self.corpus, writes, self.obs, self.bank, self.env, self.cfg.training)
         physical = execute_tools(self.corpus, actions, self.obs, self.env, self.cfg.training)
-        self.obs, _, terms, _, infos = self.env.step(physical)
+        self.obs, _, terms, _, infos = self.env.step(physical, note_writer=self.bank.write_survival_note,
+                                                 private_observations={i: r[0] for i, r in records.items()})
         self.obs = next_observations(self.corpus, self.obs, self.env.agents)
         self.decisions += len(actions)
         self.world_ticks += 1
@@ -381,7 +392,7 @@ class Trainer:
                     assay_cfg = replace(t, evaluation_maps=t.newborn_evaluation_maps,
                                         evaluation_horizon=t.newborn_evaluation_horizon,
                                         evaluation_seed=t.evaluation_seed + 100_000)
-                    assay = evaluate(self.bank, [i], self.cfg.environment, assay_cfg, self.decisions)
+                    assay = evaluate(self.bank, [i], self.cfg.environment, assay_cfg, self.decisions, survival_notes=self.survival_notes())
                     self.evaluation_decisions += sum(r["decisions"] for r in assay["episodes"])
                     self.log("newborn_evaluation", {"id": i, "generation": event["generation"],
                                                    "birth_index": self.births_total, **assay})
@@ -399,8 +410,11 @@ class Trainer:
         if not self.env.agents:
             self._recover()
 
+    def survival_notes(self):
+        return {i: p.survival_note for i, p in self.env.prey.items()}
+
     def assess(self, threshold, final=False):
-        metrics = evaluate(self.bank, self.env.agents, self.cfg.environment, self.cfg.training, threshold, final)
+        metrics = evaluate(self.bank, self.env.agents, self.cfg.environment, self.cfg.training, threshold, final, survival_notes=self.survival_notes())
         self.evaluation_decisions += sum(r["decisions"] for r in metrics["episodes"])
         metrics["population"] = len(self.env.agents)
         metrics["ages"] = [p.age for p in self.env.prey.values()]
@@ -419,10 +433,10 @@ class Trainer:
                 assays.append(("predator_evaluation", replace(self.cfg.environment, predator_temperature=temperature),
                                t, True, None))
         for kind, environment, training, last, delivery in assays:
-            assay = evaluate(self.bank, self.env.agents, environment, training, threshold, last, delivery)
+            assay = evaluate(self.bank, self.env.agents, environment, training, threshold, last, delivery, survival_notes=self.survival_notes())
             self.evaluation_decisions += sum(r["decisions"] for r in assay["episodes"])
             self.log(kind, assay)
-        self.log("probes", {"checkpoint": threshold, "probabilities": probe(self.bank, self.env.agents, self.histories)})
+        self.log("probes", {"checkpoint": threshold, "probabilities": probe(self.bank, self.env.agents, self.histories, self.survival_notes())})
         if t.corpus_interface == "notes":
             from .note_probe import probe_notes
             self.log("note_probe", {"checkpoint": threshold,

@@ -1,5 +1,7 @@
 # Frozen numerical choices confirmed by Diego: 8 founders, cap 16, denominator 16.
 environment:
+  reproduction_mode: immediate  # immediate selects the original birth process.
+  gestation_ticks: 16
   founders: 8
   population_cap: 16
   social_denominator: 16

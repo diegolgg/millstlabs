@@ -1,6 +1,7 @@
 # CPU engineering pilot, not the confirmatory 60-run experiment.
 # Three methods, four profiles, one shared seed. Run serially.
 environment:
+  reproduction_mode: gestation  # Preserve this frozen pilot and its checkpoints.
   founders: 8
   population_cap: 16
   social_denominator: 16

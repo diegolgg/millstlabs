@@ -112,6 +112,7 @@ def test_extinction_recovery_finishes_terminal_updates(tmp_path):
     t = Trainer(cfg, "individual", "iteration", 11, tmp_path / "r", warm)
     for p in t.env.prey.values():
         p.energy = 0.001
+        p.survival_note = f"Private advice from {p.id}."
     # No prey near food, so every possible policy action dies by starvation.
     t.env.station_positions = [(19, 19)] * 3
     for j, p in enumerate(t.env.prey.values()):
@@ -124,6 +125,9 @@ def test_extinction_recovery_finishes_terminal_updates(tmp_path):
     assert all(len(o.state) == 0 for o in t.bank.optimizers.values())
     assert all(torch.count_nonzero(h) == 0 for h in t.hidden.values())
     assert t.bank.gradient_updates > 0
+    assert {p.survival_note for p in t.env.prey.values()} == {a["survival_note"] for a in t.archive}
+    assert all(t.obs[i]["survival_note"] == p.survival_note for i, p in t.env.prey.items())
+    assert all(p.pregnancy is None and not p.history for p in t.env.prey.values())
 
 
 def test_all_methods_end_to_end(tmp_path):
@@ -157,9 +161,12 @@ def test_initial_evaluation_precedes_training_and_is_not_repeated_on_resume(tmp_
     assert [row["checkpoint"] for row in rows] == [0, 128]
 
 
+@pytest.mark.parametrize("mode", ["immediate", "gestation"])
 @pytest.mark.parametrize("method", ["r_adult", "r_initial"])
-def test_real_birth_uses_correct_committed_source(tmp_path, method):
+def test_real_birth_uses_correct_committed_source(tmp_path, method, mode):
     cfg = config()
+    cfg.environment.reproduction_mode = mode
+    cfg.environment.gestation_ticks = 2
     cfg.training.mutation_rms = 0
     cfg.training.mutation_watch_std = 0
     warm = tmp_path / "warm.pt"
@@ -177,6 +184,13 @@ def test_real_birth_uses_correct_committed_source(tmp_path, method):
     source = t.bank.state(parent) if method == "r_adult" else t.initial
     t.obs = {i: t.env.observe(i) for i in t.env.agents}
     t.step()
+    if mode == "gestation":
+        assert t.env.prey[parent].pregnancy is not None
+        with torch.no_grad():
+            t.bank.controllers[parent].action.weight.add_(0.3)
+        source = t.bank.state(parent) if method == "r_adult" else t.initial
+        t.step()
+        t.step()
     birth = next(e for e in t.env.events if e["type"] == "birth" and e["parent"] == parent)
     child = birth["id"]
     for section in source:
@@ -189,3 +203,20 @@ def test_real_birth_uses_correct_committed_source(tmp_path, method):
     with torch.no_grad():
         t.bank.controllers[parent].action.weight.add_(1)
     assert torch.equal(before["controller"]["action.weight"], t.bank.state(child)["controller"]["action.weight"])
+
+
+def test_standardized_evaluation_preserves_private_survival_notes(monkeypatch):
+    from millstlabs.evaluation import evaluate
+
+    cfg, bank, _ = fixture_bank()
+    notes = {"a": "Food was scarce near me.", "b": "Watch when predators approach."}
+    seen = []
+    act = bank.act
+    def recording_act(i, obs, hidden, *args, **kwargs):
+        assert obs["survival_note"] == notes[i]
+        assert obs["self"][5] == 0 and obs["self"][10] == 0
+        seen.append(i)
+        return act(i, obs, hidden, *args, **kwargs)
+    monkeypatch.setattr(bank, "act", recording_act)
+    evaluate(bank, ["a", "b"], cfg.environment, cfg.training, 0, survival_notes=notes)
+    assert set(seen) == {"a", "b"}

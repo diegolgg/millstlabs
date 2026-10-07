@@ -33,6 +33,8 @@ class EnvironmentConfig:
     birth_energy: float = 85
     birth_cost: float = 40
     birth_cooldown: int = 128
+    gestation_ticks: int = 16
+    reproduction_mode: str = "gestation"
     social_denominator: float = 16
     # Resource guard: identities are never recycled within an ecological trial.
     max_individuals: int = 100_000
@@ -51,6 +53,8 @@ class EnvironmentConfig:
         assert 0 < self.founder_energy <= self.max_energy
         assert 0 < self.birth_energy <= self.max_energy
         assert self.birth_cooldown > 0 and self.maturity > 0
+        assert self.reproduction_mode in {"immediate", "gestation"}
+        assert isinstance(self.gestation_ticks, int) and self.gestation_ticks > 0
         assert self.replenishment_rates and min(self.replenishment_rates) >= 0
         assert 1 <= self.message_symbols <= 8 and self.message_radius > 0
         assert self.message_capacity > 0 and self.message_cost >= 0
@@ -182,6 +186,9 @@ class ExperimentConfig:
     def digest(self):
         # Default extensions do not invalidate already-running v1 checkpoints.
         data = asdict(self)
+        if self.environment.reproduction_mode == "immediate":
+            del data["environment"]["reproduction_mode"]
+            del data["environment"]["gestation_ticks"]
         extensions = {
             "environment": ["message_symbols", "message_radius", "message_capacity", "message_cost", "predator_temperature"],
             "training": ["separate_critic", "value_scale", "critic_lr", "temperature_start", "temperature_end",

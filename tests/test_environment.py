@@ -71,13 +71,24 @@ def test_movement_conflict_random_and_swap():
     assert (env.prey[a].pos, env.prey[b].pos) == ((4, 3), (3, 3))
 
 
-def test_birth_energy_cooldown_identity_and_next_tick():
-    env = world(founders=1, metabolism=0)
+@pytest.mark.parametrize("mode", ["immediate", "gestation"])
+def test_birth_energy_cooldown_identity_and_next_tick(mode):
+    env = world(founders=1, metabolism=0, reproduction_mode=mode)
     safe(env)
     parent = env.agents[0]
     env.prey[parent].pos, env.prey[parent].energy = (5, 5), 90
     before = sum(p.energy for p in env.prey.values())
     obs, _, terms, _, _ = env.step({parent: REST})
+    if mode == "gestation":
+        assert env.prey[parent].energy == before - 40
+        assert env.prey[parent].cooldown == 0 and env.total_births == 0
+        assert env.prey[parent].pregnancy.completion_tick == 16
+        for _ in range(15):
+            env.step({parent: REST})
+            assert env.total_births == 0
+        obs, _, terms, _, _ = env.step({parent: REST})
+        birth = next(e for e in env.events if e["type"] == "birth")
+        assert birth["birth_tick"] == 16 and birth["conception_tick"] == 0
     child = next(i for i in env.agents if i != parent)
     assert sum(p.energy for p in env.prey.values()) == before - 10
     assert env.prey[child].age == 0 and env.prey[child].energy == 30
@@ -182,3 +193,137 @@ def test_attack_probability_and_cooldown():
             env.tick = 1
             env._predator()
             assert sum(e["type"] == "attack" for e in env.events) == 1
+
+
+def test_pending_birth_writes_once_and_does_not_recheck_energy():
+    env = world(founders=1, metabolism=0, gestation_ticks=2)
+    safe(env)
+    p = env.prey[env.agents[0]]
+    p.pos, p.energy = (5, 5), 90
+    calls = []
+    def writer(history, inherited):
+        calls.append((history, inherited))
+        return "Watch for predators. Seek observed food.", 8
+    env.step({p.id: REST}, note_writer=writer)
+    env.obstacles = set(env.neighbors(p.pos))
+    for _ in range(4):
+        env.step({p.id: REST}, note_writer=writer)
+    assert len(calls) == 1 and len(calls[0][0]) == 3
+    assert p.energy == 50 and p.cooldown == 0
+    assert p.pregnancy.remaining(env.tick) == 0
+    assert env.total_births == 0
+    fork = env.fork()
+    for candidate in (env, fork):
+        candidate.obstacles = set()
+        candidate.step({p.id: REST}, note_writer=writer)
+        child = next(q for q in candidate.prey.values() if q.parent)
+        assert child.survival_note == "Watch for predators. Seek observed food."
+        assert candidate.observe(child.id)["survival_note"] == child.survival_note
+        assert candidate.observation_space(child.id).contains(candidate.observe(child.id))
+        assert candidate.total_conceptions == candidate.total_births == 1
+        assert candidate.birth_wait_ticks == 3
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("cause", ["starvation", "predation"])
+def test_parent_death_loses_pregnancy_without_refund(cause):
+    env = world(founders=1, metabolism=0, gestation_ticks=2)
+    safe(env)
+    p = env.prey[env.agents[0]]
+    p.energy = 90
+    env.step({p.id: REST})
+    env.events = []
+    env._kill(p.id, cause)
+    assert p.energy == 50 and env.total_births == 0
+    loss = next(e for e in env.events if e["type"] == "pregnancy_loss")
+    assert loss["conception_tick"] == 0 and loss["gestation_completion_tick"] == 2
+    assert env.pregnancy_losses == 1
+
+
+def test_capacity_blocks_birth_but_not_multiple_pregnancies():
+    env = world(founders=2, population_cap=3, metabolism=0, gestation_ticks=1)
+    safe(env)
+    for j, p in enumerate(env.prey.values()):
+        p.energy, p.pos = 90, (5 + j * 5, 5)
+    env.step(dict.fromkeys(env.agents, REST))
+    assert env.total_conceptions == 2
+    env.step(dict.fromkeys(env.agents, REST))
+    assert env.total_births == 1 and len(env.prey) == 3
+    waiting = next(p for p in env.prey.values() if p.pregnancy)
+    assert waiting.energy == 50 and waiting.cooldown == 0
+    child = next(p for p in env.prey.values() if p.parent)
+    env._kill(child.id, "predation")
+    env.agents = list(env.prey)
+    env.step(dict.fromkeys(env.agents, REST))
+    assert env.total_births == 2 and waiting.energy == 50
+
+
+def test_iteration_disables_pregnancy_and_observes_own_state_only():
+    env = PopulationEnv(EnvironmentConfig(founders=2), reproduction=False)
+    env.reset(seed=11)
+    safe(env)
+    a, b = env.agents
+    env.prey[a].energy = 90
+    env.prey[a].survival_note = "Private advice: café food may be scarce."
+    env.step(dict.fromkeys(env.agents, REST))
+    assert env.total_conceptions == env.total_births == 0
+    assert env.prey[a].pregnancy is None
+    assert env.observe(a)["self"][10:].tolist() == [0, 0]
+    assert env.observe(b)["survival_note"] == ""
+    assert env.observation_space(a).contains(env.observe(a))
+
+
+@pytest.mark.parametrize("mode", ["immediate", "gestation"])
+def test_no_adjacent_space_only_blocks_conception_in_immediate_mode(mode):
+    env = world(founders=1, metabolism=0, reproduction_mode=mode)
+    safe(env)
+    p = env.prey[env.agents[0]]
+    p.pos, p.energy = (5, 5), 90
+    env.obstacles = set(env.neighbors(p.pos))
+    env.step({p.id: REST})
+    assert p.energy == (90 if mode == "immediate" else 50)
+    assert (p.pregnancy is not None) == (mode == "gestation")
+    assert env.observe(p.id)["self"].shape == ((10,) if mode == "immediate" else (12,))
+
+
+def test_pending_pregnancy_serialization_and_private_history_bound():
+    import pickle
+
+    env = world(founders=1, metabolism=0, gestation_ticks=130)
+    safe(env)
+    p = env.prey[env.agents[0]]
+    p.pos, p.energy = (5, 5), 90
+    env.step({p.id: REST})
+    env.cfg = replace(env.cfg, population_cap=1)
+    for _ in range(130):
+        env.step({p.id: REST}, note_writer=lambda h, n: ("Keep watching.", 3))
+    restored = pickle.loads(pickle.dumps(env))
+    q = restored.prey[p.id]
+    assert len(q.history) == 128
+    assert q.history[0].startswith("tick=3 ") and q.history[-1].startswith("tick=130 ")
+    assert q.pregnancy.survival_note == "Keep watching."
+    restored.cfg = replace(restored.cfg, population_cap=2)
+    restored.step({q.id: REST}, note_writer=lambda h, n: pytest.fail("Note was already prepared"))
+    child = next(p for p in restored.prey.values() if p.parent)
+    assert child.survival_note == "Keep watching." and not child.history
+    assert child.pregnancy is None
+
+
+def test_reproduction_config_validation_and_digest():
+    from millstlabs.config import ExperimentConfig
+
+    cfg = ExperimentConfig()
+    original = cfg.digest()
+    cfg.environment.gestation_ticks = 8
+    assert cfg.digest() != original
+    cfg.environment.reproduction_mode = "immediate"
+    legacy = cfg.digest()
+    cfg.environment.gestation_ticks = 16
+    assert cfg.digest() == legacy
+    cfg.environment.reproduction_mode = "unknown"
+    with pytest.raises(AssertionError):
+        cfg.validate()
+    cfg.environment.reproduction_mode = "gestation"
+    cfg.environment.gestation_ticks = 0
+    with pytest.raises(AssertionError):
+        cfg.validate()

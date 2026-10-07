@@ -8,6 +8,7 @@ from torch import nn
 from torch.distributions import Bernoulli, Categorical
 
 from .observations import observation_text, vector_observation
+from .reproduction import SURVIVAL_PROMPT
 from .structured import StructuredController
 from .structured import features as structured_features
 
@@ -49,6 +50,8 @@ class PolicyBank:
         self.truncated_observations = 0
         self.cuda_stream_seconds = 0.0
         self.cuda_events = []
+        self.survival_note_tokens = 0
+        self.survival_note_seconds = 0.0
         self.resolved_revision = None
         self.width = 64
         self.ground_width = len(self.physical_features(example_observation)) if cfg.actor_grounding else 0
@@ -167,8 +170,20 @@ class PolicyBank:
             result = features + self.adapters[i](features)
             self.gpu_end(start)
             return result
-        text = [observation_text(o) for o in observations]
-        enc = self.tokenizer(text, padding=True, truncation=True, max_length=self.cfg.max_tokens, return_tensors="pt")
+        if not any(obs.get("survival_note") for obs in observations):
+            enc = self.tokenizer([observation_text(o) for o in observations], padding=True,
+                                 truncation=True, max_length=self.cfg.max_tokens, return_tensors="pt")
+        else:
+            # Reserve note tokens separately so a full observation cannot evict advice.
+            token_ids = []
+            for obs in observations:
+                ids = self.tokenizer.encode(observation_text(obs, include_survival_note=False),
+                                            truncation=True, max_length=self.cfg.max_tokens)
+                if obs.get("survival_note"):
+                    ids += self.tokenizer.encode(" Survival note: " + obs["survival_note"],
+                                                 add_special_tokens=False, truncation=True, max_length=64)
+                token_ids.append({"input_ids": ids, "attention_mask": [1] * len(ids)})
+            enc = self.tokenizer.pad(token_ids, padding=True, return_tensors="pt")
         self.tokens += int(enc["attention_mask"].sum())
         # A max-length sequence may be exactly full, so this is a conservative counter.
         self.truncated_observations += int((enc["attention_mask"].sum(-1) >= self.cfg.max_tokens).sum())
@@ -250,18 +265,49 @@ class PolicyBank:
         """
         if self.cfg.backend != "smollm":
             raise ValueError("Free-form notes require a real language model")
+        return self._write_note(evidence, "Write one short useful note to another animal in a survival game. Preserve the observed coordinates, quantities and tick. Food stock is an amount now, not units per day. Do not infer trends, stability or hidden mechanics. Use only the supplied observations.", self.cfg.note_max_tokens, 384)
+
+    @torch.no_grad()
+    def write_survival_note(self, history, inherited_note):
+        """Frozen, greedy writer; private inputs and compute are accounted separately.
+
+        Offline backends use a short extract for simulator/training tests only.
+        """
+        if self.cfg.backend != "smollm":
+            text = "Recent private observation: " + (history[-1] if history else "No experience.")
+            text = " ".join(text.split()[:64])
+            return text, len(text.split())
+        started = time.perf_counter()
+        before = self.tokens
+        inference_before = self.inference_seconds
+        limit = int(getattr(self.base.config, "max_position_embeddings", 2048)) - 64
+        # Fit each of the latest 128 ticks into the context, retaining the inherited note.
+        per_tick = max(1, (limit - 192) // max(1, len(history)))
+        recent = [self.tokenizer.decode(self.tokenizer.encode(row, add_special_tokens=False)[:per_tick])
+                  for row in history]
+        evidence = "Inherited note: " + inherited_note + "\nPrivate history:\n" + "\n".join(recent)
+        result = self._write_note(evidence, SURVIVAL_PROMPT, 64, limit)
+        consumed = self.tokens - before
+        self.tokens = before
+        self.inference_seconds = inference_before
+        self.survival_note_tokens += consumed
+        self.survival_note_seconds += time.perf_counter() - started
+        return result
+
+    @torch.no_grad()
+    def _write_note(self, evidence, instruction, max_tokens, input_limit):
         if not self.base.config.tie_word_embeddings:
             raise ValueError("Local writer requires tied input/output embeddings")
         prompt = self.tokenizer.apply_chat_template([
-            {"role": "system", "content": "Write one short useful note to another animal in a survival game. Preserve the observed coordinates, quantities and tick. Food stock is an amount now, not units per day. Do not infer trends, stability or hidden mechanics. Use only the supplied observations."},
+            {"role": "system", "content": instruction},
             {"role": "user", "content": evidence}], tokenize=False, add_generation_prompt=True)
-        ids = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=384)["input_ids"].to(self.device)
+        ids = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=input_limit)["input_ids"].to(self.device)
         self.tokens += ids.numel()
         generated, past = [], None
         started = time.perf_counter()
         with self.base.disable_adapter():
             weight = self.base.get_input_embeddings().weight
-            for _ in range(self.cfg.note_max_tokens):
+            for _ in range(max_tokens):
                 output = self.base(input_ids=ids, past_key_values=past, use_cache=True)
                 token = int((output.last_hidden_state[:, -1] @ weight.T).argmax(-1))
                 self.encoder_forwards += 1
@@ -325,5 +371,7 @@ class PolicyBank:
         return {"processed_tokens": self.tokens, "encoder_forwards": self.encoder_forwards,
                 "gradient_updates": self.gradient_updates, "inference_seconds": self.inference_seconds,
                 "observations_at_token_cap": self.truncated_observations,
+                "survival_note_tokens": self.survival_note_tokens,
+                "survival_note_seconds": self.survival_note_seconds,
                 "cuda_model_stream_seconds": self.cuda_stream_seconds,
                 "cuda_peak_bytes": torch.cuda.max_memory_allocated(self.device) if self.device.type == "cuda" else 0}

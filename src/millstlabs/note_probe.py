@@ -11,7 +11,7 @@ def cue_pair(example):
     base["self"][0] = 30
     base["self"][2:4] = [6, 6]
     base["self"][6] = 10
-    base["self"][7:] = [0, 0, 20]
+    base["self"][7:10] = [0, 0, 20]
     base["local"][:] = 0
     base["threats"][:] = -1
     base["companions"][:] = -1

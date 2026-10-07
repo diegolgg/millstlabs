@@ -84,3 +84,59 @@ def test_llm_split_actor_learns_and_separate_critic_cannot_change_lora(monkeypat
     result=update(bank,"agent_one",rows,.5)
     assert result['critic_grad_norm'] is not None
     assert any(not torch.equal(v,bank.state("agent_one")["adapter"][k]) for k,v in prior['adapter'].items())
+
+
+def test_survival_writer_uses_frozen_backbone_and_reserved_note_tokens(monkeypatch):
+    from millstlabs.reproduction import SURVIVAL_PROMPT
+
+    class WritingTokenizer(LocalTokenizer):
+        eos_token_id = 31
+        def encode(self, text, **kwargs):
+            ids = [1] * len(text.split())
+            return ids[:kwargs.get("max_length", len(ids))]
+
+        def decode(self, ids, **kwargs):
+            return " ".join("observation" for _ in ids)
+
+        def apply_chat_template(self, messages, **kwargs):
+            self.messages = messages
+            return " ".join(m["content"] for m in messages)
+
+        def __call__(self, text, **kwargs):
+            if isinstance(text, str):
+                ids = torch.tensor([self.encode(text, **kwargs)])
+                return {"input_ids": ids, "attention_mask": torch.ones_like(ids)}
+            return super().__call__(text, **kwargs)
+
+        def pad(self, rows, **kwargs):
+            width = max(len(r["input_ids"]) for r in rows)
+            self.padded = rows
+            return {key: torch.tensor([r[key] + [0] * (width - len(r[key])) for r in rows])
+                    for key in ("input_ids", "attention_mask")}
+
+    config = LlamaConfig(vocab_size=32, hidden_size=16, intermediate_size=32,
+                         num_hidden_layers=4, num_attention_heads=2, num_key_value_heads=1,
+                         max_position_embeddings=512, tie_word_embeddings=True)
+    tokenizer = WritingTokenizer()
+    monkeypatch.setattr("transformers.AutoModel.from_pretrained", lambda *a, **k: LlamaModel(config))
+    monkeypatch.setattr("transformers.AutoTokenizer.from_pretrained", lambda *a, **k: tokenizer)
+    env = PopulationEnv()
+    obs, _ = env.reset(seed=11)
+    obs = next(iter(obs.values()))
+    bank = PolicyBank(TrainingConfig(backend="smollm", device="cpu", cpu_threads=1, max_tokens=64), obs)
+    bank.add("mother")
+    before = bank.state("mother")
+    tokens_before = bank.tokens
+    note, generated = bank.write_survival_note(["tick 1 fed at observed station"], "Avoid visible predators.")
+    assert generated <= 64
+    assert tokenizer.messages[0]["content"] == SURVIVAL_PROMPT
+    assert "Avoid visible predators." in tokenizer.messages[1]["content"]
+    assert bank.tokens == tokens_before and bank.survival_note_tokens > 0
+    assert bank.survival_note_seconds > 0
+    assert all(p.grad is None for p in bank.base.parameters())
+    for section, values in before.items():
+        assert all(torch.equal(v, bank.state("mother")[section][k]) for k, v in values.items())
+    obs["survival_note"] = note or "Find food."
+    bank.encode("mother", [obs])
+    total = len(tokenizer.padded[0]["input_ids"])
+    assert 64 < total <= 128
