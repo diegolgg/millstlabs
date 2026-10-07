@@ -3,8 +3,9 @@
 # conditions, budgets, evaluation and deals; K = 10 population seeds per condition. analysis/accumulation.null_band
 # turns these runs into per-generation bands (analysis/null.py; with K = 10 the band is the [min, max] envelope,
 # coverage (K - 1)/(K + 1) = 0.82 per point). Stub only: zero model calls.
+# The name stays `g1` on purpose: authoring is the same in both stub modes and the seed tags carry the name, so null
+# seeds 0-4 start from exactly the warm starts of G1's seeds 0-4 (and see the same deals); seeds 5-9 add new ones.
 extends: g1.yaml
 base:
-  name: g1_null
   llm: {backend: stub, stub: {mode: "null"}}
 population_seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
