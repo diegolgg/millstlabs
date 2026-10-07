@@ -19,6 +19,7 @@ import json
 import os
 import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -89,17 +90,24 @@ class CachedBackend:
         self.ledger.record(req, resp, extra={"replayed_within_run": True} if same_run else None)
         return resp
 
-    def complete(self, req: Request) -> Response:
-        key = request_key(self.name, req, self.inner.key_extra() if hasattr(self.inner, "key_extra") else None)
+    def _key(self, req: Request) -> str:
+        return request_key(self.name, req, self.inner.key_extra() if hasattr(self.inner, "key_extra") else None)
+
+    def _lookup(self, req: Request, key: str) -> dict[str, Any] | None:
         if self.cache is not None and self.mode in ("replay", "replay_strict"):
             entry = self.cache.get(key)
             if entry is not None:
-                return self._serve(req, key, entry)
+                return entry
             if self.mode == "replay_strict":
                 raise CacheMiss(f"replay_strict: no cached response for {req.tag} {req.seed_tag} ({key[:12]})")
+        return None
+
+    def _timed(self, req: Request) -> tuple[Response, float]:
         t0 = time.perf_counter()
         resp = self.inner.complete(req)
-        latency = round(time.perf_counter() - t0, 3)
+        return resp, round(time.perf_counter() - t0, 3)
+
+    def _store(self, req: Request, key: str, resp: Response, latency: float) -> Response:
         resp.request_key = key
         self.misses += 1
         if self.cache is not None and self.mode != "off":
@@ -108,8 +116,43 @@ class CachedBackend:
         self.ledger.record(req, resp, extra={"latency_s": latency})  # wall time of the backend call (volatile)
         return resp
 
+    def complete(self, req: Request) -> Response:
+        key = self._key(req)
+        entry = self._lookup(req, key)
+        if entry is not None:
+            return self._serve(req, key, entry)
+        resp, latency = self._timed(req)
+        return self._store(req, key, resp, latency)
+
     def complete_batch(self, reqs: list[Request]) -> list[Response]:
-        return [self.complete(r) for r in reqs]
+        """Serial unless the inner backend is configured with concurrency > 1 (a hosted provider). Then the cache misses
+        are sent on a thread pool; cache writes and ledger rows are made afterwards on this thread, in request order,
+        for every call that succeeded, before the first error (if any) is raised. A request repeated inside the batch
+        is sent once and the repeat is served afterwards, exactly as in the serial path."""
+        workers = int(getattr(getattr(self.inner, "config", None), "concurrency", 1) or 1)
+        if workers <= 1 or len(reqs) <= 1:
+            return [self.complete(r) for r in reqs]
+        keys = [self._key(r) for r in reqs]
+        entries = [self._lookup(r, k) for r, k in zip(reqs, keys)]
+        first_of: dict[str, int] = {}
+        send = [i for i, (k, e) in enumerate(zip(keys, entries)) if e is None and first_of.setdefault(k, i) == i]
+        with ThreadPoolExecutor(max_workers=min(workers, len(send) or 1)) as ex:
+            futs = {i: ex.submit(self._timed, reqs[i]) for i in send}
+        out: list[Response | None] = [None] * len(reqs)
+        error: BaseException | None = None
+        for i, r in enumerate(reqs):
+            if entries[i] is not None:
+                out[i] = self._serve(r, keys[i], entries[i])
+            elif i in futs:
+                if futs[i].exception() is not None:
+                    error = error or futs[i].exception()
+                    continue
+                out[i] = self._store(r, keys[i], *futs[i].result())
+            elif error is None:  # a repeat of an earlier request in this batch
+                out[i] = self.complete(r)
+        if error is not None:
+            raise error
+        return out  # type: ignore[return-value]
 
     # state that must survive a resume (simulated provider cache warmth for the stub)
     def state_dict(self) -> dict[str, Any]:

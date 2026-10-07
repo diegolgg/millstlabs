@@ -10,7 +10,7 @@ import pytest
 
 from culture.agents import agent as A
 from culture.run import single_student as SS
-from culture.run.config import ConfigError, ExperimentConfig, from_dict
+from culture.run.config import ConfigError, ExperimentConfig, from_dict, llm_hash_dict
 from culture.run.context import RunContext
 from culture.run.runner import run_config
 
@@ -129,6 +129,8 @@ def test_config_flag_default_off_and_digest_stable():
 
     d.pop("debug"), d["runner"].pop("generations"), d["runner"].pop("wall_clock_budget_s")
     d["evaluation"].pop("workers"), d["org"].pop("quarantine_unverified")
+    llm_hash_dict(d["llm"])  # the hosted-backend fields (added later) are likewise left out while at their defaults
+    assert off.digest() == "f875065a1af48815"  # the default digest recorded before the hosted backend existed
     assert off.digest() == hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:16]
     with pytest.raises(ConfigError):
         from_dict({"org": {"quarantine_unverified": "yes"}})
