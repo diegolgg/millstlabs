@@ -182,6 +182,11 @@ class RunContext:
         new_tokens = approx_tokens(req.prompt_text()) + req.max_tokens  # input estimate + the full output allowance
         if unit == "tokens":
             return float(new_tokens)
+        if self.cfg.llm.hosted:  # the configured provider prices, with the spend guard's conservative estimate
+            from ..llm.spend import estimate_usd
+
+            return estimate_usd(req.prompt_text(), req.max_tokens, self.cfg.llm.price_in_per_mtok,
+                                self.cfg.llm.price_out_per_mtok)
         return float(cost_usd(req.model, Usage(input_tokens=approx_tokens(req.prompt_text()),
                                                output_tokens=req.max_tokens)) or 0.0)
 

@@ -7,7 +7,8 @@ Spec file format (YAML):
     base: {...ExperimentConfig fields...}
     conditions: {name: {...overrides...}, ...}
     population_seeds: [0, 1, 2]
-Runs land in <out>/<condition>/p<seed>/; warm-start sets in <out>/_warm_start/."""
+Runs land in <out>/<condition>/p<seed>/; warm-start sets in <out>/_warm_start/. A hosted (paid) backend reserves
+against one spend file for the whole experiment: `base.llm.spend_file` if set, else <out>/spend.sqlite."""
 
 from __future__ import annotations
 
@@ -53,10 +54,19 @@ def _build(args):
     return str(build_warm_start(cfg, root))
 
 
+def share_spend_file(cfgs: list[tuple[str, int, Any]], out: Path) -> list[tuple[str, int, Any]]:
+    """A hosted (paid) backend with no llm.spend_file gets <out>/spend.sqlite in every job, so the llm.max_usd cap is
+    cumulative across the whole experiment (warm-start authoring, conditions, population seeds and processes).
+    spend_file is not in the config digest or the warm-start key, so this changes no pairing."""
+    shared = str((Path(out) / "spend.sqlite").resolve())
+    return [(c, ps, from_dict({"llm": {"spend_file": shared}}, cfg) if cfg.llm.hosted and not cfg.llm.spend_file
+             else cfg) for c, ps, cfg in cfgs]
+
+
 def run_experiment(spec_path: str | Path, out: str | Path, processes: int | None = None) -> list[str]:
     spec = load_spec(spec_path)
     out = Path(out)
-    cfgs = configs(spec)
+    cfgs = share_spend_file(configs(spec), out)
     os.environ["PYTHONHASHSEED"] = "0"
     # 1. one warm-start set per distinct key (in practice: per population seed), built before any condition runs
     todo: dict[str, object] = {}
