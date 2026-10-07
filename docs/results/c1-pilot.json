@@ -1,0 +1,961 @@
+{
+ "design": "k = 3 (Piers; Flawed with persuasive prose and honest evidence; the student's own bot re-sent), exhaustive delivery (8 replays per seed per stratum), 5 replicate seeds, strata verification on (selfplay n=200, replace_if_better) and off; outcome = held-out paired self-play improvement on 300 deals. Oracle = exact Shapley over the 8 replays.",
+ "mlx": {
+  "strata": {
+   "unverified": {
+    "estimators": {
+     "equal_split": {
+      "replays_per_seed": 1,
+      "rmse": {
+       "hi": 8.51145785818847,
+       "iqm": 7.4368157561975705,
+       "lo": 6.4184616257112515,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.4,
+      "spearman": {
+       "hi": 0.0,
+       "iqm": 0.0,
+       "lo": 0.0,
+       "n": 5
+      }
+     },
+     "leave_one_out": {
+      "replays_per_seed": 4,
+      "rmse": {
+       "hi": 4.801600523399245,
+       "iqm": 4.376864042743823,
+       "lo": 3.6824170606455398,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 0.6666666666666666,
+       "lo": 0.5,
+       "n": 5
+      }
+     },
+     "plackett_burman": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 1.5725925925925939,
+       "iqm": 0.713240740740741,
+       "lo": 0.24851851851851825,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "ridge_bernoulli": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 4.334553937533774,
+       "iqm": 3.9221211731077568,
+       "lo": 3.4028893448901116,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "singles_pairs": {
+      "replays_per_seed": 7,
+      "rmse": {
+       "hi": 6.290370370370371,
+       "iqm": 2.8529629629629625,
+       "lo": 0.9940740740740733,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "tau_itt": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 1.5725925925925928,
+       "iqm": 0.7132407407407406,
+       "lo": 0.24851851851851794,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     }
+    },
+    "operations": {
+     "accepted_rate": 0.675,
+     "admissible_rate": 0.975,
+     "adoption_rate_when_delivered": {
+      "T1:piers": 1.0,
+      "T2:flawed_persuasive": 1.0,
+      "T3:self": 0.0
+     },
+     "backend_calls": 31,
+     "cached_calls": 11,
+     "generalization_gap_mean": 0.13179487179487173,
+     "generalization_gap_n": 39,
+     "llm_calls": 42,
+     "output_tokens_per_call": 2857.451612903226,
+     "replays": 40,
+     "seconds_per_call": 56.174838709677424,
+     "tokens_per_call": 10269.548387096775
+    },
+    "per_seed": {
+     "0": {
+      "adopter_effect": [
+       2.132,
+       -13.143,
+       null
+      ],
+      "shapley": [
+       2.12,
+       -13.155,
+       1.585
+      ],
+      "tau_itt": [
+       2.132,
+       -13.143,
+       1.597
+      ],
+      "v(all)": -2.2666666666666666,
+      "v(none)": 7.183333333333333
+     },
+     "1": {
+      "adopter_effect": [
+       3.976,
+       -12.944,
+       null
+      ],
+      "shapley": [
+       3.299,
+       -13.621,
+       -2.706
+      ],
+      "tau_itt": [
+       3.976,
+       -12.944,
+       -2.029
+      ],
+      "v(all)": -1.1033333333333335,
+      "v(none)": 11.923333333333332
+     },
+     "2": {
+      "adopter_effect": [
+       4.923,
+       -4.22,
+       null
+      ],
+      "shapley": [
+       4.201,
+       -4.942,
+       2.368
+      ],
+      "tau_itt": [
+       4.923,
+       -4.22,
+       3.09
+      ],
+      "v(all)": 10.613333333333333,
+      "v(none)": 8.986666666666668
+     },
+     "3": {
+      "adopter_effect": [
+       5.855,
+       -9.262,
+       null
+      ],
+      "shapley": [
+       6.596,
+       -8.521,
+       4.798
+      ],
+      "tau_itt": [
+       5.855,
+       -9.262,
+       4.057
+      ],
+      "v(all)": 2.873333333333334,
+      "v(none)": 0.0
+     },
+     "4": {
+      "adopter_effect": [
+       7.293,
+       -10.027,
+       null
+      ],
+      "shapley": [
+       5.305,
+       -12.015,
+       -8.437
+      ],
+      "tau_itt": [
+       7.293,
+       -10.027,
+       -6.448
+      ],
+      "v(all)": -2.49,
+      "v(none)": 12.656666666666666
+     }
+    },
+    "primary_contrast": {
+     "R_cap": 60,
+     "R_for_80pct_power_at_1pt": 8,
+     "definition": "RMSE(ridge_bernoulli) - RMSE(leave_one_out), per replicate",
+     "mean": -0.3854276660124992,
+     "per_replicate": [
+      -0.6371963631099673,
+      -0.9721888175539259,
+      -0.4858715448885169,
+      1.1035723579680434,
+      -0.9354539624781295
+     ],
+     "sd_between_seeds": 0.8569444405586911
+    }
+   },
+   "verified": {
+    "estimators": {
+     "equal_split": {
+      "replays_per_seed": 1,
+      "rmse": {
+       "hi": 5.668085025219739,
+       "iqm": 3.9944964095926365,
+       "lo": 2.5136931712043142,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 1.0,
+      "spearman": {
+       "hi": 0.8660254037844387,
+       "iqm": 0.8660254037844387,
+       "lo": 0.8660254037844387,
+       "n": 5
+      }
+     },
+     "leave_one_out": {
+      "replays_per_seed": 4,
+      "rmse": {
+       "hi": 4.619374866533255,
+       "iqm": 3.1639159673375743,
+       "lo": 2.643811836660692,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 1.0,
+      "spearman": {
+       "hi": 0.8660254037844387,
+       "iqm": 0.8660254037844387,
+       "lo": 0.6220084679281462,
+       "n": 5
+      }
+     },
+     "plackett_burman": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 1.0931481481481482,
+       "iqm": 0.7385185185185179,
+       "lo": 0.5350925925925923,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "ridge_bernoulli": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 3.7384674431532425,
+       "iqm": 2.5828509769696804,
+       "lo": 1.7275734838614365,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.2,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 0.6666666666666666,
+       "n": 5
+      }
+     },
+     "singles_pairs": {
+      "replays_per_seed": 7,
+      "rmse": {
+       "hi": 4.372592592592593,
+       "iqm": 2.9540740740740734,
+       "lo": 2.1403703703703703,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "tau_itt": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 1.093148148148148,
+       "iqm": 0.7385185185185182,
+       "lo": 0.5350925925925926,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     }
+    },
+    "operations": {
+     "accepted_rate": 0.45,
+     "admissible_rate": 0.975,
+     "adoption_rate_when_delivered": {
+      "T1:piers": 1.0,
+      "T2:flawed_persuasive": 0.0,
+      "T3:self": 0.0
+     },
+     "backend_calls": 43,
+     "cached_calls": 0,
+     "generalization_gap_mean": 0.025940170940171068,
+     "generalization_gap_n": 39,
+     "llm_calls": 43,
+     "output_tokens_per_call": 2571.6511627906975,
+     "replays": 40,
+     "seconds_per_call": 53.900627906976744,
+     "tokens_per_call": 10665.418604651162
+    },
+    "per_seed": {
+     "0": {
+      "adopter_effect": [
+       9.667,
+       null,
+       null
+      ],
+      "shapley": [
+       10.184,
+       -4.626,
+       1.899
+      ],
+      "tau_itt": [
+       9.667,
+       -5.143,
+       1.382
+      ],
+      "v(all)": 14.64,
+      "v(none)": 7.183333333333333
+     },
+     "1": {
+      "adopter_effect": [
+       3.9,
+       null,
+       null
+      ],
+      "shapley": [
+       5.142,
+       -1.825,
+       -1.653
+      ],
+      "tau_itt": [
+       3.9,
+       -3.067,
+       -2.895
+      ],
+      "v(all)": 13.586666666666668,
+      "v(none)": 11.923333333333332
+     },
+     "2": {
+      "adopter_effect": [
+       10.959,
+       null,
+       null
+      ],
+      "shapley": [
+       10.388,
+       -3.352,
+       -2.283
+      ],
+      "tau_itt": [
+       10.959,
+       -2.781,
+       -1.713
+      ],
+      "v(all)": 13.739999999999998,
+      "v(none)": 8.986666666666668
+     },
+     "3": {
+      "adopter_effect": [
+       11.802,
+       null,
+       null
+      ],
+      "shapley": [
+       12.598,
+       -1.592,
+       3.184
+      ],
+      "tau_itt": [
+       11.802,
+       -2.388,
+       2.388
+      ],
+      "v(all)": 14.19,
+      "v(none)": 0.0
+     },
+     "4": {
+      "adopter_effect": [
+       6.034,
+       null,
+       null
+      ],
+      "shapley": [
+       5.186,
+       1.136,
+       -4.631
+      ],
+      "tau_itt": [
+       6.034,
+       1.984,
+       -3.782
+      ],
+      "v(all)": 14.346666666666666,
+      "v(none)": 12.656666666666666
+     }
+    },
+    "primary_contrast": {
+     "R_cap": 60,
+     "R_for_80pct_power_at_1pt": 29,
+     "definition": "RMSE(ridge_bernoulli) - RMSE(leave_one_out), per replicate",
+     "mean": -0.7918464309869021,
+     "per_replicate": [
+      -1.446792282212332,
+      -3.2601957808446596,
+      -1.355529209431223,
+      1.1806817019239482,
+      0.922603415629756
+     ],
+     "sd_between_seeds": 1.8486242430104594
+    }
+   }
+  },
+  "teachers": [
+   "piers",
+   "flawed_persuasive",
+   "self"
+  ]
+ },
+ "stub": {
+  "strata": {
+   "unverified": {
+    "estimators": {
+     "equal_split": {
+      "replays_per_seed": 1,
+      "rmse": {
+       "hi": 6.995246360533045,
+       "iqm": 6.554741973714911,
+       "lo": 5.145465412668173,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.2,
+      "spearman": {
+       "hi": 0.0,
+       "iqm": 0.0,
+       "lo": 0.0,
+       "n": 5
+      }
+     },
+     "leave_one_out": {
+      "replays_per_seed": 4,
+      "rmse": {
+       "hi": 8.070731770426619,
+       "iqm": 5.601215854145475,
+       "lo": 4.214509582877013,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 0.9553418012614796,
+       "iqm": 0.8660254037844387,
+       "lo": 0.6220084679281462,
+       "n": 5
+      }
+     },
+     "plackett_burman": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 0.9226851851851853,
+       "iqm": 0.29583333333333356,
+       "lo": 1.7093001656742789e-16,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "ridge_bernoulli": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 3.282204093667728,
+       "iqm": 2.6333878242755517,
+       "lo": 1.6182100854781056,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "singles_pairs": {
+      "replays_per_seed": 7,
+      "rmse": {
+       "hi": 3.6907407407407398,
+       "iqm": 1.183333333333333,
+       "lo": 1.7093001656742789e-16,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "tau_itt": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 0.9226851851851849,
+       "iqm": 0.2958333333333335,
+       "lo": 1.7093001656742789e-16,
+       "n": 5
+      },
+      "sign_error_defined_in": 5,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     }
+    },
+    "operations": {
+     "accepted_rate": 0.725,
+     "admissible_rate": 1.0,
+     "adoption_rate_when_delivered": {
+      "T1:piers": 1.0,
+      "T2:flawed_persuasive": 1.0,
+      "T3:self": 0.0
+     },
+     "backend_calls": 30,
+     "cached_calls": 10,
+     "generalization_gap_mean": -0.00783333333333328,
+     "generalization_gap_n": 40,
+     "llm_calls": 40,
+     "output_tokens_per_call": 1813.5333333333333,
+     "replays": 40,
+     "seconds_per_call": 0.0,
+     "tokens_per_call": 7287.766666666666
+    },
+    "per_seed": {
+     "0": {
+      "adopter_effect": [
+       6.473,
+       -7.457,
+       null
+      ],
+      "shapley": [
+       7.687,
+       -6.243,
+       2.062
+      ],
+      "tau_itt": [
+       6.473,
+       -7.457,
+       0.847
+      ],
+      "v(all)": 3.506666666666667,
+      "v(none)": 0.0
+     },
+     "1": {
+      "adopter_effect": [
+       5.533,
+       -5.508,
+       null
+      ],
+      "shapley": [
+       4.984,
+       -6.057,
+       -2.261
+      ],
+      "tau_itt": [
+       5.533,
+       -5.508,
+       -1.712
+      ],
+      "v(all)": -3.3333333333333335,
+      "v(none)": 0.0
+     },
+     "2": {
+      "adopter_effect": [
+       5.854,
+       -11.194,
+       null
+      ],
+      "shapley": [
+       6.193,
+       -10.856,
+       1.429
+      ],
+      "tau_itt": [
+       5.854,
+       -11.194,
+       1.091
+      ],
+      "v(all)": -3.2333333333333334,
+      "v(none)": 0.0
+     },
+     "3": {
+      "adopter_effect": [
+       7.095,
+       -9.855,
+       null
+      ],
+      "shapley": [
+       7.095,
+       -9.855,
+       0.0
+      ],
+      "tau_itt": [
+       7.095,
+       -9.855,
+       0.0
+      ],
+      "v(all)": -2.76,
+      "v(none)": 0.0
+     },
+     "4": {
+      "adopter_effect": [
+       7.173,
+       -9.663,
+       null
+      ],
+      "shapley": [
+       7.173,
+       -9.663,
+       0.0
+      ],
+      "tau_itt": [
+       7.173,
+       -9.663,
+       0.0
+      ],
+      "v(all)": -2.49,
+      "v(none)": 0.0
+     }
+    },
+    "primary_contrast": {
+     "R_cap": 60,
+     "R_for_80pct_power_at_1pt": 65,
+     "definition": "RMSE(ridge_bernoulli) - RMSE(leave_one_out), per replicate",
+     "mean": -3.4627691962304596,
+     "per_replicate": [
+      -0.4605135717713371,
+      -7.949848319771194,
+      -1.87588932408518,
+      -3.457868415303152,
+      -3.569726350221437
+     ],
+     "sd_between_seeds": 2.814119288275414
+    }
+   },
+   "verified": {
+    "estimators": {
+     "equal_split": {
+      "replays_per_seed": 1,
+      "rmse": {
+       "hi": 2.0940510803330667,
+       "iqm": 0.6352994884915676,
+       "lo": 0.006175308148345962,
+       "n": 5
+      },
+      "sign_error_defined_in": 1,
+      "sign_error_rate": 1.0,
+      "spearman": {
+       "hi": 0.9553418012614796,
+       "iqm": 0.8660254037844387,
+       "lo": 0.8660254037844387,
+       "n": 5
+      }
+     },
+     "leave_one_out": {
+      "replays_per_seed": 4,
+      "rmse": {
+       "hi": 1.8050923992034675,
+       "iqm": 0.6013948333766678,
+       "lo": 0.018121673811445176,
+       "n": 5
+      },
+      "sign_error_defined_in": 1,
+      "sign_error_rate": 1.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 0.9553418012614796,
+       "lo": 0.8660254037844387,
+       "n": 5
+      }
+     },
+     "plackett_burman": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 0.21314814814814806,
+       "iqm": 0.015277777777777371,
+       "lo": 0.00212962962963035,
+       "n": 5
+      },
+      "sign_error_defined_in": 1,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "ridge_bernoulli": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 1.550937158705665,
+       "iqm": 1.204947587027145,
+       "lo": 0.8180596825285118,
+       "n": 5
+      },
+      "sign_error_defined_in": 1,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 0.788675134594813,
+       "lo": 0.5,
+       "n": 5
+      }
+     },
+     "singles_pairs": {
+      "replays_per_seed": 7,
+      "rmse": {
+       "hi": 0.8525925925925927,
+       "iqm": 0.06111111111111115,
+       "lo": 0.00851851851851935,
+       "n": 5
+      },
+      "sign_error_defined_in": 1,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     },
+     "tau_itt": {
+      "replays_per_seed": 8,
+      "rmse": {
+       "hi": 0.21314814814814795,
+       "iqm": 0.015277777777777939,
+       "lo": 0.00212962962963035,
+       "n": 5
+      },
+      "sign_error_defined_in": 1,
+      "sign_error_rate": 0.0,
+      "spearman": {
+       "hi": 1.0,
+       "iqm": 1.0,
+       "lo": 1.0,
+       "n": 5
+      }
+     }
+    },
+    "operations": {
+     "accepted_rate": 0.4,
+     "admissible_rate": 1.0,
+     "adoption_rate_when_delivered": {
+      "T1:piers": 1.0,
+      "T2:flawed_persuasive": 0.0,
+      "T3:self": 0.0
+     },
+     "backend_calls": 40,
+     "cached_calls": 0,
+     "generalization_gap_mean": -0.0222916666666666,
+     "generalization_gap_n": 40,
+     "llm_calls": 40,
+     "output_tokens_per_call": 2010.775,
+     "replays": 40,
+     "seconds_per_call": 0.0,
+     "tokens_per_call": 7771.7
+    },
+    "per_seed": {
+     "0": {
+      "adopter_effect": [
+       11.257,
+       null,
+       null
+      ],
+      "shapley": [
+       11.559,
+       2.081,
+       0.999
+      ],
+      "tau_itt": [
+       11.257,
+       1.778,
+       0.697
+      ],
+      "v(all)": 14.64,
+      "v(none)": 0.0
+     },
+     "1": {
+      "adopter_effect": [
+       13.587,
+       null,
+       null
+      ],
+      "shapley": [
+       13.587,
+       0.0,
+       0.0
+      ],
+      "tau_itt": [
+       13.587,
+       0.0,
+       0.0
+      ],
+      "v(all)": 13.586666666666668,
+      "v(none)": 0.0
+     },
+     "2": {
+      "adopter_effect": [
+       11.532,
+       null,
+       null
+      ],
+      "shapley": [
+       11.498,
+       0.094,
+       2.201
+      ],
+      "tau_itt": [
+       11.532,
+       0.128,
+       2.235
+      ],
+      "v(all)": 13.793333333333333,
+      "v(none)": 0.0
+     },
+     "3": {
+      "adopter_effect": [
+       14.24,
+       null,
+       null
+      ],
+      "shapley": [
+       14.246,
+       0.067,
+       0.011
+      ],
+      "tau_itt": [
+       14.24,
+       0.062,
+       0.005
+      ],
+      "v(all)": 14.323333333333332,
+      "v(none)": 0.0
+     },
+     "4": {
+      "adopter_effect": [
+       14.344,
+       null,
+       null
+      ],
+      "shapley": [
+       14.338,
+       -0.004,
+       0.013
+      ],
+      "tau_itt": [
+       14.344,
+       0.002,
+       0.019
+      ],
+      "v(all)": 14.346666666666666,
+      "v(none)": 0.0
+     }
+    },
+    "primary_contrast": {
+     "R_cap": 60,
+     "R_for_80pct_power_at_1pt": 16,
+     "definition": "RMSE(ridge_bernoulli) - RMSE(leave_one_out), per replicate",
+     "mean": 0.4603697037987783,
+     "per_replicate": [
+      -0.8044419864750871,
+      1.1904069235386423,
+      -1.07832808177489,
+      1.451875834605043,
+      1.5423358291001832
+     ],
+     "sd_between_seeds": 1.289770224993041
+    }
+   }
+  },
+  "teachers": [
+   "piers",
+   "flawed_persuasive",
+   "self"
+  ]
+ }
+}
