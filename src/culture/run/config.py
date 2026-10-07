@@ -43,6 +43,8 @@ class PopulationConfig:
     seed: int = 0  # population seed: the unit of uncertainty (stub perturbations, policy randomness)
     warm_start: str = "author"  # "author" (one authoring call per agent) or an anchor name every agent starts from
     warm_start_overrides: dict[str, str] = field(default_factory=dict)  # agent id -> anchor name
+    # path to a shared warm-start set (run/warmstart.py); when set, generation 0 is read from it, never authored
+    warm_start_set: str = ""
 
 
 @dataclass

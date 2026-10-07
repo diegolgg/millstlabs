@@ -15,15 +15,15 @@ from typing import Any
 import numpy as np
 
 from ..agents import agent as A
-from ..artifacts.schema import Artifact, TeachingMessage
+from ..artifacts.schema import TeachingMessage
 from ..artifacts.store import EvidenceRejected
-from ..bots.anchors import anchor_conventions, anchor_source
 from ..evaluate import stats
 from ..evaluate.crossplay import crossplay_matrix
 from ..evaluate.selfplay import selfplay
 from ..game.hanabi import HanabiParams
 from ..org.credit import Offer, Window
 from .context import RunContext
+from .warmstart import author_initial, load_warm_start
 
 
 def maybe_kill(ctx: RunContext, g: int, step: str) -> None:
@@ -128,20 +128,15 @@ def warm_start(ctx: RunContext) -> dict[str, Any]:
     t0 = time.perf_counter()
     _apply_environment(ctx, g)
     ctx.start_budgets(None)
-    pcfg = ctx.cfg.population
+    shared = None
+    if ctx.cfg.population.warm_start_set:  # forked from a shared set: no backend call for generation 0
+        shared = load_warm_start(ctx.cfg.population.warm_start_set, ctx.cfg)
+        arts = shared["artifacts"]
+    else:
+        arts = author_initial(ctx)
     for aid in sorted(ctx.agents):
-        ag = ctx.agents[aid]
-        anchor = pcfg.warm_start_overrides.get(aid) or (pcfg.warm_start if pcfg.warm_start != "author" else None)
-        art = None
-        if anchor is None:
-            art = A.produce(ctx, ag, "author", A.author_prompt(ag, g), g, None, [], [], "author")
-            if art is None:
-                anchor = "random"  # authoring failed twice: start from the random bot (counted in failed_revisions)
-        if art is None:
-            art = Artifact.make(anchor_source(anchor), anchor_conventions(anchor), author=f"anchor:{anchor}",
-                                group=ag.group, generation=0, origin="seed")
-        ctx.add_artifact(art)
-        ag.incumbent = art.id
+        ctx.add_artifact(arts[aid])
+        ctx.agents[aid].incumbent = arts[aid].id
     maybe_kill(ctx, g, "revise")
     _evaluate_population(ctx, g, {})
     _refresh_scores(ctx)
@@ -149,8 +144,10 @@ def warm_start(ctx: RunContext) -> dict[str, Any]:
         ctx.pol["selection"].record(ag.group, ag.incumbent, ag.score, None, g)
     _deposit(ctx)
     sent = _teach(ctx, g)
-    return _finish(ctx, g, t0, {"teaching": {"sent": len(sent)}}, candidates={},
-                   starts={a: ag.incumbent for a, ag in ctx.agents.items()})
+    extra: dict[str, Any] = {"teaching": {"sent": len(sent)}}
+    if shared is not None:
+        extra["warm_start_set"] = {"key": shared["key"], **shared["ledger_totals"]}
+    return _finish(ctx, g, t0, extra, candidates={}, starts={a: ag.incumbent for a, ag in ctx.agents.items()})
 
 
 # ------------------------------------------------------------------------------------------------ generation g >= 1

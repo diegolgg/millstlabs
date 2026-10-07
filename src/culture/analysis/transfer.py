@@ -1,6 +1,7 @@
 """Stage-1 analysis (queue item 1): student score versus cumulative tokens per condition, and paired deltas.
 
-Student = the agent with the lower generation-0 score. Warm starts are paired across conditions (same seed tags), so
+Student = the agent with the lower generation-0 score. Warm starts are paired across conditions (forked from one shared
+warm-start set per population seed), so
 the student is the same agent, holding the same artifact, in every condition of a population seed; `pairing_checks`
 verifies that and that final evaluations used the same deals."""
 
@@ -24,7 +25,7 @@ def _final_evals(run_dir: Path) -> dict[str, Any]:
 def load_experiment(root: str | Path) -> dict[str, dict[int, dict[str, Any]]]:
     root = Path(root)
     out: dict[str, dict[int, dict[str, Any]]] = {}
-    for cdir in sorted(p for p in root.iterdir() if p.is_dir()):
+    for cdir in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith("_")):  # skip _warm_start
         for pdir in sorted(cdir.glob("p*")):
             run = load_run(pdir)
             run["final"] = _final_evals(pdir)
