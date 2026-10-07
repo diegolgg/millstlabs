@@ -1,0 +1,823 @@
+\documentclass[11pt]{article}
+\usepackage{enrico}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\setlist{itemsep=2pt,topsep=3pt}
+\numberwithin{theorem}{section}
+\theoremstyle{definition}
+\newtheorem{implementation}[theorem]{Implementation}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{problemstyle}
+\newtheorem{experiment}{Experiment}[section]
+\nc{\ITT}{\mathrm{ITT}}
+\nc{\LOO}{\mathrm{LOO}}
+\nc{\ES}{\mathrm{ES}}
+\nc{\SP}{\mathrm{SP}}
+\nc{\sgn}{\operatorname{sign}}
+\nc{\status}[1]{\hfill{\color{muted}\small[#1]}}
+\definecolor{muted}{RGB}{105,112,122}
+
+\title{Sandbox 1: organized populations of program-writing agents on Hanabi\\[2pt]\large Research notes}
+\author{Enrico Yao-Bate}
+\date{October 7, 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section*{Preface}
+These notes fix what Sandbox~1 is, in the order one needs to understand it: the goal and the claim we are making
+(\S\ref{sec:goal}); the game, the bots, and the population process built on top of them (\S\ref{sec:game}); the causal
+framework in which every quantity we report is defined (\S\ref{sec:causal}); the estimators and metrics and the rigor
+protocol (\S\ref{sec:est}); the experiments, written as designs rather than results (\S\ref{sec:exp}); and the state of
+the build (\S\ref{sec:build}). Each experiment carries a status tag, [not run], [pilot only] or [run]; no result
+numbers appear in this version, since the experiments run so far were pilots used to fix designs, and their numbers
+live in the ledger (\texttt{files/prereg/LEDGER.md}) and the status document. Definitions are given before they are
+used; where a definition comes from a source, the source is cited by section (Wager, \emph{Causal Inference: A
+Statistical Learning Approach}, draft of September 2026, cited as W \S; Sutton and Barto, \emph{Reinforcement
+Learning}, second edition, cited as SB p.). Claims of novelty are phrased as ``not found'' with the nearest works named
+in Appendix~\ref{app:novelty}.
+
+\section{Goal, hypothesis, edge}\label{sec:goal}
+
+The company is building the layer that lets a population of agents discover knowledge, share it, and keep building on
+it over long horizons: who teaches whom, how a learner checks what it is taught, how credit and compute flow. Sandbox~1
+is the controlled laboratory for that layer; Sandbox~2 (market making) points the same layer at the real domain.
+Whatever we build here has to carry over there with only the evaluator swapped, which is the first constraint on
+everything below.
+
+\begin{ass}[The thesis, in testable form]\label{ass:thesis}
+A long-running population of agents improves collectively because of (i) adaptive social dynamics: groups compete for
+finite resources, so helping one's group is rewarded even when it costs the individual, and agents revise how they
+cooperate and migrate between groups; and (ii) intelligence transfer: agents are credited for the improvement of those
+they teach, discoveries from different lineages are combined, and learners verify what they are taught before adopting
+it.
+\end{ass}
+
+\begin{rem}
+Transfer alone is not interesting; many systems move knowledge between agents. The claims that distinguish us, stated
+as the literature map states them, are five: the group as the unit that competes and reproduces, with teaching; causal
+credit over a teaching graph with several teachers; controlled perturbation of the organization over long runs; a
+formal model that predicts when organization beats scale; and designing against persuasive-but-wrong ideas and against
+convergence. Rigor is itself part of the edge, since the adjacent literature runs single seeds, no counterfactuals and
+no pre-registration. Of the five, the ones that are cheap enough to test before funding are credit, the formal model,
+and robustness; the group-level and long-run claims need a factorial over organization rules and wait.
+\end{rem}
+
+\section{The game and the population}\label{sec:game}
+
+\subsection{Hanabi}
+
+Hanabi is a cooperative card game; we play it with two players, who form one team against the deck. Nobody in the game
+competes with anybody, and no group exists inside a game. The goal is to build five fireworks, one per colour, by
+playing cards onto each colour's stack in the order $1,2,3,4,5$; the score is the number of cards successfully played,
+at most $25$. The twist is that each player holds their five cards facing away from themselves: a player sees the
+partner's hand and never their own, so the only way to learn what one holds is from the partner's clues.
+
+The deck has $50$ cards, five colours by ranks $1$ to $5$, with three $1$s, two each of $2,3,4$ and one $5$ per
+colour. The table holds eight clue tokens and three life tokens. A turn is exactly one of three actions. A
+\emph{clue} spends a token and names one colour or one rank, pointing at every card in the partner's hand that
+matches. A \emph{discard} puts one of one's own cards face up, regains a token, and draws. A \emph{play} puts one of
+one's own cards on the stacks; if it is the next rank of its colour it stays and scores, otherwise it is a bomb and
+costs a life; either way one draws. The game ends when all stacks are complete, when three bombs have been played (our
+engine scores this $0$), or when the deck runs out and each player has taken one last turn.
+
+Eight tokens cannot describe $25$ cards literally, so good teams agree in advance on rules that make a clue mean more
+than it says.
+
+\begin{example}[A play clue]
+The partner's newest card is a red $1$. We clue ``red'', touching only that card. Literally, the clue says that the
+card is red. Under the convention ``a clue touching a single unknown card means play it'', the partner plays the card
+without knowing its rank, and it scores. If the partner instead holds the convention ``a colour clue means save this
+card'', they hold it forever. The same clue produces two outcomes depending only on whether the rule is shared, which
+is the property that makes the game a laboratory for culture: a convention has no value alone, and whether two players
+share one is measurable by letting them play.
+\end{example}
+
+The human community on \texttt{hanab.live} maintains a written rulebook of such conventions, in levels $1$ to $25$,
+revised by pull request; expert pairs score about $23$ to $24$.
+
+\subsection{Bots as policies}
+
+\begin{definition}[Deal, policy]
+A \emph{deal} is one shuffled order of the $50$ cards, indexed by a seed. A \emph{policy}, or \emph{bot}, is a
+deterministic program $\pi$ mapping what one player can see (own hand knowledge, the partner's cards, the stacks, the
+discards, the tokens, the last moves) to a legal move. A bot is reset at the start of every game and keeps no memory
+across games.
+\end{definition}
+
+A game is thus a pair of bots and a deal. Nothing carries over between games, so evaluating a bot means playing it in
+many independent games from fresh deals and averaging.
+
+\begin{definition}[Score functional, self-play, cross-play]
+For bots $\pi,\pi'$ and a finite set of deals $\D$, write
+\[
+\hat V_{\D}(\pi,\pi') := \frac{1}{|\D|}\sum_{d\in\D}\mathrm{score}(\pi,\pi';d),
+\]
+the mean score when $\pi$ and $\pi'$ play together over $\D$, with seats alternating by deal. $\hat V(\pi,\pi)$ is the
+\emph{self-play} score of $\pi$; $\hat V(\pi,\pi')$ for $\pi\neq\pi'$ is the \emph{cross-play} score, the measure of
+whether two bots share conventions. We write $V$ for the population version over the deal distribution.
+\end{definition}
+
+\begin{rem}
+Self-play rewards internal consistency and says nothing about compatibility: two bots can each score $24$ with
+themselves and $2.5$ with each other (Hu et al., \emph{Other-Play}, 2020), because each converged on private
+signalling rules. This collapse is the quantitative face of ``independent groups develop incompatible cultures'', and
+it is the null against which transfer claims are measured.
+\end{rem}
+
+\begin{definition}[Anchors]
+An \emph{anchor} is a fixed reference bot with a known score, used so that scores are comparable across experiments
+and time. Ours are: random play ($0$); the rule-based bots of Canaan et al.\ (AIIDE 2020), Piers ($16.99$ in two-player
+self-play), IGGI ($15.99$) and Flawed ($0$, a deliberately bad rule list); and, optionally, a frozen reinforcement
+learning policy.
+\end{definition}
+
+\begin{example}[Piers]
+Piers encodes one human player's style as an ordered list of rules, the first applicable rule deciding the move: play a
+card known to be safe; play the card most likely playable when a life can be spared; hint a partner's playable card;
+hint useless cards when clue tokens are low; otherwise discard. Our engine reproduces its published $16.99$ over
+$1{,}000$ deals move for move, which is how the engine adapter was validated. In the experiments below it is the
+\emph{known-good teacher}: when a student adopts it, we know what the student should score.
+\end{example}
+
+\begin{rem}[Why this game]
+Strategies are explicit rules, writeable as text and as code; a rule has value only when the partner shares it, so
+knowledge must be transmitted to be worth anything; compatibility is measurable by cross-play; the score is absolute
+with human and reinforcement-learning reference points; and a game simulates in about a millisecond, so we can play
+millions. Games whose play requires a language model on every turn (social deduction games, Diplomacy) fail the last
+property by three orders of magnitude and were rejected on that ground.
+\end{rem}
+
+\subsection{The population process}
+
+We now describe the layer that sits on top of the game. The picture to keep in mind is a population of programmers,
+each maintaining their own Hanabi bot, who can send one another their code and notes; the game is only the test bench.
+
+\begin{definition}[Agent, incumbent, artifact]
+An \emph{artifact} $a$ is a package of bot code together with a \emph{conventions document}, a plain-language
+statement of the rules the code implements, with an identifier. An \emph{agent} is a process, driven by a language
+model, that owns exactly one current artifact, its \emph{incumbent}, and can revise it, send it, and receive others'.
+\end{definition}
+
+\begin{definition}[Message, evidence]
+A \emph{message} $m=(a,e)$ from a teacher $i$ to a student $j$ is an artifact together with \emph{evidence} $e$: the
+scores our harness measured for $a$ (self-play, cross-play against anchors), signed by the harness. An agent cannot
+fabricate evidence, only earn it.
+\end{definition}
+
+\begin{definition}[Verification, adoption]
+On receiving $m=(a,e)$, the student may \emph{verify} $a$ by playing it against its own incumbent on a fixed set of
+deals, and then \emph{adopt} it (replace the incumbent), \emph{merge} it (one language-model call combining the two),
+or \emph{reject} it. Which of these happen, and under what rule, is an organization policy.
+\end{definition}
+
+\begin{definition}[Corpus, touch log]
+The \emph{corpus} $\C_t$ of a group is the store of artifacts with evidence deposited by its members up to generation
+$t$. A deposit is accepted only with harness evidence; a retrieval is recorded in the \emph{touch log} as (reader,
+artifact, generation). The touch log is what makes credit computable later.
+\end{definition}
+
+\begin{definition}[Generation, lineage]
+A \emph{generation} is one round in which every agent executes Algorithm~\ref{alg:step}. Every artifact records its
+\emph{parents}: the agent's previous incumbent, together with any artifact adopted or merged. Following parents
+backward gives an artifact's \emph{ancestry}; forward gives its \emph{descendants}, which include other agents' bots
+that adopted it. The directed graph so formed is the \emph{lineage graph}.
+\end{definition}
+
+\begin{algorithm}[The agent step]\label{alg:step}
+For one agent in one generation, in this order:
+\begin{enumerate}
+\item \emph{Receive} the messages the routing rule delivered to it.
+\item \emph{Verify} each received artifact on the verification deals; adopt, merge or reject by the adoption rule.
+\item \emph{Revise}: one language-model call that rewrites the incumbent, given the current code and conventions, a
+summary of performance over the evaluation deals, the traces of the three worst games on the feedback deals, and
+whatever was received and not withheld.
+\item \emph{Evaluate} the new incumbent: self-play on the evaluation deals, cross-play against group members and
+anchors.
+\item \emph{Teach}: send the incumbent, with its evidence, to the agents the routing rule names.
+\end{enumerate}
+Each language-model call debits the agent's share of its group's budget; evaluation is engine time only.
+\end{algorithm}
+
+\begin{rem}[Two levels that never mix]
+Inside a game two bots play sixty turns, deciding every move themselves, instantly, with no language model and no
+other agent involved. The population never plays a game together, and nothing about it is decided by consensus or
+vote: each agent decides what to do with its own bot, and the only interactions are messages, verification, adoption,
+budget, and group membership. The wall-clock of a generation is dominated by the language-model calls, about a minute
+per agent run one at a time, so twelve agents take about twelve minutes per generation and fifty generations take a
+night; the games themselves take seconds.
+\end{rem}
+
+\begin{rem}[The right analogy]
+The closest established frame is a genetic-programming population: artifacts are individuals, the language model is the
+mutation operator, verification and adoption are selection, and teaching is horizontal transfer. What we vary is not
+the operator but the organization around it: routing, verification, credit, allocation, migration.
+\end{rem}
+
+\subsection{Groups}
+
+\begin{definition}[Group, group score]\label{def:group}
+A \emph{group} is a subset of agents whose messages are routed mostly to one another and who share a corpus. Its
+\emph{group score} is the expected score when two of its members, drawn at random, play together, i.e.\ the mean
+within-group cross-play. Its \emph{compatibility} with another group is the mean between-group cross-play.
+\end{definition}
+
+\begin{rem}
+This makes ``culture'' operational. A group whose members share conventions has a high group score; a group of
+individually strong but mutually incompatible bots has a low one. Two isolated groups drift to different conventions,
+so between-group cross-play falls toward the self-play collapse of the remark above; teaching across groups and
+migration (an agent moving to another group, bringing its artifact) are the mechanisms that keep groups compatible,
+and the lineage graph records which one did the work. Groups compete for the budget of language-model calls under an
+allocation rule applied to group scores.
+\end{rem}
+
+\subsection{What varies}
+
+Everything above is fixed across experiments. What an experiment varies is a tuple of organization policies, each a
+small pluggable rule: topology (isolated, full, islands with migration); routing (none, broadcast within group, best to
+all, random); delivery (deterministic, or Bernoulli with known probability); verification (none, self-play on $N$
+deals, sequential); adoption (replace if better, merge, provisional with revert); credit (the estimators of
+\S\ref{sec:est}); allocation (uniform, proportional, Nash-relative); migration; environment change (a rule variant at a
+given generation); and the horizon, the number of generations for a fixed total budget.
+
+\section{The causal framework}\label{sec:causal}
+
+Every quantity we report is a causal effect of something the organization controls, on something the engine measures.
+This section fixes the units, treatments and outcomes, and the assumptions under which the effects are identified.
+
+\subsection{Potential outcomes for one student}
+
+Consider one student with incumbent $\pi_0$, receiving $k$ messages indexed by $j\in[k]$. The organization decides
+which messages are delivered; the student's update then runs. The obstacle to calling the result a causal effect of
+delivery is that the update involves a language model, whose randomness would make the counterfactual unobservable.
+The following assumption removes that obstacle, and it is the reason the local model is run with a fixed sampling seed.
+
+\begin{ass}[Deterministic update]\label{ass:det}
+The student's update $\pi' = U(\pi_0, S, \xi)$, where $S\subseteq[k]$ is the delivered set and $\xi$ the sampling
+randomness of the language model, is a deterministic function of $S$ once $\xi$ is fixed. The engine is deterministic
+given the deal.
+\end{ass}
+
+\begin{definition}[Delivery set, outcome]
+Write $W\in\{0,1\}^k$ for the delivery indicators and $S=\{j: W_j=1\}$. The \emph{outcome} is the student's paired
+improvement on the evaluation deals,
+\[
+Y(S) := \hat V_{\D_{\mathrm{eval}}}\big(\pi'(S),\pi'(S)\big) - \hat V_{\D_{\mathrm{eval}}}(\pi_0,\pi_0),
+\]
+with $\D_{\mathrm{eval}}$ disjoint from the deals shown to the model (\S\ref{sec:rigor}). A \emph{replicate} $r$ is
+a change of experiment seed, which changes the feedback deals the model sees but not $\D_{\mathrm{eval}}$; we write
+$Y_r(S)$.
+\end{definition}
+
+Under Assumption~\ref{ass:det}, $\{Y_r(S): S\subseteq[k]\}$ are the $2^k$ potential outcomes of replicate $r$, in the
+sense of W \S1, and all of them can be observed by replaying. This is stronger than anything the causal-inference
+literature assumes, and it is what makes an exact oracle possible (\S\ref{sec:est}).
+
+\begin{definition}[Intent-to-treat effect of a message]\label{def:itt}
+The intent-to-treat effect of message $j$ in replicate $r$ is
+\[
+\tau_{j,r} := \frac{1}{2^{k-1}}\sum_{S\subseteq[k]\setminus\{j\}}\big[\,Y_r(S\cup\{j\}) - Y_r(S)\,\big],
+\]
+the average, over the other messages delivered independently with probability $\tfrac12$ each, of the gain from
+delivering $j$.
+\end{definition}
+
+The word ``intent'' is deliberate. Delivery is the treatment, and whatever the student does with the message, verify,
+reject, adopt, or merely read, is inside the effect. This is the quantity the organization can act on, since delivery
+is the only thing it controls, and it is the estimand that the pre-registered decision rules use.
+
+\begin{prop}[Identification under randomized delivery]\label{prop:ident}
+Let the organization deliver each message independently with $\P(W_j=1)=\tfrac12$. Then for every $j$,
+\[
+\E[Y\mid W_j=1] - \E[Y\mid W_j=0] = \tau_j ,
+\]
+where the expectation is over $W$ for fixed $r$ (and over $r$ as well if replicates are pooled).
+\end{prop}
+\begin{proof}
+Conditional on $W_j=1$, the other indicators are still independent Bernoulli($\tfrac12$), so $\E[Y\mid W_j=1] =
+2^{-(k-1)}\sum_{S\not\ni j}Y(S\cup\{j\})$, and similarly $\E[Y\mid W_j=0] = 2^{-(k-1)}\sum_{S\not\ni j}Y(S)$.
+Subtracting gives the definition.
+\end{proof}
+
+\begin{rem}[What the sandbox gives for free]
+Two things that are usually the hard part of causal inference are satisfied by construction here. First, the
+propensity $\P(W_j=1)$ is known exactly, because we set it; W Corollary~3.3 (p.~38) says that with the true propensity
+known, the augmented inverse-propensity estimator is efficient with any consistent regression model, so no nuisance
+estimation is needed. Second, the deals are shared across every arm, so outcomes are paired, and W Theorem~1.3
+(p.~14) says adjustment for a pre-treatment covariate is never worse than the raw difference in means; blocking on the
+deal is therefore done by default. What is not given for free is the absence of interference between agents, taken up
+in \S\ref{sec:interf}.
+\end{rem}
+
+\subsection{Credit as a game-theoretic quantity}
+
+A second way to ask ``how much did message $j$ contribute'' is to divide the total gain fairly among the messages.
+
+\begin{definition}[Shapley credit]\label{def:shapley}
+With $v_r(S):=Y_r(S)$ as the value of a coalition of delivered messages,
+\[
+\phi_{j,r} := \sum_{S\subseteq[k]\setminus\{j\}} \frac{|S|!\,(k-|S|-1)!}{k!}\,\big[\,v_r(S\cup\{j\}) - v_r(S)\,\big].
+\]
+\end{definition}
+
+\begin{prop}\label{prop:banzhaf}
+$\tau_{j,r}$ is the Banzhaf index of $j$ in the game $v_r$, and $\sum_j\phi_{j,r} = Y_r([k]) - Y_r(\emptyset)$. If
+$v_r$ is additive, $v_r(S)=\sum_{j\in S}a_j$, then $\tau_{j,r}=\phi_{j,r}=a_j$. In general they differ only through
+the interaction terms of $v_r$.
+\end{prop}
+\begin{proof}
+The Banzhaf index weights every marginal $v(S\cup\{j\})-v(S)$ equally by $2^{-(k-1)}$, which is
+Definition~\ref{def:itt}; the Shapley weights sum to one and the efficiency identity is the standard telescoping over
+a random ordering. Under additivity every marginal equals $a_j$, so any convex combination of them does.
+\end{proof}
+
+\begin{rem}[Which to use when]
+The two answer different questions. $\tau$ answers ``what happens if I deliver $j$ under my delivery rule'', and it
+changes if the rule changes, which is a feature when the rule is the object of study. $\phi$ answers ``how to split the
+gain'', and its efficiency property matters as soon as credit is converted into budget: one cannot hand out more
+credit than there was gain, and $\tau$ effects do not sum to anything meaningful once messages interact. Both come
+from the same $2^k$ replays, so both are reported; the decision rules use $\tau$, because the organization's question
+is causal rather than divisional. $\phi$ is also the formalism of the nearest published work on credit in multi-agent
+language-model systems (Appendix~\ref{app:novelty}), which keeps our numbers comparable.
+\end{rem}
+
+\begin{definition}[Effect among adopters]
+Delivery is an instrument for adoption: a message cannot be adopted unless delivered (one-sided noncompliance), so the
+effect of $j$ among students who adopt it is identified as $\tau_{j}/\P(\text{adopt } j\mid j \text{ delivered})$
+(W \S10). It is reported for interpretation and is undefined when no replicate adopts; it is not used in decision
+rules, because conditioning on adoption directly would select on a post-treatment choice.
+\end{definition}
+
+\begin{rem}[Two lessons from the pilot that shape the designs]
+First, a re-sent copy of the student's own bot is not a null message: any delivered text changes the revision, so a
+``placebo'' with zero effect does not exist, and planted truths are only known in isolation. The oracle therefore
+defines truth. Second, verification as implemented gates the adoption of code, not the reading of prose: a message
+whose code is rejected can still move the student through the text the revision call sees. The reaction rules of
+\S\ref{sec:exp} exist because of this.
+\end{rem}
+
+\subsection{Interference between agents}\label{sec:interf}
+
+With several students in a group, one agent's treatment changes what is available to the others: a teacher's artifact
+is the output of someone else's recent generation, and a verification or budget decision for one agent changes the
+pool the rest draw from. The no-interference assumption behind \S3.1 fails across agents, and W \S11--12 give the
+replacement.
+
+\begin{ass}[Exposure mapping]
+For agent $i$ there is a map $H_i:\{0,1\}^n\to\mathcal H$ such that $Y_i(w)=Y_i(w')$ whenever $H_i(w)=H_i(w')$ (W
+Assumption~11.1, p.~146). Under network interference, $H_i(w)$ is the restriction of $w$ to $\{i\}\cup N_i$, the agent
+and the set of agents whose artifacts or budget decisions can reach it in that generation (W Definition~11.1, p.~147).
+\end{ass}
+
+\begin{definition}[Randomization dependency graph]
+$G_{ij}=1$ if $(\{i\}\cup N_i)\cap(\{j\}\cup N_j)\neq\emptyset$ (W eq.~12.18, p.~163). Outcomes of agents not joined
+in $G$ are independent under the randomization.
+\end{definition}
+
+\begin{rem}
+Three consequences for the group-level experiments. The inverse-probability exposure estimator is unbiased under
+Bernoulli randomization with known exposure probabilities (W Theorem~12.1, p.~157), and ours are known. Its variance
+should be the finite-population one (W Theorem~12.2, p.~159), which needs no story about a superpopulation of agent
+cohorts; the network version (W eq.~12.21) is made conservative by projecting $G$ onto the positive semidefinite cone
+(W Corollary~12.6, p.~167). Before assuming interference away, one tests for it: the permutation test for the sharp
+null (W Theorem~11.1, p.~149) and the composite test for ``no spillovers'' (W Theorem~11.2). Inference remains valid
+while the reach of any one agent grows slower than $n^{1/4}$ (W Theorem~12.7, p.~168), which caps how many students a
+single teacher may touch in one generation relative to the population size, a design constraint on routing.
+\end{rem}
+
+\subsection{Evaluating an organization rule from logs}
+
+A routing or verification rule is a policy over deliveries across generations. Running every candidate rule is
+expensive; evaluating a candidate from logs collected under another rule is off-policy evaluation.
+
+\begin{definition}[Behaviour and target rule]
+Let $b$ be the rule that generated the logs and $\pi$ the rule to be valued, each assigning probabilities to deliveries
+given the state. Coverage requires $\pi(a\mid s)>0 \Rightarrow b(a\mid s)>0$ (SB p.~103).
+\end{definition}
+
+\begin{prop}[Weighted importance sampling]
+With $\rho_{t:T-1}=\prod_{u=t}^{T-1}\pi(A_u\mid S_u)/b(A_u\mid S_u)$ (SB eq.~5.3), the weighted estimator
+$\sum_t \rho_t G_t/\sum_t\rho_t$ (SB eq.~5.6) is consistent under coverage and has bounded variance even when the
+ratios have infinite variance; the ordinary estimator (SB eq.~5.5) is unbiased but can have unbounded variance.
+\end{prop}
+
+\begin{rem}
+Over many generations the sequential weights compound multiplicatively (W eq.~14.12--14.14, pp.~195--196), the curse
+of horizon, and the estimator becomes useless after a handful of generations. If the student state mixes, i.e.\
+artifacts do not retain unbounded memory of old messages, the process is a Markov decision process and the doubly
+robust stationary estimator of W \S15 (eq.~15.9, p.~208) avoids the compounding. If a rule is itself chosen
+adaptively across generations, sample means are biased (W pp.~76--77); the adaptively weighted estimator (W eq.~6.12)
+or a switchback design (W Definition~15.2, bias at most $4M\lambda(1+t_0)$, Theorem~15.5) restores valid inference.
+These are the tools for the long-run experiments, not for the single-student ones.
+\end{rem}
+
+\subsection{Credit over time, and teacher choice}
+
+\begin{rem}[Eligibility traces as lineage credit]
+Crediting a teacher for a student's improvement several generations downstream is Minsky's credit-assignment problem
+(SB p.~17) with messages in place of decisions. The backward view of TD($\lambda$) (SB eqs.~12.5--12.7, pp.~292--294)
+assigns the current error backward along the trajectory with weight decaying by $\gamma\lambda$ per step; a trace per
+(teacher, student) pair along the lineage graph is the direct analogue, with $\lambda=1$ recovering plain Monte Carlo
+credit when the bootstrapped version is not trusted. The book's traces run along one trajectory; with several teachers
+acting on one student the per-pair trace is the minimal extension, and this is a design choice we make rather than a
+result we inherit.
+\end{rem}
+
+\begin{rem}[Which teacher to listen to]
+Choosing teachers under uncertainty is a nonstationary bandit, since teachers improve. The constant-step-size update
+$Q_{n+1}=Q_n+\alpha(R_n-Q_n)$ (SB eq.~2.5, p.~32) is appropriate rather than the sample average, and the book's own
+caveat applies: upper-confidence selection assumes uncertainty shrinks with the pull count, which fails under
+nonstationarity (SB p.~36). Any baseline that does not depend on the action leaves the expected update unchanged and
+reduces its variance (SB p.~329). This mechanism needs many generations to matter and is deferred.
+\end{rem}
+
+\section{Estimators, metrics, and the rigor protocol}\label{sec:est}
+
+\subsection{The oracle}
+
+\begin{definition}[Oracle]
+For replicate $r$, run the student's update for every $S\subseteq[k]$ under the same seed, obtaining all $2^k$ values
+$Y_r(S)$; compute $\tau_{j,r}$ and $\phi_{j,r}$ from Definitions~\ref{def:itt} and \ref{def:shapley}.
+\end{definition}
+
+\begin{rem}
+The oracle costs $2^k$ language-model calls per replicate: $8$ at $k=3$, $128$ at $k=7$. It is affordable for small
+$k$ and becomes the problem at large $k$, which is why cheaper estimators are tested against it. Its existence depends
+entirely on Assumption~\ref{ass:det}; with a model that cannot be seeded one would replace each $Y_r(S)$ by an average
+over repeated calls, multiplying the cost.
+\end{rem}
+
+\subsection{Estimators}
+
+Each estimator uses a subset of the $2^k$ replays, and the question is how much accuracy is lost.
+
+\begin{definition}[Leave-one-out]
+$\hat\tau^{\LOO}_{j,r} := Y_r([k]) - Y_r([k]\setminus\{j\})$, using $k+1$ replays.
+\end{definition}
+
+\begin{prop}
+$\hat\tau^{\LOO}_{j,r}=\tau_{j,r}$ when $v_r$ is additive. In general it equals the single marginal of $j$ with all other
+messages present, one of the $2^{k-1}$ terms averaged in Definition~\ref{def:itt}.
+\end{prop}
+
+\begin{rem}
+This is the ablation of SHARP (arXiv 2602.08335), a 2026 credit scheme for multi-agent language-model systems that,
+despite its name, masks one agent and replays; we generalize its binary accuracy to our continuous outcome. It is the
+cheapest replay-based estimator with a precedent, and it is biased exactly when messages interact: the margin of a good
+artifact is smaller when a persuasive bad one is also in the prompt. The opposite single context, leave-one-in,
+$Y_r(\{j\})-Y_r(\emptyset)$, costs the same and has the mirror-image bias.
+\end{rem}
+
+\begin{definition}[Equal split]
+Deliver everything once; let $A_r$ be the set of adopted messages. $\hat\tau^{\ES}_{j,r} := Y_r([k])\,\mathbf
+1\{j\in A_r\}/|A_r|$, one replay.
+\end{definition}
+
+\begin{rem}
+This is the accounting an organization does with no replays at all, and it is what delivery-based credit schemes
+amount to. It assigns nothing to rejected messages, so it cannot see the effect of text that was read but not adopted,
+nothing to differences in magnitude among adopted ones, and is undefined when nothing is adopted. It is the zero-cost
+baseline every other estimator must beat.
+\end{rem}
+
+\begin{definition}[Randomized delivery with regression]\label{def:ridge}
+Let the organization deliver each message by an independent coin flip $W_j\sim\Bern(\tfrac12)$ and log every event
+$(W,Y)$. Pooling events over replicates $r$ and draws $i$, fit
+\[
+(\hat a,\hat\beta) := \arg\min_{a,\beta}\;\sum_{r,i}\Big(Y_r(W^{(i)}_r) - a - \textstyle\sum_{j}\beta_jW^{(i)}_{r,j}\Big)^2
++ \lambda\|\beta\|_2^2,
+\qquad \hat\tau^{\mathrm{ridge}}_j := \hat\beta_j .
+\]
+\end{definition}
+
+The model reads: the student's gain is a baseline $a$, what it gets from its own revision with nothing delivered, plus
+a contribution $\beta_j$ for each message that arrived. The coefficients are on the coin flips because the coin flips
+are the treatments. This is the regression form of a randomized experiment with several simultaneous treatments
+(W \S1: the difference in means is the regression on the treatment indicator), and the datamodels estimator of Ilyas
+et al.\ (2022) in the credit setting.
+
+\begin{prop}
+With $\lambda=0$ and independent Bernoulli($\tfrac12$) deliveries, $\hat\beta_j\to\tau_j$ as the number of events
+grows, where $\tau_j$ is the replicate-averaged effect $\frac1R\sum_r\tau_{j,r}$.
+\end{prop}
+\begin{proof}
+The design is orthogonal, so the least-squares coefficient on $W_j$ converges to $\E[Y\mid W_j=1]-\E[Y\mid W_j=0]$,
+which is $\tau_j$ by Proposition~\ref{prop:ident}; interactions are averaged over the other coin flips, not assumed
+away.
+\end{proof}
+
+\begin{rem}[Why ridge, and what it does and does not estimate]
+The penalty $\lambda\|\beta\|^2$ shrinks the coefficients toward zero, trading a little bias for variance when events
+are few relative to messages; at $k=3$ with hundreds of events it is immaterial, and it matters in the regime the
+estimator exists for, many messages and one event per student-generation. Alternatives: plain least squares; the lasso
+when most messages do nothing; interaction terms $W_jW_l$ to recover the pairwise structure that $\phi$ weights;
+replicate fixed effects to absorb the large between-student baselines. The estimator costs no replays beyond the
+deliveries the organization randomizes anyway, which is its reason to exist, and it estimates the \emph{average}
+credit across students and generations, not any one student's. That distinction is the content of
+Proposition~\ref{prop:floor}.
+\end{rem}
+
+\begin{definition}[Singles plus pairs]
+Replay the empty set, each singleton and each pair, $1+k+\binom k2$ replays, and set
+\[
+\alpha_{j,r} := Y_r(\{j\})-Y_r(\emptyset),\qquad
+\gamma_{jl,r} := Y_r(\{j,l\})-Y_r(\{j\})-Y_r(\{l\})+Y_r(\emptyset),
+\]
+with $\hat\tau^{\SP}_{j,r}$ the average of Definition~\ref{def:itt} in which any missing $Y_r(S)$ with $|S|\ge3$ is
+imputed from $\alpha$ and $\gamma$ assuming no higher-order interaction.
+\end{definition}
+
+\begin{rem}
+The replay pattern is that of Li et al.\ (2026, arXiv 2608.29228), who search singletons and pairs for the minimal
+message sets that flip a failed run. It is the cheapest estimator that sees pairwise interactions; at $k=3$ its seven
+replays are no saving over the oracle's eight, and it pays off at $k=7$ ($29$ against $128$). Designed delivery
+patterns, Plackett--Burman arrays in place of coin flips, serve the same purpose for the regression estimator and are
+tested in the same arm.
+\end{rem}
+
+\subsection{Metrics}
+
+\begin{definition}[Per-replicate accuracy]
+For an estimator $\hat\tau$ and replicate $r$,
+\[
+\mathrm{RMSE}_r := \Big(\tfrac1k\sum_j(\hat\tau_{j,r}-\tau_{j,r})^2\Big)^{1/2},\qquad
+\rho_r := \mathrm{Spearman}\big((\hat\tau_{j,r})_j,(\tau_{j,r})_j\big),\qquad
+e_r := \mathbf 1\{\sgn\hat\tau_{j^\ast,r}\neq\sgn\tau_{j^\ast,r}\},
+\]
+where $j^\ast$ is the planted harmful message. Each is aggregated over replicates by the interquartile mean, with a
+$95\%$ interval from bootstrap resampling of replicates within stratum.
+\end{definition}
+
+\begin{rem}[Why these three]
+Credit feeds budget allocation, so errors of magnitude cost compute; root mean square penalizes large misses more than
+mean absolute error, which is the right sensitivity for that use. Routing decisions need only ordering, hence the rank
+correlation; with three messages it takes only four values and is a coarse check, as Kendall's $\tau$ would be. The
+sign error on the harmful message is the safety question: does credit at least say that harm was harmful. The
+interquartile mean with bootstrap intervals is the recommendation of Agarwal et al.\ (2021) for small numbers of runs,
+so that one bad seed cannot drive a verdict. A calibration slope, the regression of estimate on truth, would say whether
+an estimator's error is a constant scale factor and should be added.
+\end{rem}
+
+\begin{prop}[Floor for pooled estimators]\label{prop:floor}
+Let $\hat\tau_j$ be any estimator that returns the same value for every replicate. Then
+\[
+\E_r\big[(\hat\tau_j-\tau_{j,r})^2\big]\;\ge\;\Var_r(\tau_{j,r}),
+\]
+with equality when $\hat\tau_j=\E_r\tau_{j,r}$.
+\end{prop}
+\begin{proof}
+Add and subtract $\bar\tau_j=\E_r\tau_{j,r}$ and expand; the cross term vanishes.
+\end{proof}
+
+\begin{rem}
+The regression estimator of Definition~\ref{def:ridge} is pooled, so its per-replicate root mean square error is
+bounded below by the between-replicate standard deviation of the truth, however many events it sees. A per-replicate
+accuracy criterion therefore asks a pooled estimator a question it cannot answer, and the fair criterion for it is its
+error against the replicate-averaged credit $\bar\tau_j$. Two targets follow: per-student credit, available only by
+replay; and population-average credit, available from randomized delivery at no extra cost. Pre-registrations must say
+which one an estimator is judged against.
+\end{rem}
+
+\subsection{Rigor protocol}\label{sec:rigor}
+
+\begin{implementation}[Deal separation]
+Every generation draws three disjoint sets of deals from the shared stream: \emph{feedback} deals, whose worst traces
+the model sees; \emph{verification} deals, on which received artifacts are judged; \emph{evaluation} deals, on which
+$Y$ is computed and which the model never sees. The generalization gap, evaluation score minus feedback-deal score, is
+logged per artifact. Deals are independent draws from one fixed distribution, so a random split is the correct one;
+the walk-forward discipline of time series is needed only across generations, where it takes the form of the frozen
+ladder below.
+\end{implementation}
+
+\begin{implementation}[Pre-registration]
+Before a run, one page fixes: the question; the setting; the estimand; the known or planted truth where one exists;
+the design (what is paired, randomized, blocked); the metrics; the decision rules with thresholds; the minimum effect
+worth detecting; a pilot of five seeds to estimate variance, then the number of seeds by a power calculation; the
+stopping rule; what would falsify the approach; compute and cost. Amendments after the pilot are logged with a
+timestamp, never silently edited. The ledger (\texttt{files/prereg/LEDGER.md}) keeps every pre-registration and its
+outcome, negatives included.
+\end{implementation}
+
+\begin{implementation}[Null populations, evidence ladder, multiplicity]
+The whole pipeline is run with a null stub that only adds noise, giving the null distribution of every reported metric;
+figures carry null bands. A result is accepted only when the pre-registered effect's interval excludes zero at the
+declared minimum effect on two local models (the second as a blocking factor). The Benjamini--Hochberg procedure at
+$q=0.1$ is applied across the confirmatory tests with $p$-values in the ledger; threshold rules are acceptance
+criteria, not tests, and exploratory contrasts are reported with their $p$-values outside the family. Every curve is
+plotted against tokens and seconds; local runs cost nothing but are timed.
+\end{implementation}
+
+\begin{implementation}[Frozen ladder]
+In population runs every generation's artifacts are kept, and the current population is cross-played against every
+past generation and the anchor set, so improvement is measured against fixed opponents and partners rather than
+against a moving population; the league Nash assigning small weight to past generations is the non-cycling check
+(AlphaStar, Vinyals et al.\ 2019).
+\end{implementation}
+
+\section{Experiments}\label{sec:exp}
+
+Each experiment states what it is for, what it is, why it is worth doing now, how it is done, its decision rule and
+its cost. The single-student designs share one driver; the population designs share another. Status tags are [not
+run], [pilot only] (a five-seed pilot was run to fix the design; its numbers are in the ledger and are not results),
+and [run].
+
+\begin{experiment}[C1: which credit estimator to trust]\status{pilot only; full run on one model block}
+\emph{For.} Causal credit over a teaching graph, the second edge claim.
+\emph{What.} A student with incumbent $\pi_0$ receives $k=3$ messages carrying Piers, Flawed with persuasive prose and
+honest low evidence, and a copy of its own bot. The oracle replays all eight delivery subsets; the estimators of
+\S\ref{sec:est} are scored against it.
+\emph{Why.} Credit for students' improvement is what makes teaching in an agent's interest, and the nearest published
+schemes have no empirical validation or no code; an estimator we trust every generation is a prerequisite for any
+organizational experiment.
+\emph{How.} Two strata, verification on (self-play on $200$ deals, replace if better) and off; replicates $R$ from a
+five-seed pilot by the power rule at a one-point minimum effect on the primary contrast; a second arm with $k=7$ (four
+null teachers added) for singles-plus-pairs and Plackett--Burman against an exhaustive oracle on five seeds; a
+replication block on the second model.
+\emph{Decision rule.} An estimator is accepted if, in both strata and both blocks, Spearman interquartile mean $\ge0.9$
+with bootstrap lower bound $\ge0.8$, root mean square error $\le2$ points, and sign error on Flawed $\le5\%$; among
+accepted, the cheapest. Primary contrast: error of the regression estimator minus error of leave-one-out, paired by
+replicate.
+\emph{Cost.} $2^3\times R\times2$ local calls.
+\end{experiment}
+
+\begin{experiment}[C1b: pooled estimators against the population-average credit]\status{not run}
+\emph{For.} The same claim, with the criterion matched to what a pooled estimator estimates
+(Proposition~\ref{prop:floor}).
+\emph{What and how.} Same replays as C1; the regression estimator (coin flips, and Plackett--Burman patterns) is
+judged by its error against $\bar\tau_j$ with a bootstrap interval over replicates, at one event per student-generation
+to mimic a running organization.
+\emph{Decision rule.} Accept if the error against $\bar\tau_j$ is at most one point with the interval below $1.5$, in
+both blocks.
+\end{experiment}
+
+\begin{experiment}[C2: does withholding unverified text remove the influence of bad ideas]\status{pilot only}
+\emph{For.} Robustness to persuasive-but-wrong ideas, the fifth edge claim.
+\emph{What.} The setting of C1 with a \emph{quarantine} rule: a message reaches the revision prompt only after its
+code passes verification. Under Assumption~\ref{ass:det} the effect of a withheld message is zero by construction, so
+the quantity with empirical content is the effect of a rejected message's text \emph{without} quarantine: the contrast
+between Flawed and the re-sent own bot under verification on, paired by replicate.
+\emph{Decision rule.} Claim that rejected text influences the learner if that contrast's interquartile mean is at least
+two points with the bootstrap interval excluding zero, in both blocks; claim quarantine is costless for good teachers if
+the Piers effect under quarantine is within one point of its effect without.
+\end{experiment}
+
+\begin{experiment}[D1: breakdown point of verification, with reaction rules]\status{not run on a model}
+\emph{For.} The fifth edge claim at the group level: how much contamination the organization tolerates.
+\emph{What.} One group of $n$ students, $G$ generations, broadcast routing. Each delivered message is independently
+replaced with probability $\varepsilon$ by a Flawed-family artifact with persuasive prose and honest evidence. Two
+factors: $\varepsilon\in\{0,0.1,0.2,0.3,0.5\}$ and the \emph{reaction rule}, the rule by which a student treats what it
+receives.
+\emph{Why.} In robust statistics the breakdown point is the contamination an estimator tolerates; here the
+organization is the estimator and bad messages are contamination. Byzantine-robustness results give fraction
+thresholds for consensus rules and memory-poisoning defenses give attack rates; the breakdown curve for execution-based
+verification in a learning population was not found (Appendix~\ref{app:novelty}).
+\emph{How.} Sabotage is Bernoulli with known probability, so exposure probabilities are known (W Theorem~12.1).
+Outcome: the group score at generation $G$ (Definition~\ref{def:group}), paired on deals. Breakdown point $\varepsilon^\ast$: the
+smallest $\varepsilon$ at which the group score falls below $70\%$ of its uncontaminated value, interpolated between
+grid points. Variance by the finite-population estimator with the projected dependency graph; permutation test of the
+sharp null of no $\varepsilon$ effect within each rule. Pilot on the null stub, then five seeds per cell on the model
+at reduced size, then $R$ by power.
+\emph{Decision rule.} Claim that a rule raises the breakdown point if $\varepsilon^\ast(\text{rule}) -
+\varepsilon^\ast(\text{read everything})\ge0.2$ with the interval excluding zero, in both blocks.
+\end{experiment}
+
+The reaction rules are defined here because they are the object D1 compares.
+
+\begin{definition}[Reaction rules]
+On receiving $m=(a,e)$, a student may: (i) \emph{read everything}: verify $a$, adopt by the adoption rule, and let the
+revision call see $m$ regardless of the verdict (the baseline); (ii) \emph{quarantine}: let the revision see $m$ only
+if $a$ passed verification; (iii) \emph{evidence-gated reading}: let the revision see $m$ only if the signed evidence
+$e$ exceeds the student's own score; (iv) \emph{idea trial}: implement the conventions of $m$ in a sandboxed branch, test
+the branch, and let the revision see $m$ only if the branch beats the incumbent; (v) \emph{trust weighting}: weight
+$m$ by the teacher's credit history under a nonstationary bandit; (vi) \emph{critical social learning}: adopt
+provisionally and revert if the next evaluation is worse (Enquist, Eriksson and Ghirlanda, 2007).
+\end{definition}
+
+\begin{rem}[Trade-offs among the rules]
+Quarantine costs nothing and guarantees zero influence from unverified messages, but discards a good idea whose code
+happens to fail, and delays reading until verification has run. Evidence-gated reading is free and uses only signed
+numbers, but score is not relevance: a weaker teacher with one useful specific idea is ignored. The idea trial is
+verification of ideas rather than of artifacts, the principled rule, at the price of one extra language-model call per
+message, which doubles the cost of a teaching event. Trust weighting and critical social learning act over
+generations rather than within one, so they need the population runs and are deferred; the former has a cold-start
+and lock-in risk, the latter accepts transient damage and needs a paired test to revert reliably, which the sequential
+test of B1 supplies.
+\end{rem}
+
+\begin{experiment}[B1: verification as a sequential test]\status{run, engine only}
+\emph{For.} The cost side of verification.
+\emph{What.} Each adoption decision is a paired test on per-deal differences $d_1,d_2,\dots$ between candidate and
+incumbent, with mean $\delta$ and standard deviation $\sigma$. Wald's sequential probability ratio test continues
+until the log-likelihood ratio leaves $[\log\tfrac{\beta}{1-\alpha},\log\tfrac{1-\beta}{\alpha}]$; its expected
+sample size at error rates $\alpha,\beta$ is of order $2\sigma^2\log(1/\alpha)/\delta^2$.
+\emph{How.} A bank of candidate--incumbent pairs with $\delta$ measured on $2{,}000$ deals; fixed $N\in\{50,100,200,400\}$
+against the sequential test at matched error rates; false adoptions, misses near $\delta=1$, and deals used.
+\emph{Decision rule.} Adopt the sequential test as the default verification rule if it matches the fixed-$N$ error rates
+with at least $30\%$ fewer deals at $\delta=1$. Expected regret in score points should be reported alongside.
+\end{experiment}
+
+\begin{experiment}[A1: transmission fidelity and the accumulation prediction]\status{pilot only}
+\emph{For.} The formal model, the fourth edge claim.
+\emph{What.} Send a student a known-good artifact (Piers, self-play $v_T$) as code, as prose, or as both; the student
+revises once; measure the copy. Copy loss $\alpha(\mu):=v_T-\E\,\hat V(S',S')$ and copy dispersion $\beta(\mu)$ per
+medium $\mu$, and the sufficiency ratio $\rho(\mu):=\E\,\hat V(S',T)/v_T$, the cross-play of the copy with its
+teacher relative to the teacher's self-play. Henrich's (2004) model predicts mean skill change per generation
+$-\alpha+\beta(0.577+\ln N)$ when learners copy the best of $N$ exemplars with Gumbel copy error; the sign predicts
+whether a small population improves, and a check population tests the sign.
+\emph{Why.} Fidelity rather than population size decides accumulation in that theory; its parameterization and a
+code-versus-prose comparison were not found for language-model agents.
+\emph{How.} Thirty replicates per medium with the feedback deals varied (at temperature zero a sampling seed does not
+vary the output); verification off; all copies scored on one common deal set. The pilot showed the copy distribution
+to be a cluster at the teacher's level plus a tail of failed copies, so the Gumbel dispersion is the wrong summary: the
+fidelity of a medium is to be reported as a failure probability plus a within-cluster loss, and the prediction derived
+from that mixture before the check populations run.
+\emph{Decision rule.} Medium claim if $\alpha(\text{prose})-\alpha(\text{code})\ge1$ with the interval excluding
+zero; model-support claim if the predicted sign matches the observed sign in at least eight of ten population seeds
+per medium, in both blocks.
+\end{experiment}
+
+\begin{experiment}[R1: recombination across lineages]\status{not run}
+\emph{For.} The claim that teaching combines discoveries from different lineages.
+\emph{What.} Plant two complementary partial conventions in two agents (one a good discard rule, one a good hint rule,
+each alone worth little), and ask whether, and how quickly, the population produces an artifact that has both, under
+isolated, full and island topologies. This is the two-path design of Derex and Boyd (2016) with program-writing agents.
+\emph{How.} Outcome: generations until an artifact beats the better of the two parents by a pre-set margin on
+evaluation deals, with the lineage graph showing both parents in its ancestry; null band from the null stub.
+\end{experiment}
+
+\begin{experiment}[H1: horizon at fixed budget]\status{not run; the lab's central hypothesis}
+\emph{What.} The same total budget split as twenty generations with large per-generation budgets versus two hundred
+with small ones, with and without teaching. If many small generations win only when teaching is on, long-running is
+doing the work the thesis says it does.
+\emph{How.} Frozen ladder; trajectory metrics (slope in the last third against the first third; changepoints;
+retained innovations, artifacts that beat the archive and still have descendants $k$ generations later).
+\end{experiment}
+
+\begin{rem}[Deferred]
+Groups competing for compute under allocation rules, migration rates, selection rules such as clade-level credit, and
+learned routing are implemented as frozen, tested policies and are not run until the single-student and small-group
+results exist; a factorial over them is a post-funding experiment.
+\end{rem}
+
+\section{Build and status}\label{sec:build}
+
+\begin{implementation}[Engine and anchors]
+The Hanabi Learning Environment is vendored at a pinned commit and built from source; bots see a fixed observation
+schema and act through a sandbox (import whitelist, guarded attribute access, timeouts, a watchdog) so that a bot
+cannot read its own cards or the file system. The adapter reproduces the published anchor scores move for move. Games
+export to the \texttt{hanab.live} replay format, so any game can be watched.
+\end{implementation}
+
+\begin{implementation}[Local model and determinism]
+Agents run on an open-weight mixture-of-experts model (Qwen3.6-35B-A3B, 4-bit) served by MLX on the development
+machine, with sampling seed and temperature zero: identical requests return identical text across sessions, which is
+Assumption~\ref{ass:det} in practice. A second model (Gemma~4 26B-A4B) is the replication block. No paid model is in
+the loop. Calls run one at a time, since batching on the server breaks reproducibility.
+\end{implementation}
+
+\begin{implementation}[Harness]
+Artifacts are content-addressed with harness-signed evidence; every language-model call is recorded and replayable;
+runs checkpoint atomically and resume byte-identically; configurations are frozen by digest; the single-student driver
+implements the oracle and every estimator of \S\ref{sec:est}; the population driver implements the policies of \S\ref{sec:game}.5
+with the group-level ones frozen. The test suite exercises determinism, the sandbox, the estimators on synthetic truths,
+the credit identities, and crash-resume.
+\end{implementation}
+
+\section{Next steps}
+\begin{enumerate}
+\item Pre-register D1 with the reaction-rule factor and C1b; run their pilots on the model.
+\item Replicate C1 on the second model, so that an estimator verdict can be accepted rather than only rejected.
+\item Re-register C2 around the rejected-text contrast; re-register A1 around the mixture summary of fidelity.
+\item R1 and H1 on a small population once the single-student results are in.
+\end{enumerate}
+
+\appendix
+\section{Novelty notes}\label{app:novelty}
+From targeted searches of arXiv on 2026-10-06; venues were not checked separately. Phrasing in any public document
+follows these.
+\begin{itemize}
+\item \emph{Credit.} Message-level credit in multi-agent language-model systems is an active area: Shapley with process
+rewards (Yang et al.\ 2025, arXiv 2511.10687, conceptual); counterfactual replay for failure localization (Li et al.\
+2026, arXiv 2608.29228); Aumann--Shapley attribution at scale (Tang et al.\ 2026, arXiv 2605.11404); SHARP (arXiv
+2602.08335). Not found: a randomized-delivery regression checked against exact seeded replay as a teacher's causal
+effect on a paired-deal student.
+\item \emph{Breakdown point.} Fraction thresholds for consensus under corrupted agents (Liu et al.\ 2026, arXiv
+2604.17139; Lee et al.\ 2026, arXiv 2605.09076); memory-poisoning gates with attack rates (MAPLE-Guard, arXiv
+2608.00426). Not found: a breakdown curve for execution-based verification in a learning population.
+\item \emph{Fidelity.} Transmission-chain studies of language models (Perez et al.\ 2024, arXiv 2407.04503 and
+2403.08882); generational cooperation (Vallinder and Hughes 2024, arXiv 2412.10270); peer-verified accumulation (POLIS,
+arXiv 2507.21166). Not found: Henrich's parameterization or a code-versus-prose comparison for agents.
+\end{itemize}
+
+\section{Glossary}
+Deal: one shuffled deck. Policy, bot: a deterministic program from observation to move. Self-play, cross-play: score of
+a bot with itself, with another. Anchor: a fixed reference bot. Artifact: code plus conventions document. Agent: a
+language-model-driven owner of one artifact. Message, evidence: an artifact with harness-signed scores. Verification,
+adoption: testing a received artifact; replacing one's own. Corpus, touch log: a group's store of artifacts; the
+record of who read what. Generation: one round of Algorithm~\ref{alg:step}. Lineage graph: parents and descendants of
+artifacts. Group, group score: a subset with shared routing and corpus; mean within-group cross-play. Replicate: a change
+of experiment seed. Intent-to-treat effect, Shapley credit: Definitions~\ref{def:itt} and \ref{def:shapley}.
+\end{document}

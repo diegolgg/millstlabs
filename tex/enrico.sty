@@ -1,0 +1,110 @@
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{xcolor}
+
+% Create shortcuts for new and renew commands
+\newcommand{\nc}{\newcommand}
+\nc{\rnc}{\renewcommand}
+
+% Initialize theorems and related constructions
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{ass}[theorem]{Assumption}
+\newtheorem{notation}[theorem]{Notation}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{construction}[theorem]{Construction}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem*{rem}{Remark}
+
+% Custom
+\definecolor{problemblue}{RGB}{0,0,128}
+\nc{\hint}{\textcolor{teal}{\textit{Hint:} }}
+\renewenvironment{proof}[1][\textcolor{black}{Proof}]{\noindent{#1.} }{\hfill$\square$}
+\newtheoremstyle{problemstyle}
+  {3pt}% space above
+  {3pt}% space below
+  {}% body font
+  {}% indent amount
+  {\color{problemblue}\bfseries}% theorem head font
+  {.}% punctuation after theorem head
+  { }% space after theorem head
+  {\color{problemblue}\bfseries\thmname{#1}\thmnumber{ #2}\normalfont\thmnote{ (#3)}}% theorem head spec
+\theoremstyle{problemstyle}
+\newtheorem{problem}{Problem}[section]
+
+% Problem counter and custom item
+\newcounter{problemcounter}
+\setcounter{problemcounter}{0}
+\nc{\problemitem}[1]{%
+    \stepcounter{problemcounter}%
+    \item[\textbf{Problem \theproblemcounter.\arabic{enumi} (#1).}]%
+}
+
+% Mathrm
+\rnc{\d}{\mathrm{d}}
+
+% Mathbb
+\nc{\E}{\mathbb{E}}
+\nc{\R}{\mathbb R}
+\nc{\Z}{\mathbb Z}
+\nc{\I}{\mathcal I}
+\nc{\Q}{\mathbb Q}
+\rnc{\P}{\mathbb P}
+
+% Mathcal
+\nc{\A}{\mathcal A}
+\nc{\D}{\mathcal D}
+\nc{\F}{\mathcal F}
+\nc{\G}{\mathcal G}
+\nc{\B}{\mathcal B}
+\nc{\C}{\mathcal C}
+\nc{\N}{\mathcal N}
+
+% Basic stats
+\nc\pperp{\protect\mathpalette{\protect\pperP}{\perp}}
+\def\pperP#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\nc{\Var}{\text{Var}}
+\nc{\Cov}{\text{Cov}}
+\nc{\Cor}{\text{Cor}}
+\nc{\Corr}{\text{Corr}}
+\nc{\Mult}{\text{Mult}}
+
+% Distributions
+\rnc{\I}{\mathbb{I}}
+\nc{\Beta}{\text{Beta}}
+\nc{\GGamma}{\text{Gamma}}
+\nc{\Bern}{\text{Bern}}
+\nc{\Bin}{\text{Bin}}
+\nc{\Expo}{\text{Expo}}
+\nc{\Unif}{\text{Unif}}
+\nc{\Pois}{\text{Pois}}
+\nc{\Wei}{\text{Wei}}
+\nc{\Geom}{\text{Geom}}
+\nc{\Dir}{\textup{Dir}}
+\nc{\Normal}{\mathcal{N}}
+
+% Stat-related variables
+\rnc{\t}{\mathbf{t}}
+\nc{\s}{{s}}
+\nc{\x}{{x}}
+\nc{\y}{{y}}
+\nc{\w}{{w}}
+\nc{\z}{{z}}
+\rnc{\r}{{r}}
+\rnc{\k}{{k}}
+\rnc{\j}{{j}}
+\nc{\m}{{m}}
+\nc{\n}{{n}}
+\rnc{\i}{{i}}
+\nc{\p}{\mathbf{p}}
+\rnc{\a}{\mathbf{a}}
+\rnc{\b}{\mathbf{b}}
+\nc{\g}{\mathbf{g}}
+\rnc{\t}{\mathbf{t}}
+\nc{\X}{\mathbf{X}}
+\nc{\Y}{\mathbf{Y}}
+\rnc{\O}{\mathcal{O}_\prec}
