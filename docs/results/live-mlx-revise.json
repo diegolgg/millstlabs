@@ -1,0 +1,38 @@
+{
+ "accepted": false,
+ "admissible": true,
+ "base_url": "http://127.0.0.1:8080/v1",
+ "calls_in_generation": [
+  {
+   "input_tokens": 8110,
+   "output_tokens": 2399,
+   "seconds": 44.638,
+   "tag": "revise"
+  }
+ ],
+ "candidate_first_error": "UnboundLocalError: cannot access local variable 'c' where it is not associated with a value",
+ "candidate_illegal_rate": 0.4780701754385965,
+ "candidate_lines": 226,
+ "candidate_selfplay_mean": 0.0,
+ "date": "2026-10-06 22:19",
+ "failed_revisions": 0,
+ "generation_seconds": 45.3,
+ "model": "mlx-community/Qwen3.6-35B-A3B-4bit",
+ "parent_selfplay_mean": 14.875,
+ "repaired": 0,
+ "reproducible": {
+  "identical_text": true,
+  "output_tokens": 2203,
+  "seconds_each": 36.0
+ },
+ "revise_call": {
+  "input_tokens": 8110,
+  "output_tokens": 2399,
+  "seconds": 44.638
+ },
+ "sampling": {
+  "max_tokens": 8192,
+  "seed": 0,
+  "temperature": 0.0
+ }
+}

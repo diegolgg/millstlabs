@@ -72,6 +72,12 @@ class LLMConfig:
     batch: bool = False
     repair_attempts: int = 1
     stub: dict[str, Any] = field(default_factory=dict)  # StubConfig fields
+    # openai_compat backend (llm/openai_compat.py): a local MLX (or other OpenAI-compatible) server
+    base_url: str = "http://127.0.0.1:8080/v1"
+    seed: int = 0  # sampling seed, sent in the request body and part of the cache key
+    temperature: float = 0.0
+    request_timeout_s: float = 1200.0
+    extra_body: dict[str, Any] = field(default_factory=dict)  # merged verbatim into the request body
 
 
 @dataclass
@@ -235,8 +241,11 @@ def validate(cfg: ExperimentConfig) -> None:
             raise ConfigError(f"evaluation.{k} must be >= 0")
     if e.selfplay_games < 1:
         raise ConfigError("evaluation.selfplay_games must be >= 1")
-    if cfg.llm.backend != "stub":
-        raise ConfigError("only the stub backend exists in this build (no API backends were run or written)")
+    if cfg.llm.backend not in ("stub", "openai_compat"):
+        raise ConfigError("llm.backend must be stub | openai_compat (no paid API backend exists in this build)")
+    if cfg.llm.backend == "openai_compat" and cfg.llm.model.startswith("claude"):
+        raise ConfigError("openai_compat targets a local open-weight server: set llm.model to the served model "
+                          "(e.g. mlx-community/Qwen3.6-35B-A3B-4bit)")
     if cfg.llm.cache_mode not in ("record", "replay", "replay_strict", "off"):
         raise ConfigError("llm.cache_mode must be record | replay | replay_strict | off")
     if cfg.budget.unit not in ("calls", "tokens", "usd"):

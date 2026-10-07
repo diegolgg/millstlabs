@@ -1,7 +1,7 @@
 """LLM layer interface: Request / Response, the Backend protocol, prices and the cost ledger (spec section 6).
 
-Only the stub backend exists in this build. The Anthropic and OpenAI-compatible backends named in the spec are
-deliberately not written yet (no key tonight, and untested SDK code is worse than none); they plug in behind the same
+Backends: the stub (stub_backend.py) and an OpenAI-compatible backend for local open-weight servers
+(openai_compat.py, targeting mlx_lm.server). No paid-API (Anthropic) backend is written; it would plug in behind the same
 `Backend` protocol and the cache/ledger without touching anything else.
 """
 

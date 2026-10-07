@@ -34,6 +34,18 @@ from .config import ExperimentConfig
 LOGS = ("generations", "artifacts", "messages", "ledger", "touch", "provenance")
 
 
+def make_backend(cfg: ExperimentConfig):
+    """The inner LLM backend named by the config (the cache and ledger wrap it)."""
+    if cfg.llm.backend == "openai_compat":
+        from ..llm.openai_compat import OpenAICompatBackend, OpenAICompatConfig
+
+        c = cfg.llm
+        return OpenAICompatBackend(OpenAICompatConfig(base_url=c.base_url, seed=c.seed, temperature=c.temperature,
+                                                      request_timeout_s=c.request_timeout_s,
+                                                      extra_body=dict(c.extra_body)))
+    return StubBackend(StubConfig(**cfg.llm.stub))
+
+
 class RunContext:
     def __init__(self, cfg: ExperimentConfig, out: Path | None):
         self.cfg = cfg
@@ -52,7 +64,7 @@ class RunContext:
         if cfg.llm.cache_mode != "off":
             cache_dir = Path(cfg.llm.cache_dir) if cfg.llm.cache_dir else (self.out / "llm_cache" if self.out else None)
             cache = CallCache(cache_dir) if cache_dir else None
-        self.backend = CachedBackend(StubBackend(StubConfig(**cfg.llm.stub)), cache, cfg.llm.cache_mode, self.ledger)
+        self.backend = CachedBackend(make_backend(cfg), cache, cfg.llm.cache_mode, self.ledger)
         self.store = ArtifactStore(self.out / "artifacts" if self.out else None)
         self.provenance = Provenance(self._p("provenance"))
         self.touch = TouchLog(self._p("touch"))

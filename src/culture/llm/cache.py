@@ -1,4 +1,5 @@
-"""Record / replay cache for LLM calls, keyed by sha256(backend, model, effort, system, messages, max_tokens, seed_tag).
+"""Record / replay cache for LLM calls, keyed by sha256(backend, model, effort, system, messages, max_tokens, seed_tag,
+and the backend's sampling parameters such as the seed and temperature).
 
 Modes:
 - `record`: always call the backend and store the response (overwrites).
@@ -17,6 +18,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -29,8 +31,12 @@ class CacheMiss(KeyError):
     pass
 
 
-def request_key(backend_name: str, req: Request) -> str:
-    blob = json.dumps(req.key_material(backend_name), sort_keys=True, ensure_ascii=False)
+def request_key(backend_name: str, req: Request, extra: dict[str, Any] | None = None) -> str:
+    """`extra` holds backend sampling parameters (seed, temperature, ...); the stub has none, so its keys are unchanged."""
+    material = req.key_material(backend_name)
+    if extra:
+        material["sampling"] = extra
+    blob = json.dumps(material, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(blob.encode()).hexdigest()
 
 
@@ -84,20 +90,22 @@ class CachedBackend:
         return resp
 
     def complete(self, req: Request) -> Response:
-        key = request_key(self.name, req)
+        key = request_key(self.name, req, self.inner.key_extra() if hasattr(self.inner, "key_extra") else None)
         if self.cache is not None and self.mode in ("replay", "replay_strict"):
             entry = self.cache.get(key)
             if entry is not None:
                 return self._serve(req, key, entry)
             if self.mode == "replay_strict":
                 raise CacheMiss(f"replay_strict: no cached response for {req.tag} {req.seed_tag} ({key[:12]})")
+        t0 = time.perf_counter()
         resp = self.inner.complete(req)
+        latency = round(time.perf_counter() - t0, 3)
         resp.request_key = key
         self.misses += 1
         if self.cache is not None and self.mode != "off":
             self.cache.put(key, {"response": resp.to_dict(), "run": req.meta.get("run"), "tag": req.tag,
                                  "seed_tag": req.seed_tag})
-        self.ledger.record(req, resp)
+        self.ledger.record(req, resp, extra={"latency_s": latency})  # wall time of the backend call (volatile)
         return resp
 
     def complete_batch(self, reqs: list[Request]) -> list[Response]:
