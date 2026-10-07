@@ -1,0 +1,17 @@
+# C1 pilot on the stub (fix round 1, step 14 part 1): proves the single-student pipeline end to end.
+# k = 3 teachers (Piers; Flawed with persuasive prose; the student's own bot re-sent), exhaustive delivery (8 replays
+# per replicate per stratum), 5 replicates, both strata. Zero model calls.
+name: c1_pilot_stub
+k: 3
+teachers: [piers, flawed_persuasive, self]
+delivery: exhaustive
+replicates: [0, 1, 2, 3, 4]
+generation: 1
+ridge_lam: 1.0
+ridge_runs: 8
+base:
+  experiment_seed: 100
+  evaluation: {selfplay_games: 300, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0, workers: 8}
+strata:
+  verified: {org: {verification: {name: selfplay, n: 200}, adoption: replace_if_better}}
+  unverified: {org: {verification: none, adoption: replace_if_better}}

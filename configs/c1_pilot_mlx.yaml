@@ -1,0 +1,19 @@
+# C1 pilot on the local MLX server (fix round 1, step 14 part 2): 80 revise calls (8 replays x 5 replicates x 2 strata),
+# temperature 0, sampling seed = replicate (in the cache key), request timeout 1200 s. Zero cost.
+# Same design as configs/c1_pilot_stub.yaml.
+name: c1_pilot_mlx
+k: 3
+teachers: [piers, flawed_persuasive, self]
+delivery: exhaustive
+replicates: [0, 1, 2, 3, 4]
+generation: 1
+ridge_lam: 1.0
+ridge_runs: 8
+base:
+  experiment_seed: 100
+  evaluation: {selfplay_games: 300, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0, workers: 8}
+  llm: {backend: openai_compat, model: mlx-community/Qwen3.6-35B-A3B-4bit, base_url: "http://127.0.0.1:8080/v1",
+        temperature: 0.0, max_tokens: 8192, request_timeout_s: 1200}
+strata:
+  verified: {org: {verification: {name: selfplay, n: 200}, adoption: replace_if_better}}
+  unverified: {org: {verification: none, adoption: replace_if_better}}
