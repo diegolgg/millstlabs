@@ -1,0 +1,12 @@
+# A1 parameters on the stub (Overnight 2, step 5): same design as configs/a1_params_mlx.yaml; proves the pipeline. Zero model calls.
+name: a1_params_stub
+teacher: piers
+media: [code, prose, both]
+replicates: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+generation: 1
+eval_experiment_seed: 299
+eval_games: 300
+N: 4
+base:
+  experiment_seed: 300
+  evaluation: {selfplay_games: 300, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0, workers: 4}

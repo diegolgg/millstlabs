@@ -39,3 +39,27 @@ For each medium: 4 students, copy-the-best-with-verification-off, 10 generations
 LLM telephone-game and cultural-evolution line (Perez et al. 2024, arXiv 2407.04503 and 2403.08882; Vallinder and
 Hughes 2024, arXiv 2412.10270; POLIS 2025, arXiv 2507.21166). Henrich's parameterization and a code-versus-prose
 comparison were not found in the 2026-10-06 arXiv check.
+
+## 8. Amendments before the parameter run (2026-10-07 01:34 EDT; logged, not silently edited)
+
+Recorded before any model call for A1. Decision rules (section 5) unchanged.
+
+1. **A1-1, source of replicate variation.** Section 2 says "30 sampling seeds per medium; same deals for all". The
+   program samples at temperature 0, where the sampling seed does not change the output, so 30 sampling seeds on one
+   prompt would give 30 identical copies and beta = 0 by construction. Replicate r instead uses experiment seed
+   300 + r (the feedback traces shown in the prompt differ, as in C1's replicates) and sampling seed r. "Same deals for
+   all" is kept for measurement: every copy, the teacher and the student's incumbent are scored on one common set of
+   300 evaluation deals (experiment seed 299), and v_T is Piers' self-play on those deals (paired), not the 16.99 of
+   the 1,000-game anchor table. Copy dispersion beta is therefore dispersion across prompt contexts at temperature 0,
+   which is the noise source the check populations have; it is not sampling noise.
+2. **A1-2, no adoption and failed copies.** "Verification off" is implemented as verification none plus adoption
+   `never`: the payload is never installed by the harness, so S' is whatever the one revision call writes from the
+   student's incumbent S0 with the message in view. The message carries a content-free cover note identical across
+   media ("I am sending you my strategy below. Use whatever helps you.") and the harness's evidence for Piers; the
+   medium decides whether Piers' bot.py, conventions.md or both are appended to it. A revision that is unparseable or
+   inadmissible after the one repair call leaves the student with S0, so S' = S0 for that replicate (the student's
+   artifact after its revision step, which is what selection sees in a population). Failures are counted per medium and
+   the parameters are also reported over admissible copies only.
+3. **Scope note.** The student's bot and Piers are the same rule-bot template with different CONFIG lines, and Piers'
+   conventions name rule functions that exist in the student's own code. Transmission is therefore easier here than
+   between unrelated codebases; alpha should be read as a lower bound on copy loss for that harder case.
