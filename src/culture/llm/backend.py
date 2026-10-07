@@ -1,8 +1,8 @@
 """LLM layer interface: Request / Response, the Backend protocol, prices and the cost ledger (spec section 6).
 
-Backends: the stub (stub_backend.py) and an OpenAI-compatible backend for local open-weight servers
-(openai_compat.py, targeting mlx_lm.server). No paid-API (Anthropic) backend is written; it would plug in behind the same
-`Backend` protocol and the cache/ledger without touching anything else.
+Backends: the stub (stub_backend.py) and an OpenAI-compatible backend (openai_compat.py) for local open-weight servers
+(mlx_lm.server, $0) and hosted open-weight providers (priced from llm.price_*_per_mtok, capped by llm/spend.py). No
+Anthropic backend is written; `PRICES` below is kept for the budget arithmetic of the stub's simulated runs.
 """
 
 from __future__ import annotations
@@ -21,6 +21,9 @@ PRICES: dict[str, tuple[float, float]] = {
 CACHE_READ_MULT = 0.1
 CACHE_WRITE_MULT = 1.25
 BATCH_MULT = 0.5
+
+
+PROVIDER_FIELDS = ("provider_request_id", "system_fingerprint")
 
 
 @dataclass
@@ -68,9 +71,16 @@ class Response:
     cached: bool = False  # served from the record/replay cache (no new spend)
     request_key: str = ""
     batch: bool = False
+    # hosted providers only (llm/openai_compat.py): the provider's response `id` and `system_fingerprint`. Left out of
+    # to_dict() when None, so local-server cache entries are byte-identical to those written before they existed.
+    provider_request_id: str | None = None
+    system_fingerprint: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
+        for k in PROVIDER_FIELDS:
+            if d.get(k) is None:
+                d.pop(k, None)
         return d
 
     @staticmethod
@@ -127,6 +137,9 @@ class CostLedger:
             "spend_usd": resp.cost_usd, "new_spend_usd": 0.0 if resp.cached else resp.cost_usd,
             "cached": resp.cached, "batch": resp.batch, "request_key": resp.request_key,
         }
+        for k in PROVIDER_FIELDS:  # hosted calls only; local rows are unchanged
+            if getattr(resp, k, None) is not None:
+                row[k] = getattr(resp, k)
         if extra:
             row.update(extra)
         self.rows.append(row)

@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .backend import Request, Response, Usage
+from .spend import usage_cost_usd
 
 DEFAULT_BASE_URL = "http://127.0.0.1:8080/v1"
 DEFAULT_MODEL = "mlx-community/Qwen3.6-35B-A3B-4bit"
@@ -111,7 +112,24 @@ class OpenAICompatBackend:
         cached = ((u.get("prompt_tokens_details") or {}).get("cached_tokens")) or 0
         usage = Usage(input_tokens=max(int(u.get("prompt_tokens", 0)) - int(cached), 0),
                       output_tokens=int(u.get("completion_tokens", 0)), cache_read_input_tokens=int(cached))
-        return Response(text=text, usage=usage, cost_usd=0.0, model=req.model, backend=self.name)
+        if not self.config.hosted:
+            return Response(text=text, usage=usage, cost_usd=0.0, model=req.model, backend=self.name)
+        return Response(text=text, usage=usage, cost_usd=self.price(usage), model=req.model, backend=self.name,
+                        provider_request_id=_opt_str(out.get("id")),
+                        system_fingerprint=_opt_str(out.get("system_fingerprint")))
+
+    def price(self, usage: Usage) -> float:
+        """Dollar cost of a hosted call from the configured per-million-token prices. Provider-cached prompt tokens are
+        charged at the full input rate (never under-counts)."""
+        c = self.config
+        if c.price_in_per_mtok is None or c.price_out_per_mtok is None:
+            raise BackendError("hosted call without llm.price_in_per_mtok / llm.price_out_per_mtok")
+        return usage_cost_usd(usage.input_tokens + usage.cache_read_input_tokens + usage.cache_creation_input_tokens,
+                              usage.output_tokens, c.price_in_per_mtok, c.price_out_per_mtok)
 
     def complete_batch(self, reqs: list[Request]) -> list[Response]:
         return [self.complete(r) for r in reqs]
+
+
+def _opt_str(v: Any) -> str | None:
+    return None if v is None else str(v)
