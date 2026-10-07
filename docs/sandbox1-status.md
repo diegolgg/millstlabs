@@ -1,4 +1,4 @@
-Scope: engineering validation. Everything below ran on the stub LLM backend, except the step-9 backend check: a handful of revise calls to a local open-weight model (Qwen3.6-35B-A3B 4-bit on mlx_lm.server, this machine) to test the OpenAI-compatible backend. Zero paid API calls. Nothing here is evidence about LLM agents or about any organizational mechanism. The only empirical claims are the engine/anchor ground truth (Canaan Piers, IGGI, Flawed reproduced through our adapter), machine throughput, and the measured cost, latency and reproducibility of the local model. Every "agent" score from a run is a perturbed copy of an anchor rule list written by the stub.
+Scope: engineering validation plus three pilots, all at $0 (zero paid API calls). Everything ran on the stub LLM backend or the engine alone, except two things that used a local open-weight model (Qwen3.6-35B-A3B 4-bit on mlx_lm.server, this machine, temperature 0): the step-9 backend check (a few revise calls) and the step-14 C1 pilot (80 replays, 74 model calls). The B1 SPRT study is engine-only on anchor-family bots, and the D1 pilot and the null calibration ran on the stub. The C1 pilot is n = 5 seeds per stratum, sized to plan the real run; it is not a test of any hypothesis. The other empirical claims are the engine/anchor ground truth, machine throughput, and the local model's measured cost, latency and reproducibility. Every "agent" score from a stub run is a perturbed copy of an anchor rule list.
 
 # Sandbox 1 build status (enrico branch)
 
@@ -13,6 +13,7 @@ Scope: engineering validation. Everything below ran on the stub LLM backend, exc
 | 5 analysis toolkit | `e478c6c` | HC + empirical null, DCMM, IF-PCA recover planted answers; applied to dry-run logs; 103 tests |
 | 6 baselines, export | `dfb75cc` | OpenEvolve runs on our Game with the stub LLM; hanab.live export round trip exact on 100 games; 111 tests |
 | fix round 1, steps 1 to 12 | `9fb78c6` to `f06372e` | the 8 review defects fixed with regression tests; local MLX backend (live-checked: bit-reproducible); disjoint feedback/verification/evaluation deals; null calibration (K=40); innovation base rate; 183 passed, 1 skipped (opt-in live test) |
+| fix round 1, steps 13 to 16 | `e3bd512` to `673178b` | C1 single-student driver with exact Shapley oracle; C1 pilot on stub and MLX (80 replays); B1 SPRT vs fixed N (SPRT passes the 30% rule); D1 pilot on the null stub; **205 passed, 1 skipped** |
 
 How to reproduce: `scripts/setup_env.sh`, then `.venv/bin/python -m pytest -q`. Runs: `python -m culture.run --config configs/<x>.yaml --out runs/<x>`, `scripts/run_experiment.py`, `scripts/kill_resume_check.py`, `scripts/phase4_dryruns.py`, `scripts/bench_engine.py`, `scripts/build_notebooks.py probe|transfer|analysis_p5`. Run outputs live in `runs/` (git-ignored).
 
@@ -164,9 +165,10 @@ Tests: **111 passed** (103 + 6 hanablive + 2 baselines), about 2 minutes on this
 
 ## Fix round 1 (2026-10-06): review defects and three new pieces
 
-All steps are commits on `enrico` prefixed "Fix round 1, step N:". Each has a regression test that fails on the code
-before the step and passes after (checked by running the new test file against the previous commit in a throwaway
-worktree). Suite after step 12: **183 passed, 1 skipped** (the skip is the opt-in live MLX test, `CULTURE_LIVE=1`).
+All steps are commits on `enrico` prefixed "Fix round 1, step N:". Each of steps 1 to 13, 15 and 16 has a regression
+test that fails on the code before the step and passes after (checked by running the new test file against the
+previous commit in a throwaway worktree); step 14 is results only. Suite after step 12: 183 passed, 1 skipped; after
+step 16: **205 passed, 1 skipped** (the skip is the opt-in live MLX test, `CULTURE_LIVE=1`).
 
 | step | what changed | guarded by |
 |---|---|---|
@@ -236,6 +238,123 @@ worktree). Suite after step 12: **183 passed, 1 skipped** (the skip is the opt-i
   phase-4 HGM test follows the paired API.
 - `CLAUDE.md` still lists these review defects as open and says the stub is the only backend. I did not edit it (it
   belongs to the planning session).
+
+### Overnight extension: steps 13 to 16
+
+| step | what was built | guarded by |
+|---|---|---|
+| 13 C1 driver | `culture.run.single_student` (CLI `python -m culture.run.single_student --spec ... --out ...`): one weak student (self-play 3.2) and k teachers carrying fixed artifacts (Piers with plain prose; Flawed with persuasive prose and honest low evidence; the student's own bot re-sent; null teachers beyond 3). One replay = one generation from the same student state under one delivered subset: verify/adopt per stratum, one revise call, evaluate, accept if not worse; outcome = held-out paired self-play improvement. Delivery: exhaustive (oracle), bernoulli(p, runs), pb8 (k <= 7), singles_pairs. Replicate r = experiment seed + r and sampling seed r (in the cache key). Writes `replays.jsonl` (with the revise request hash) and `summary.json`; re-runs skip finished replays. `analysis/credit.py`: exact Shapley, ITT tau (Banzhaf), adopter effect (undefined when never adopted), leave-one-out, equal split, ridge on Bernoulli(1/2) delivery pooled across seeds, singles-plus-pairs, Plackett-Burman; RMSE, Spearman, sign error on the sabotaged teacher, replays per seed; IQM with bootstrap intervals; the primary contrast with a noncentral-t power calculation; figure and table. | `tests/test_credit_estimators.py` (efficiency; hand-computed game; additive and second-order games; PB8 orthogonality; metrics; power), `tests/test_single_student.py` (with revision off the oracle recovers the planted engine effects exactly in both strata; the full stub loop; resume) |
+| 14 C1 pilot | `configs/c1_pilot_stub.yaml`, `configs/c1_pilot_mlx.yaml`, `scripts/c1_report.py` → `docs/results/c1-pilot.json`, `c1-pilot-{stub,mlx}.png` and `-table.md` | results only (pipeline tested in step 13) |
+| 15 B1 | `analysis/sprt.py` (fixed N with the current `mean > 0` rule and a one-sided t-test; Wald SPRT with online sigma; operating characteristics; the decision rule), `scripts/b1_sprt.py` → `docs/results/b1-sprt.json` and `.png` | `tests/test_sprt.py` |
+| 16 D1 pilot | `sabotage` config (epsilon, payload, text) applied after delivery with common random numbers across epsilon; messages carry `sabotaged`; `analysis/breakdown.py`; `scripts/d1_pilot.py`, `configs/d1_pilot.yaml` → `docs/results/d1-pilot.json` and `.png` | `tests/test_sabotage.py` |
+
+#### C1 pilot (step 14): k = 3, exhaustive delivery, 5 seeds, both strata, 300 evaluation deals
+
+**MLX** (Qwen3.6-35B-A3B 4-bit, temperature 0): 80 replays, 74 backend calls, 11 cache hits (a prompt identical
+across strata, e.g. nothing delivered), 5 repair calls. About **10.5k tokens per call (2.6k to 2.9k output) and 54 to
+56 s per call**; 1.15 hours of replay time (longer on the wall clock, because B1 and D1 shared the machine during the run). **Admissible: 39 of 40 revisions per stratum.**
+Accepted: 45% (verified), 68% (unverified). **Adoption when delivered**: Piers 100% in both strata; Flawed 100%
+without verification, 0% with it; the re-sent bot is always a duplicate. **Generalization gap** (held-out minus
+feedback-deal score of each candidate): +0.03 (verified) and +0.13 (unverified) points, so no sign of overfitting
+the shown traces at this size.
+
+Per-seed Shapley credit [Piers, Flawed, re-sent bot] in points, with v(none) and v(all):
+
+| stratum | seed 0 | seed 1 | seed 2 | seed 3 | seed 4 |
+|---|---|---|---|---|---|
+| verified | [10.2, -4.6, 1.9] | [5.1, -1.8, -1.7] | [10.4, -3.4, -2.3] | [12.6, -1.6, 3.2] | [5.2, 1.1, -4.6] |
+| unverified | [2.1, -13.2, 1.6] | [3.3, -13.6, -2.7] | [4.2, -4.9, 2.4] | [6.6, -8.5, 4.8] | [5.3, -12.0, -8.4] |
+
+v(none) (the student revising with its own feedback only) is 7.2, 11.9, 9.0, 0.0, 12.7 by seed. The ITT tau values are
+within about 1 point of Shapley (full numbers in `c1-pilot.json`).
+
+Estimators against the Shapley oracle (MLX, IQM over 5 seeds):
+
+| estimator | replays/seed | RMSE verified | RMSE unverified | Spearman (both) | sign error on Flawed |
+|---|---|---|---|---|---|
+| tau (exhaustive ITT) | 8 | 0.74 | 0.71 | 1.00 | 0 |
+| Plackett-Burman | 8 | 0.74 | 0.71 | 1.00 | 0 |
+| ridge, Bernoulli(1/2), pooled | 8 | 2.58 | 3.92 | 1.00 | 0.2 / 0 |
+| singles plus pairs | 7 | 2.95 | 2.85 | 1.00 | 0 |
+| leave-one-out | 4 | 3.16 | 4.38 | 0.87 / 0.67 | 1.0 / 0 |
+| equal split | 1 | 3.99 | 7.44 | 0.87 / 0.00 | 1.0 / 0.4 |
+
+**Primary contrast** RMSE(ridge) - RMSE(leave-one-out): mean -0.79 (verified) and -0.39 (unverified); **between-seed
+SD 1.85 and 0.86**; **R for 80% power at a 1-point minimum effect, two-sided alpha 0.05: 29 (verified) and 8
+(unverified)**. Taking the larger, the full C1 needs about 29 seeds per stratum, under the prereg's cap of 60; at about
+55 s per call that is 8 × 29 × 2 = 464 calls, about 7 hours.
+
+What this pilot does and does not say:
+- At k = 3 the Plackett-Burman design is the full factorial, so it equals tau and is not a cheaper estimator here. The
+  cheap estimators (leave-one-out, equal split, pooled ridge, singles plus pairs) all miss the prereg's RMSE <= 2.0
+  in this pilot. With 5 seeds this is planning information, not a verdict.
+- Under verification, Flawed (always rejected) still gets negative Shapley credit in 4 of 5 seeds (-1.6 to -4.6):
+  its persuasive text changes the revision. But the pure-text placebo (the re-sent bot) also moves outcomes in
+  either direction, by up to 4.6 points with verification and 8.4 without. At n = 5, Flawed's text effect cannot be told apart from prompt-perturbation noise.
+  Treat it as a hypothesis for the full run, not a finding.
+- **Stub pilot** (same design, zero calls) ran first to prove the pipeline; its numbers are in the same JSON and only
+  validate plumbing.
+
+#### B1 (step 15): fixed-N verification versus Wald's SPRT, engine only
+
+Bank: 70 anchor-family bots (random one- or two-rule mutations of Piers and IGGI, plus two graded families: Piers
+with the `play_probably_safe` threshold 0.3 to 0.9 and the extra-lives switch, and IGGI with `play_probably_safe(t)`
+for t from 0.62 to 0.95), 360 ordered pairs. Each pair's delta and sigma come from 2,000 deals; tests use 10 separate
+600-deal blocks per pair. Median sigma 3.6 (the program assumed 3 to 4). 188 pairs have delta <= 0, 90 have delta >= 1,
+82 lie in between. 16 minutes of engine time.
+
+| procedure | false adoption (delta <= 0) | missed, 1 <= delta <= 1.25 | deals (all) | deals near delta = 1 |
+|---|---|---|---|---|
+| SPRT (alpha = beta = 0.05, delta1 = 1) | 0.3% | 10% | 40 | 109 |
+| fixed N = 50, t-test | 0.6% | 50% | 50 | 50 |
+| fixed N = 100, t-test | 0.8% | 24% | 100 | 100 |
+| fixed N = 200, t-test | 0.4% | 12% | 200 | 200 |
+| fixed N = 400, t-test | 0.4% | 0% | 400 | 400 |
+| fixed N = 200, `mean > 0` (current harness rule) | 6.1% | 0% | 200 | 200 |
+
+**Decision rule (program section B1): passes.** Of the fixed-N t-tests on the grid, only N = 400 is as accurate as
+the SPRT, and the SPRT uses **73% fewer deals near delta = 1** (109 vs 400). N = 200 narrowly misses (12% vs 10%
+missed), so against an interpolated N of about 230 the saving would be closer to 50%; either way it clears 30%. A side
+finding: the harness's current rule (adopt if the paired mean is positive) adopts a non-improvement 6% of the time at
+N = 100 to 200, and 8.8% at N = 50.
+
+#### D1 pilot (step 16): breakdown point on the null stub
+
+Four students, 10 generations, in-group broadcast; epsilon in {0, 0.1, 0.2, 0.3, 0.5}; verification on (selfplay
+n = 200) or off; 5 seeds; 50 runs, 17 minutes, zero model calls. The null stub's revisions keep the rule list, so skill
+moves only through copying and sabotage.
+
+| epsilon | 0 | 0.1 | 0.2 | 0.3 | 0.5 |
+|---|---|---|---|---|---|
+| Y_G, verification off | 10.2 | 1.8 | 1.7 | 0.0 | 0.0 |
+| Y_G, verification on | 15.7 | 15.8 | 15.7 | 15.8 | 15.9 |
+| sabotaged messages adopted, off / on | 0 / 0 | 63 / 0 | 116 / 0 | 159 / 0 | 202 / 0 |
+
+eps*(off) = 0.04; eps*(on) is censored (> 0.5); the contrast is at least 0.46 (bootstrap 95% interval [0.43, 0.47],
+censored values at 0.5). The per-cell spread over seeds is the null band (min, max, median in `d1-pilot.json`).
+Note: even at epsilon = 0 the unverified arm ends lower (10.2 vs 15.7), because blind adoption also takes worse honest
+payloads. This pilot proves the pipeline; on the stub the outcome is close to forced, and the model run is what tests
+whether verification is sufficient.
+
+#### Deviations and notes (steps 13 to 16)
+
+- C1 placebo ordering: the driver processes the re-sent bot (and null teachers) before the other messages, while the
+  student still holds that bot, so it is a duplicate acting only through its text. Processed after an adoption,
+  blind adoption would take the old bot back and the "placebo" would carry a large planted effect.
+- C1 Arm 2 (k = 7, Plackett-Burman, singles plus pairs, 128-run oracle) is implemented and unit-tested on synthetic
+  games but was not run.
+- B1: the first two bank versions had no pairs with delta just above 1 (the random mutations change behaviour a lot or
+  not at all), so the decision rule could not be evaluated; the graded families fixed that. The decision rule's first
+  implementation had its "matched" inequality inverted (it compared with fixed N tests less accurate than the SPRT);
+  this was fixed, unit-tested, and re-applied to the saved operating characteristics, which did not change. The JSON
+  carries a note.
+- D1 uses the Flawed anchor itself as the sabotage payload (not a perturbed Flawed family), with the C1 persuasive
+  text.
+- Housekeeping: two byte-identical `" 2"` copies of `analysis/innovation.py` and `tests/test_innovation.py` appeared
+  in the working tree. The repository is under `~/Desktop`, and file sync makes such copies when a file is deleted
+  and recreated quickly. I removed them (they were never committed and never counted in a reported test total). Watch
+  for this when moving files in this directory.
+- Test count at the end: **205 passed, 1 skipped** (the skip is the opt-in live MLX test, `CULTURE_LIVE=1`).
 
 ## Deviations from the spec
 
