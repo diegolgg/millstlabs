@@ -1,4 +1,4 @@
-Scope: offline engineering validation only, on the stub LLM backend. Zero API calls were made, no model and no local model ran, and nothing here is evidence about LLM agents or about any organizational mechanism. The only empirical claims are the engine/anchor ground truth (Canaan Piers, IGGI, Flawed reproduced through our adapter) and machine throughput. Every score produced by an "agent" below is a perturbed copy of an anchor rule list written by the stub.
+Scope: engineering validation. Everything below ran on the stub LLM backend, except the step-9 backend check: a handful of revise calls to a local open-weight model (Qwen3.6-35B-A3B 4-bit on mlx_lm.server, this machine) to test the OpenAI-compatible backend. Zero paid API calls. Nothing here is evidence about LLM agents or about any organizational mechanism. The only empirical claims are the engine/anchor ground truth (Canaan Piers, IGGI, Flawed reproduced through our adapter), machine throughput, and the measured cost, latency and reproducibility of the local model. Every "agent" score from a run is a perturbed copy of an anchor rule list written by the stub.
 
 # Sandbox 1 build status (enrico branch)
 
@@ -11,11 +11,12 @@ Scope: offline engineering validation only, on the stub LLM backend. Zero API ca
 | 3 queue item 1 | `ce56131` | solo vs transfer (unverified / verified), 3 seeds, paired; figure and paired deltas; learning smoke test passes all three claims; 82 tests |
 | 4 mechanisms | `f867e26` | 11 mechanisms, unit tests with known answers, 20-generation dry-run checks all pass; 94 tests |
 | 5 analysis toolkit | `e478c6c` | HC + empirical null, DCMM, IF-PCA recover planted answers; applied to dry-run logs; 103 tests |
-| 6 baselines, export | this commit | OpenEvolve runs on our Game with the stub LLM; hanab.live export round trip exact on 100 games; 111 tests |
+| 6 baselines, export | `dfb75cc` | OpenEvolve runs on our Game with the stub LLM; hanab.live export round trip exact on 100 games; 111 tests |
+| fix round 1, steps 1 to 12 | `9fb78c6` to `f06372e` | the 8 review defects fixed with regression tests; local MLX backend (live-checked: bit-reproducible); disjoint feedback/verification/evaluation deals; null calibration (K=40); innovation base rate; 183 passed, 1 skipped (opt-in live test) |
 
 How to reproduce: `scripts/setup_env.sh`, then `.venv/bin/python -m pytest -q`. Runs: `python -m culture.run --config configs/<x>.yaml --out runs/<x>`, `scripts/run_experiment.py`, `scripts/kill_resume_check.py`, `scripts/phase4_dryruns.py`, `scripts/bench_engine.py`, `scripts/build_notebooks.py probe|transfer|analysis_p5`. Run outputs live in `runs/` (git-ignored).
 
-Spec: `files/sandbox-architecture.md` (left untracked, as found). Package: `src/culture/`. Tests: `tests/`. Setup: `scripts/setup_env.sh`.
+Spec: `files/sandbox-architecture.md` (committed by the planning session in `1c823cc`). Package: `src/culture/`. Tests: `tests/`. Setup: `scripts/setup_env.sh`.
 
 ## Environment and engine
 
@@ -161,6 +162,81 @@ Deviations:
 
 Tests: **111 passed** (103 + 6 hanablive + 2 baselines), about 2 minutes on this machine.
 
+## Fix round 1 (2026-10-06): review defects and three new pieces
+
+All steps are commits on `enrico` prefixed "Fix round 1, step N:". Each has a regression test that fails on the code
+before the step and passes after (checked by running the new test file against the previous commit in a throwaway
+worktree). Suite after step 12: **183 passed, 1 skipped** (the skip is the opt-in live MLX test, `CULTURE_LIVE=1`).
+
+| step | what changed | guarded by |
+|---|---|---|
+| 1 sandbox escape | New `bots/sandbox.py`. Static checks reject dunder names and attributes (short allowlist), string/bytes constants containing `__` (docstrings and `"__main__"` excepted), frame/introspection attributes (`gi_frame`, `f_back`, `f_locals`, `tb_frame`, `mro`, ...), `str.format`/`format_map` except on a literal template without attribute fields, stores into imported modules, private names in imports and class patterns. A token scan marks any artifact mentioning `sys`, `_os`, `_getframe`, `__subclasses__`, `__globals__`, `__builtins__` invalid. Imports return read-only proxy modules with only public, non-module attributes (`collections.abc` proxied as a submodule); `typing.get_type_hints`, `functools.singledispatch(method)`, `random.SystemRandom` removed; `functools.wraps/update_wrapper/total_ordering` and `dataclasses.dataclass/make_dataclass` replaced by checked versions. `getattr/hasattr/setattr` reject dunder, frame and format names, and `_x` names unless the attribute belongs to a class the bot defined; `setattr` only writes to bot-owned objects. Every `obj._x` in the source is rewritten to a run-time check of the same rule (so `self._cache` works and `typing.ForwardRef(...)._evaluate` does not). Each seat gets its own copy of the game description. | `tests/test_sandbox.py`: the four demonstrated escapes fail; 14 run-time and 10 static variants fail; a spy bot's view of its own hand is all `None` while the engine holds real cards; a bot using namedtuples, dataclasses, `functools.wraps`, private attributes on itself, `super()._helper()` still runs clean |
+| 2 swallowed timeout | `HardTimeout` stays a `BaseException`, so `except Exception` cannot catch it; the source check rejects bare `except:` and `except BaseException`; the alarm sets a fired flag and re-arms a 10 ms repeating timer, and a call that returns after the alarm fired counts as a timeout. `evaluate/pool.py` adds a wall-clock watchdog (`future.result(timeout=...)`): an overrunning chunk returns broken results for its seats, its workers are killed, and the pool is rebuilt. | `tests/test_timeout.py`: the review's looping bot is rejected and counted; an `except Exception` loop is stopped within about 2x the limit and counted; a C-level loop that ignores SIGALRM (`sum(range(10**9))`) is stopped by the watchdog in about 1.5 s and the pool keeps working |
+| 3 soft budget cap | The budget is a per-generation pool per group. A call reserves its estimated cost before it is sent (1 call; or prompt estimate plus `max_tokens` tokens; or their dollar cost) and is refused if that exceeds the pool. Refusals go to the ledger with the reason and are excluded from call and usage totals. Teaching cost debits the same pool. | `tests/test_budget.py`: a group of 2 with `per_group_per_generation=1` makes exactly one revise call per generation; the other agent's attempt is refused and logged |
+| 4 HGM labels | Each candidate is recorded with its parent and the parent's self-play on the same generation's deals (re-scored if the parent is not an incumbent). Label: success if child minus parent > margin (default 0), failure if < -margin, **no label on a tie**. Clade counts include the node's own outcome. Records carry `parent_score`. | `tests/test_hgm_paired.py`: a behaviourally identical candidate is never labelled on any of four generations (under the old rule its label depended on which generation's deals the parent was scored on); run labels equal the sign of the paired difference. The phase-4 HGM test moved to the paired API |
+| 5 warm-start race | `run/warmstart.py` authors generation 0 once per population seed into a set keyed by a hash of everything that changes authoring (name, experiment seed, population, game, sandbox limits, LLM settings, prompt hashes), built in a temp directory and renamed into place. `run_experiment` builds the sets first, then forks every condition from them (`population.warm_start_set`); a forked run verifies key and content hashes and makes no generation-0 backend call. | `tests/test_warmstart.py`: three conditions × two seeds have byte-identical generation-0 incumbents, zero generation-0 author/repair calls in any condition's ledger, and the set's ledger holds one author call per agent |
+| 6 cross-play order | Pair jobs are canonical: lower key in seat 0 on even seeds, higher key on odd seeds. | `tests/test_crossplay_symmetry.py`: `crossplay(A,B) == crossplay(B,A)` game for game; the reversed request plays zero new games |
+| 7 bot seed | `bot_seed = sha256(salt, game seed, seat) mod 2^31-1`; the module-level RNG is reseeded with the seat -1 hash, not the deal seed. | `tests/test_bot_seed.py`: identical across processes and `PYTHONHASHSEED` values; no constant stride, not the old formula |
+| 8 real spend | Ledger totals, generation records and the run report add `real_spend_usd` = new spend excluding rows flagged `replayed_within_run`. | `tests/test_real_spend.py`: replaying a run's own calls under the same run id reports the full curve but 0 real spend |
+| 9 local backend | `llm/openai_compat.py`: OpenAI chat-completions over stdlib urllib to `http://127.0.0.1:8080/v1`, model `mlx-community/Qwen3.6-35B-A3B-4bit`; body = model, messages, max_tokens, temperature (0), seed, stream false, plus `extra_body`; timeout 1200 s; usage from the response; cost $0. The backend's seed, temperature and extra_body enter the cache key (stub keys unchanged). The ledger records each call's latency. | `tests/test_openai_compat.py` with a fake HTTP server: request body, usage, extra_body, a different seed misses the cache, clear error when the server is down, one revise through the full agent step |
+| 10 deal separation | New `feedback` seed purpose; per generation the feedback, verification and evaluation deals are disjoint (at most 100,000 games per purpose). Failure traces shown to the LLM come only from the parent's lowest-scoring feedback games. Every generation record has `generalization`: per incumbent and candidate, evaluation score, feedback score and `generalization_gap` = evaluation minus feedback. `evaluation.feedback_games` (None = min(selfplay_games, 40); 0 = no traces). | `tests/test_deal_separation.py` |
+| 11 null calibration | Stub `mode: null`: a revision returns the parent's rule list with a fresh RNG salt (same policy, new random stream). `analysis/null.py` builds per-generation bands over K null populations by conformal order statistics; with K < 39 it falls back to the [min, max] envelope and says so. `figures.between_vs_tokens` and `score_vs_generation` take `null=`. `scripts/null_calibration.py` → `docs/results/null-calibration.json`. | `tests/test_null_calibration.py`: conformal coverage 0.92-0.98 on synthetic draws; null revisions keep the rule list; the band contains the null runs' own metrics |
+| 12 innovation base rate | `analysis/innovation.py`: epsilon per revise context (nothing / feedback_only / feedback_plus_received) with a Beta(1,1) posterior and 95% credible interval; outcomes are paired held-out candidate-minus-parent differences against a declared margin. Records carry `revise_context`. Wired into `notebooks/00_probe.ipynb`. | `tests/test_innovation.py`: planted rates 0.05/0.2/0.5 recovered within 0.02 with covering intervals |
+
+### Results produced in this round
+
+- **Live MLX check (step 9)**, `docs/results/live-mlx-revise.json` and the model's bot `live-mlx-revise-candidate.py`.
+  One agent started from IGGI and made one revise call through the full agent step: **8,110 input and 2,399 output
+  tokens in 45 to 63 s** (three runs; about 50 output tokens/s with an 8k-token prompt). The code was **admissible**
+  (passed the source checks and the smoke game, no repair call), but **48% of its moves raised
+  `UnboundLocalError`**, so it scored 0.0 against its parent's 14.9 on the held-out deals and was not accepted. The
+  sandbox did not cause this: run as plain Python with no sandbox, the same code raises on 66 of 138 moves. Note: admission only
+  rejects a bot whose every smoke-game move fails, so such bots reach evaluation, which then rejects them.
+  **Reproducibility**: the identical revise request sent twice gave bit-identical text, and three separate processes
+  produced the same token counts and the same bug. Ollama was not used (the coordinator measured it as
+  non-reproducible for this model).
+- **Null calibration (step 11)**, K = 40 null populations of `configs/null.yaml` (2 groups of 2, 10 generations,
+  in-group teaching with self-play verification), stub only, 336 s, guaranteed per-point coverage 0.951. Medians at
+  generation 1 → 9: population best 15.6 → 16.5, population mean 14.7 → 15.3, between-group cross-play 14.3 → 14.2,
+  HC statistic 0 (95% band up to about 1.1), retained innovations 0 in all 40 runs. The bands are wide (population
+  best 5.9 to 17.3) because warm starts differ across population seeds. **This null removes innovation, not
+  transfer**: copying a group's best warm start still raises the population mean, so a real run should be read
+  against this band for innovation and against a no-teaching null for transfer.
+- **Innovation probe (step 12)**, stub, margin 0.5, two population seeds per context: 1 of 30 revisions improved in
+  each context (epsilon 0.06, 95% CrI 0.01 to 0.17). The stub ignores context, so equal rates are the expected
+  answer here; the contexts were checked to be applied and the per-revision outcomes differ.
+
+### Deviations and notes
+
+- Step 1 goes beyond the review's list. Each extra rule closes a path found while fixing the listed ones: frame
+  walking through generator `gi_frame` (no dunder needed), `str.format` attribute traversal, `typing.get_type_hints`
+  and `functools.singledispatch` evaluating strings with the real builtins, `functools.update_wrapper` copying
+  arbitrary attributes, dataclass field names injected into generated code, and `ForwardRef._evaluate` reached
+  through a single-underscore attribute (hence the run-time private-attribute guard). This is still not a
+  security boundary against a determined adversary; the watchdog and process isolation are the backstop.
+  Residual: a bot can still monkeypatch a shared standard-library class through an alias (`R = random.Random;
+  R.choice = f`), which would leak into other bots in the same worker process.
+- Step 1 legitimately rejects some LLM idioms: string constants containing `__`, `str.format` on a non-literal,
+  `obj._x` on objects the bot did not define, `except:`. The system prompt now states the rules, and a rejected
+  artifact gets one repair call with the reason.
+- Step 3 changes the budget from equal per-agent shares to a group pool drawn in agent order. Within a generation the
+  first agents in sorted order spend first.
+- Step 8: on a genuine crash and resume the ledger rows of calls made before the crash are truncated, so those calls
+  (paid once) appear only as replays and are not in `real_spend_usd`. `real_spend_usd` is exact for the replay case
+  the review named.
+- Step 9: stdlib urllib, not the `openai` package (no new dependency; the body is exactly what the code writes). There
+  are no Ollama `options`/`think` fields, per the coordinator's change: thinking is disabled when the MLX server
+  starts (`--chat-template-args '{"enable_thinking": false}'`). The same backend talks to Ollama's `/v1` route through
+  `extra_body`, but it is not relied on for determinism.
+- Step 10: when `feedback_games` was 40 for every config, the 1,000-generation test went from about 30 s to 290 s,
+  hence the scaled default.
+- Fallout handled along the way: the stub fixture `tests/fixtures/llm_cache_smoke` was re-recorded after steps 1, 6, 7
+  and 10 (prompt or game changes). `test_analysis`'s crossing check now uses a data-derived threshold (a fixed
+  constant broke whenever the stub curve shifted). `test_evaluate`'s seat assertion follows the canonical rule, and the
+  phase-4 HGM test follows the paired API.
+- `CLAUDE.md` still lists these review defects as open and says the stub is the only backend. I did not edit it (it
+  belongs to the planning session).
+
 ## Deviations from the spec
 
 1. **Observation JSON adds `possible`** (`{"colors": [...], "ranks": [...]}`) to every card, own and partner's. It is HLE's plausibility set, which includes negative information. HLE gives it to every agent and Canaan's agents depend on it. Without it the adapter loses information the raw engine provides, and trajectories cannot match. Partner cards also carry `hints`/`possible` (what the partner knows).
@@ -168,11 +244,11 @@ Tests: **111 passed** (103 + 6 hanablive + 2 baselines), about 2 minutes on this
 3. The hanab.live exporter and reloader live in `game/hanablive.py`, not in `hanabi.py`. HLE's colors map to hanab.live No Variant suits as R, Y, G, B, W -> Red, Yellow, Green, Blue, Purple (W plays Purple).
 4. Evaluation anchors are the native rule-list ports (`piers`, `iggi`, `flawed`), which are about twice as fast and can be passed around as artifacts. They are tested move-for-move identical to the vendored originals (`canaan_*`) on 1,000 seeds.
 5. The soft timeout (50 ms) is counted (`slow_rate`) but not enforced. Replacing a move on wall time would make games depend on machine load. The hard timeout (1 s) is enforced.
-6. **The Anthropic and OpenAI-compatible backends were not written.** The instruction was that the stub is the only backend run tonight, and I judged untested SDK code worse than none. `validate()` refuses any backend other than `stub`. They plug in behind `Backend` with no other change.
+6. **The Anthropic backend is not written** (no paid calls; open weights are the default). The OpenAI-compatible backend exists since fix round 1, step 9, targeting the local MLX server; `validate()` accepts `stub` and `openai_compat`.
 7. The default model is `claude-haiku-4-5` (screening tier per section 17). The spec's `Request` comment says Opus, but section 17 rules Opus out for agents.
 8. `ingest.md` is a prompt fragment rendered into the revise context, not a separate LLM call. `system.md` (the frozen prefix) and `repair.md` were added.
 9. The config digest excludes `runner.generations`, `runner.wall_clock_budget_s`, `evaluation.workers` and `debug`, so a run can be extended or resumed with a different worker count.
-10. Seed tags omit the condition, so all conditions of an experiment get byte-identical warm starts (paired). A second condition's warm-start calls are cache hits, and the ledger marks them `cached` with zero new spend.
+10. Warm starts are authored once per population seed into a shared set that every condition forks from (fix round 1, step 5); conditions make no generation-0 backend calls. (Before: seed tags omitted the condition and the second condition hit the cache, which races with a real backend.)
 11. The diversity "code embedding" is token-count cosine (no embedding model offline). The probe's H-group comparison is a keyword list plus bag-of-words cosine; the spec asked for embedding similarity against the rulebook.
 12. Higher Criticism uses HC+ (only p > 1/n): with paired seeds a near-deterministic improvement has p about 0, and plain HC* explodes.
 13. Paired-delta credit window: before = the student's incumbent at the start of the generation, after = its incumbent at the end, both against the anchor set on that generation's seeds. Messages sent in generation g are received in g+1.
