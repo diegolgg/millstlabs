@@ -124,6 +124,16 @@ def ridge_draws(rows_s: list[dict], spec: dict, si: int, sab: int, n_draws: int 
             "fraction_of_draws_rmse_le_2": float(np.mean([x <= 2.0 for x in rm]))}
 
 
+def pooled_floor(reps: dict) -> dict:
+    """The per-seed RMSE of the best seed-invariant estimator (the oracle's own mean over seeds): a floor for any
+    pooled estimator such as ridge, set by between-seed heterogeneity of the oracle, not by estimation noise."""
+    phi = np.array([r["shapley"] for r in reps.values()])
+    m = phi.mean(0)
+    r = [float(np.sqrt(np.mean((m - p) ** 2))) for p in phi]
+    return {"definition": "per-seed RMSE of the oracle's seed-mean against each seed's oracle (IQM)",
+            "rmse_iqm": S.iqm(r), "between_seed_sd_of_oracle": phi.std(0, ddof=1).tolist()}
+
+
 def verdict(e: dict) -> dict:
     sp, rm, se = e["spearman"], e["rmse"], e["sign_error_rate"]
     checks = {
@@ -336,6 +346,7 @@ def main() -> int:
             "per_seed": {r: {"shapley": [round(v, 3) for v in p["shapley"]], "tau_itt": [round(v, 3) for v in p["tau"]],
                              "adopter_effect": [None if v is None else round(v, 3) for v in p["adopter_effect"]],
                              "v": p["v"]} for r, p in reps.items()},
+            "pooled_estimator_floor": pooled_floor(reps),
             "ridge_pooled": s["ridge_pooled"], "ridge_draw_stratum_index": si,
             "ridge_draw_sensitivity": ridge_draws([r for r in rows if r["stratum"] == stratum], spec, si, sab),
             "operations": {**s["operations"], "by_source": operations(rows, stratum, pilot)},
@@ -356,6 +367,30 @@ def main() -> int:
     passing = [n for n in CONFIRMATORY if all(report["verdicts"][n]["passes_by_stratum"].values())]
     report["overall"] = ("no confirmatory estimator passes" if not passing else
                          "confirmatory estimators passing this block: " + ", ".join(passing))
+    report["section_8_reading"] = (
+        "Applied literally: no confirmatory estimator (i, ii, iii) passes in the Qwen block, so none can be accepted. "
+        "Section 8's fallback ('if no estimator passes at R = 60, causal credit is not available at this cost') is "
+        "conditioned on R = 60; this run used the power-rule R (29 verified, 8 unverified), so the fallback is not "
+        "formally triggered. Evidence that more seeds would not change the verdicts: leave-one-out and equal split "
+        "do not pool, so their per-seed RMSE does not shrink with R; ridge pools, but its per-seed RMSE has a floor "
+        "set by between-seed heterogeneity of the oracle (pooled_estimator_floor: the oracle's own seed-mean scores "
+        "2.19 verified and 3.20 unverified), and 0 of 200 alternative Bernoulli draws pass (ridge_draw_sensitivity). "
+        "The exploratory exhaustive ITT estimator (8 replays per seed, the oracle's own cost at k = 3) passes in both "
+        "strata of this block.")
+    report["multiplicity"] = (
+        "Section 10 counts nine confirmatory tests (three statistics x three estimators) for BH at q = 0.1, but the "
+        "section 8 rules are thresholds on IQMs and bootstrap bounds with no pre-specified test statistic, so no "
+        "p-values exist for them and BH was not applied. The one pre-specified test is the primary contrast (paired "
+        "two-sided t-test, alpha 0.05): p values per stratum are in strata.*.primary_contrast.")
+    report["notes"] = [
+        "The pilot's 5 seeds are the first 5 of each stratum: their 80 replay rows were copied in after a strict "
+        "cache replay with the current code reproduced all 80 bit-identically (y, adoption, acceptance, request keys).",
+        "The ridge's Bernoulli(1/2) 8-run subset per seed is drawn with rng seed (ridge_seed 0, stratum index, seed); "
+        "the stratum index follows the sorted spec.json (unverified 0, verified 1), as in the pilot report "
+        "(docs/results/c1-pilot.json). ridge_draw_sensitivity shows the verdict does not depend on the draw.",
+        "The machine idle-slept 03:50-03:56 and 03:56-04:12 EDT (display off) while a replay was in flight; the "
+        "request completed after wake, and latencies (perf_counter) exclude the sleep. No effect on outputs; about "
+        "22 minutes of wall clock lost. caffeinate was started for the rest of the night."]
     (out / "c1-full.json").write_text(json.dumps(report, indent=1) + "\n")
     figure({**summ, "strata": {x: summ["strata"][x] for x in order}}, null, teachers, names_fig).savefig(
         out / "c1-full.png", dpi=150)
