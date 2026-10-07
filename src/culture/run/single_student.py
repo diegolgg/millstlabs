@@ -11,7 +11,7 @@ generation's evaluation deals (disjoint from the feedback deals shown to the mod
 Replicate r uses experiment seed base + r (different deals, so different traces in the prompt) and LLM sampling seed r
 (in the cache key). Delivery patterns: `exhaustive` (all 2^k subsets: the Shapley oracle), `{name: bernoulli, p,
 runs}`, `pb8` (8-run Plackett-Burman, k <= 7), `singles_pairs`. Strata (e.g. verification on/off) are config
-overrides. Outputs in <out>/: replays.jsonl (one row per replay, with the revise request hash), summary.json, and the
+overrides; `replicates` is a list for every stratum or a dict {stratum: list}. Outputs in <out>/: replays.jsonl (one row per replay, with the revise request hash), summary.json, and the
 figure/table from analysis/credit.py. Re-running skips replays already in replays.jsonl; LLM calls are cached in
 <out>/llm_cache.
 
@@ -83,6 +83,15 @@ def replicate_config(spec: dict[str, Any], stratum: str, r: int, cache_dir: Path
                       "population": {"groups": 1, "agents_per_group": 1, "seed": r, "warm_start": "random"},
                       "org": {"routing": "none", "selection": {"name": "keep_best_k", "k": 5}},
                       "corpus": {"enabled": False}, "llm": llm}, cfg)
+
+
+def stratum_replicates(spec: dict[str, Any], stratum: str) -> list[int]:
+    """Replicate seeds for one stratum: `replicates` is a list (every stratum) or a dict {stratum: list} (the full C1
+    run uses R = 29 verified and R = 8 unverified, from the pilot's power calculation)."""
+    reps = spec["replicates"]
+    if isinstance(reps, dict):
+        return [int(r) for r in reps.get(stratum, [])]
+    return [int(r) for r in reps]
 
 
 def delivery_masks(spec: dict[str, Any], stratum_index: int, r: int) -> list[int]:
@@ -209,7 +218,7 @@ def run_single_student(spec: str | Path | dict, out: str | Path, progress: bool 
     done = {(r["stratum"], r["replicate"], r["mask"]) for r in rows}
     g = int(spec["generation"])
     for si, stratum in enumerate(spec["strata"]):
-        for r in spec["replicates"]:
+        for r in stratum_replicates(spec, stratum):
             masks = [m for m in delivery_masks(spec, si, r) if (stratum, r, m) not in done]
             if not masks:
                 continue

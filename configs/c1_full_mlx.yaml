@@ -1,0 +1,25 @@
+# Full C1 on the local MLX server (Overnight 2, step 1), as pre-registered (files/prereg/C1-credit-estimators.md) and
+# amended (section 15): k = 3, exhaustive delivery, verified stratum R = 29 seeds, unverified stratum R = 8 seeds (R
+# for 80% power at a 1-point minimum effect from the pilot's between-seed SD of the primary contrast). The pilot's 5
+# seeds are the first 5 of each stratum: `name` is kept equal to the pilot's because it enters the LLM cache key
+# (seed_tag), so the pilot's cached calls are reused, and its replay rows are copied in (checked first: the current
+# code reproduces all 80 pilot replays bit-identically from the cache). Everything else is identical to
+# configs/c1_pilot_mlx.yaml. Zero cost.
+name: c1_pilot_mlx
+k: 3
+teachers: [piers, flawed_persuasive, self]
+delivery: exhaustive
+replicates:
+  verified: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+  unverified: [0, 1, 2, 3, 4, 5, 6, 7]
+generation: 1
+ridge_lam: 1.0
+ridge_runs: 8
+base:
+  experiment_seed: 100
+  evaluation: {selfplay_games: 300, crossplay_games: 0, anchor_games: 0, between_group_games: 0, ladder_every: 0, workers: 8}
+  llm: {backend: openai_compat, model: mlx-community/Qwen3.6-35B-A3B-4bit, base_url: "http://127.0.0.1:8080/v1",
+        temperature: 0.0, max_tokens: 8192, request_timeout_s: 1200}
+strata:
+  verified: {org: {verification: {name: selfplay, n: 200}, adoption: replace_if_better}}
+  unverified: {org: {verification: none, adoption: replace_if_better}}

@@ -83,3 +83,20 @@ def test_designed_delivery_patterns(tmp_path):
     sb = load_spec({"k": 3, "delivery": {"name": "bernoulli", "p": 0.5, "runs": 8}})
     assert delivery_masks(sb, 0, 0) == delivery_masks(sb, 0, 0)  # seeded
     assert len(delivery_masks(load_spec({"k": 4, "delivery": "singles_pairs"}), 0, 0)) == 1 + 4 + 6
+
+
+def test_per_stratum_replicates(tmp_path):
+    """`replicates` as a dict runs a different number of seeds per stratum (full C1: R = 29 verified, 8 unverified)."""
+    from culture.run.single_student import stratum_replicates
+
+    s = spec(replicates={"verified": [0, 1], "unverified": [0]},
+             base={"experiment_seed": 7, "evaluation": SMALL, "runner": {"revise": False}})
+    assert stratum_replicates(s, "verified") == [0, 1] and stratum_replicates(s, "unverified") == [0]
+    assert stratum_replicates(spec(), "unverified") == [0, 1]
+    out = tmp_path / "per_stratum"
+    summ = run_single_student(s, out)
+    rows = [json.loads(x) for x in (out / "replays.jsonl").read_text().splitlines()]
+    assert sorted({(r["stratum"], r["replicate"]) for r in rows}) == [("unverified", 0), ("verified", 0),
+                                                                        ("verified", 1)]
+    assert summ["strata"]["verified"]["complete_replicates"] == [0, 1]
+    assert summ["strata"]["unverified"]["complete_replicates"] == [0]
