@@ -17,7 +17,10 @@ class Selection(Policy):
     def __init__(self):
         self.archive: dict[str, list[dict[str, Any]]] = {}  # group -> entries
 
-    def record(self, group: str, aid: str, score: float, parent: str | None, generation: int) -> None:
+    def record(self, group: str, aid: str, score: float, parent: str | None, generation: int,
+               parent_score: float | None = None) -> None:
+        """`parent_score` is the parent's score on the same deals as `score` (paired); rules that label a child as
+        better or worse than its parent use it, never a parent score from another generation's deals."""
         arch = self.archive.setdefault(group, [])
         for e in arch:
             if e["id"] == aid:
@@ -112,25 +115,35 @@ class ShinkaWeighted(Selection):
 
 class HGMCladeTS(Selection):
     """Huxley-Godel Machine parent rule. Each group keeps a tree of artifacts; a node succeeds if it scored above its
-    parent when evaluated. Clade metaproductivity uses success/failure counts over the node's whole subtree,
+    parent on the same deals (paired: the parent is re-scored on the generation's seeds the child was evaluated on).
+    Label rule: success if child - parent > margin, failure if < -margin, and no label (neither) on a tie within the
+    margin, so a behaviourally identical revision never counts either way and the label cannot flip with seed noise.
+    Clade metaproductivity uses success/failure counts over the node's whole subtree including the node itself,
     CMP = nC_s / (nC_s + nC_f); the parent is chosen by Thompson sampling Beta(tau(1 + nC_s), tau(1 + nC_f)).
     UCB-Air widening: an agent expands (makes an LLM revision) only if n^alpha >= |T|, where n counts the group's
     agent-steps and |T| its tree size; otherwise it spends the step re-evaluating (free in this harness), i.e. it skips
     the LLM call. Revisions always join the tree; the agent's incumbent becomes the child (judged by descendants)."""
 
-    def __init__(self, alpha: float = 0.6, tau: float = 1.0):
+    def __init__(self, alpha: float = 0.6, tau: float = 1.0, margin: float = 0.0):
         super().__init__()
-        self.alpha, self.tau = alpha, tau
+        self.alpha, self.tau, self.margin = alpha, tau, margin
         self.tree: dict[str, dict[str, dict]] = {}  # group -> id -> {parent, score, ok}
         self.steps: dict[str, int] = {}
 
-    def record(self, group, aid, score, parent, generation):
+    def label(self, score: float, parent_score: float | None) -> bool | None:
+        if parent_score is None:
+            return None  # no paired parent score: unlabelled rather than compared across different deals
+        d = score - parent_score
+        return True if d > self.margin else False if d < -self.margin else None
+
+    def record(self, group, aid, score, parent, generation, parent_score=None):
         t = self.tree.setdefault(group, {})
         if aid in t:
             t[aid]["score"] = score
             return
-        ok = parent in t and score > t[parent]["score"]
-        t[aid] = {"parent": parent if parent in t else None, "score": score, "ok": bool(ok) if parent in t else None}
+        linked = parent in t
+        t[aid] = {"parent": parent if linked else None, "score": score,
+                  "ok": self.label(score, parent_score) if linked else None}
 
     def clade_counts(self, group: str, aid: str) -> tuple[int, int]:
         t = self.tree.get(group, {})
@@ -139,7 +152,7 @@ class HGMCladeTS(Selection):
             if v["parent"]:
                 kids.setdefault(v["parent"], []).append(k)
         s = f = 0
-        stack = list(kids.get(aid, []))
+        stack = [aid] if aid in t else []  # the node's own outcome counts towards its clade
         while stack:
             k = stack.pop()
             if t[k]["ok"]:

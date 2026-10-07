@@ -160,13 +160,15 @@ def test_shinka_weighted_matches_formula_and_prefers_unexplored_good_parents():
 
 def test_hgm_clade_counts_thompson_and_widening():
     h = HGMCladeTS(alpha=0.6)
+    # parent_score is the parent re-scored on the child's deals (fix round 1, step 4: labels are paired)
     h.record("g", "root", 10.0, None, 0)
-    h.record("g", "good", 12.0, "root", 1)      # success
-    h.record("g", "good2", 13.0, "good", 2)     # success in good's clade
-    h.record("g", "bad", 5.0, "root", 1)        # failure
-    h.record("g", "bad2", 4.0, "bad", 2)        # failure
+    h.record("g", "good", 12.0, "root", 1, parent_score=10.0)    # success
+    h.record("g", "good2", 13.0, "good", 2, parent_score=12.0)   # success in good's clade
+    h.record("g", "bad", 5.0, "root", 1, parent_score=10.0)      # failure
+    h.record("g", "bad2", 4.0, "bad", 2, parent_score=5.0)       # failure
     assert h.clade_counts("g", "root") == (2, 2)
-    assert h.clade_counts("g", "good") == (1, 0) and h.clade_counts("g", "bad") == (0, 1)
+    # clade counts include the node's own outcome (fix round 1, step 4)
+    assert h.clade_counts("g", "good") == (2, 0) and h.clade_counts("g", "bad") == (0, 2)
     rng = random.Random(3)
     picks = [h.choose_parent(AgentState("x", "g"), rng) for _ in range(3000)]
     assert picks.count("good") > picks.count("bad")

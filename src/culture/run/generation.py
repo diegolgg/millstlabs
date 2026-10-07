@@ -69,6 +69,11 @@ def _evaluate_population(ctx: RunContext, g: int, extra: dict[str, list[str]]) -
     ctx.evaluate_many(g, sorted(items.items()))
 
 
+def paired_parent_score(ctx: RunContext, parent_id: str, g: int) -> float:
+    """The parent's self-play mean on generation g's evaluation deals, i.e. the same deals its child was scored on."""
+    return ctx.selfplay(parent_id, ctx.seeds(g))[0]
+
+
 def _refresh_scores(ctx: RunContext) -> None:
     for ag in ctx.agents.values():
         ev = ctx.evals[ag.incumbent]
@@ -264,11 +269,14 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
                              (ctx.agents[a].pending_check or {}).get("previous")) if x] for a in ctx.agents}
     _evaluate_population(ctx, g, extra)
     accepted = {}
+    parent_scores: dict[str, float] = {}
     for a, (cid, parent_id) in sorted(candidates.items()):
         ag = ctx.agents[a]
         c_ev, i_ev = ctx.evals[cid], ctx.evals[ag.incumbent]
         ok = c_ev.illegal_rate <= illegal_max and P["selection"].accept(c_ev.selfplay_mean, i_ev.selfplay_mean)
-        P["selection"].record(ag.group, cid, c_ev.selfplay_mean, parent_id, g)
+        # the parent re-scored on this generation's deals (memoized if it is an incumbent; engine time otherwise)
+        parent_scores[a] = paired_parent_score(ctx, parent_id, g)
+        P["selection"].record(ag.group, cid, c_ev.selfplay_mean, parent_id, g, parent_score=parent_scores[a])
         if ok:
             ag.incumbent = cid
             ag.bump("accepted_revisions")
@@ -314,6 +322,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
         ctx.agents[a].group = dst
     extra_rec = {"teaching": counts | {"sent": len(sent)}, "credit_increments": increments, "allocation": alloc,
                  "parents": {a: p for a, (_, p) in sorted(candidates.items())},
+                 "parent_scores": {a: round(v, 4) for a, v in sorted(parent_scores.items())},
                  "credit_windows": credit_notes, "migrations": moves,
                  "accepted": accepted, "windows": [{"student": w.student, "before": w.before, "after": w.after,
                                                     "offers": [o.__dict__ for o in w.offers]} for w in windows]}
@@ -412,6 +421,7 @@ def _finish(ctx: RunContext, g: int, t0: float, extra: dict[str, Any], candidate
                        "candidate": candidates.get(a, (None,))[0],
                        "parent": candidates[a][1] if a in candidates else None,
                        "candidate_score": (round(ctx.evals[candidates[a][0]].selfplay_mean, 4) if a in candidates else None),
+                       "parent_score": extra.get("parent_scores", {}).get(a),
                        "illegal_rate": ctx.evals[ag.incumbent].illegal_rate, "lines": ctx.evals[ag.incumbent].lines,
                        "start": starts.get(a)}
                    for a, ag in sorted(ctx.agents.items())},
