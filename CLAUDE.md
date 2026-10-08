@@ -4,14 +4,41 @@ Read this first in every session, then `files/external.tex` (the company one-pag
 sandboxes; read it before describing the company or writing anything outward-facing), then
 `files/sandbox-architecture.md` (build spec), `docs/sandbox1-status.md` (what is built and validated),
 `files/lit-map.md`, and `reports/Sandbox game selection lit review.md`.
+
+**Then read Enrico himself, before writing anything to him (added 2026-10-07 at his request).** `enrico/` holds his own
+work (git-ignored, local only). Read, in this order, and read them as samples of what he knows, how he reasons and how
+he writes, not as sources to cite:
+- `enrico/*hcrp_proposal.pdf` (all of it, ~8 pages): how he frames a research question and argues for it.
+- `enrico/*stat221_paper.pdf` (abstract, introduction, methods; ~first 6 pages): how he sets up an estimand, states
+  assumptions and reports results. `enrico/*math91r_writeup.pdf` (introduction and one proof): how he writes math.
+- `enrico/subha-dp/` (skim the most recent note): the DMFT / cavity / DP work he is doing now.
+- `enrico/221-notes.pdf` and `enrico/236/` (skim the tables of contents): the stats he has at his fingertips
+  (adaptive subsampling, chi-square staleness, Higher Criticism, phase transitions, IF-PCA, DCMM, RMT).
+His texts (the samples he pastes) are lowercase, clipped, "lowk / rn / p / bs", one thought per message, no
+scaffolding. Chat with him in that register: no "for / what / why / details" templates, no numbered edge items, no
+defining terms he already knows (he knows grad-level stats, pure math, systems; he does NOT know Hanabi, cultural
+evolution theory, RL or causal inference beyond what the two textbooks below give him). Say the idea, then one
+sentence each on why, why not, and how to do it rigorously, and stop. The structure rules below (estimands, designs,
+acceptance rules) are about the *content* of proposals, not the prose.
+
+**Foundations for RL and causal inference are the two textbooks in `files/`** (uploaded by him for this purpose;
+cite them by section, with page numbers, when a design leans on them):
+- `files/wager__causal-inf.pdf` (Wager, Causal Inference: A Statistical Learning Approach): ch. 1 potential outcomes
+  and randomized experiments; ch. 2-3 regression adjustment and AIPW; ch. 6 adaptive experiments; ch. 10 instruments
+  and noncompliance; ch. 11-12 interference and exposure mappings; ch. 14-15 off-policy evaluation and switchback
+  designs (Thm 15.5 is the bias bound S1 uses).
+- `files/sutton-barto__rl.pdf` (Sutton and Barto, 2nd ed.): ch. 2 bandits and nonstationarity; ch. 5.5 off-policy
+  importance sampling; ch. 12 eligibility traces (the lineage-credit analogue); ch. 13 policy gradient baselines.
+Read the chapter a design needs before proposing it, and say which chapter it came from.
 Diego's sandbox is on `main` (package `millstlabs`); ours is `src/culture/`. Never edit `src/millstlabs`.
 
 ## How to work with Enrico (learned 2026-10-05/06)
 
-- **Structure every proposal as: what it is for (which goal or edge item), what it is at a high level, why it is
-  worth studying, then the technical details.** He said this explicitly. Do not lead with mechanism.
-- **Define terms before using them.** He does not know Hanabi, and he will not guess what "cross-play",
-  "artifact", "touch log" or "corpus" mean. One sentence per term, in a vocabulary block, before the argument.
+- **Every proposal must say what it is for, what it is, why it is worth studying, and how it is done** (he said this
+  2026-10-05). But that is a checklist for the content, not a template for the prose: on 2026-10-07 he said the
+  templated "for / what / why / details" messages read nothing like him. Write it in his register (see above).
+- **Define only the terms he does not know** (Hanabi, cross-play, artifact, touch log, corpus, cultural-evolution
+  terms), one sentence, inline, the first time. Never define statistics or math to him.
 - **Explain games and settings from scratch**: goal, players, cooperative or competitive, what a turn is, a worked
   example. He asked for this after a too-brief description.
 - **Tie everything to the startup's edge, not just to "transfer helps".** He rejected "preseed only needs evidence
