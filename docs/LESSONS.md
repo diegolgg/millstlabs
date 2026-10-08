@@ -21,3 +21,10 @@ change `CLAUDE.md` if it changes a rule.
   rigor lives in per-idea design notes, not theory docs.
 - 2026-10-07: treated "no paid calls" as a design constraint → cost never constrains design; the cap is a safety
   interlock until he trusts the session; he will fund research.
+- 2026-10-08: framed the lab's goal as "show swarms beat independent agents" → wrong. The goal is to make designing,
+  implementing and using swarms less ad hoc, more rigorous and more thoughtful, so swarming is more computationally
+  efficient (speed, scale of compute) and more effective (absolute level). Swarm-vs-isolation is a sanity check, not
+  the thesis. Also: be concise; (a) was 2–3 sentences of content.
+- 2026-10-08: answered design questions (perturbation, payoff, retrieval) with one quick suggestion each → never
+  propose one thing; lay out the design options, their tradeoffs, what the literature (actual arXiv search, recent)
+  and his own notes say, then a recommendation and why. "Literature" means searching arXiv etc., not a litmap.

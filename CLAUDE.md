@@ -16,10 +16,17 @@ Your surface, structured for you and your subagents; he never needs to read it:
 `archive/` is reference only (the old theory notes, pre-registrations, build history). Do not extend it, do not
 read it at session start; `docs/REPO.md` says what is in it if a finding needs a number from there.
 
+## The goal (Enrico's words, 2026-10-08; do not reframe it)
+Not "show swarms beat independent agents". The lab exists to make designing, implementing and using swarms less ad
+hoc, more rigorous and more thoughtful, so that swarming is more computationally efficient (speed and scale of
+compute required) and more effective (absolute level reached). Organization-vs-isolation is a sanity check worth
+running, not the thesis. Every idea is judged by whether it makes swarming cheaper or better, or makes its design
+less ad hoc.
+
 ## Learn the company (in this order)
-1. `notes/hanabi-and-swarms.pdf`: the thesis in plain words, what Hanabi is, how a swarm works on it, and the
+1. `files/external.tex`: the one-pager (team, thesis, both sandboxes).
+2. `notes/hanabi-and-swarms.pdf`: the thesis in plain words, what Hanabi is, how a swarm works on it, and the
    vocabulary (the dials we can turn and the quantities we measure) that every note and finding uses by name.
-2. `files/external.tex`: the one-pager (team, thesis, both sandboxes).
 3. `docs/DIEGO.md`: what Diego has run on `main`, his results, heuristics and open questions, and what is
    orthogonal to us. If `main` has commits after the hash recorded in the registry, spawn a subagent to update
    `docs/DIEGO.md` before proposing ideas.
@@ -38,9 +45,8 @@ infrastructure and no result is a bad one.
 
 ## How to work with Enrico
 Who he is: Harvard '27, MA statistics + BA math. Grad-level stats, pure math, systems (stochastic processes,
-statistical computing, sparse inference / networks / text, DP research, random matrix theory). He does not know
-Hanabi conventions, cultural-evolution theory, or RL / causal inference beyond the two textbooks in `files/`.
-He is not the theory person. He, Diego and Kevin all do results, experiments, ideation. "Rigorous" means the
+statistical computing, sparse inference / networks / text, DP/high-dim stats research, random matrix theory). 
+He does not know Hanabi conventions, cultural-evolution theory, or RL / causal inference beyond the two textbooks in `files/`. He, Diego and Kevin all do results, experiments, ideation. "Rigorous" means the
 experiment is well designed and the idea is well informed, not that there is a theorem.
 
 How to explain things to him, whatever his background: first principles, show don't tell. Never "use method X"
@@ -71,6 +77,9 @@ Rules that came from his corrections (history in `docs/LESSONS.md`):
   week-based timelines.
 - Think big and plain. Ideas that are insightful and well-informed, said simply. Not small, not formal for its
   own sake.
+- Never one quick suggestion. For any design question (a mechanism, a dial, an estimator): the options, their
+  tradeoffs, what the literature says (search arXiv etc. for recent work; "literature" never means a litmap or
+  memory), what his own notes in `enrico/` say if relevant, then a recommendation and why.
 - If unsure, one sharp question. Never assume. Never guess course contents or paper claims.
 - When he corrects you: before anything else, one line in `docs/LESSONS.md`, save it to memory, and if it changes
   a rule, edit this file. That is how sessions stop resetting.

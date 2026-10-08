@@ -1,0 +1,1551 @@
+{
+ "scope": "Zero model calls. Copies rebuilt from runs/a1-params/llm_cache (one cached revise response per copy, parsed against the student's bot as agents.agent.produce does); self-play and cross-play with the teacher (Piers) replayed on the run's 300 common evaluation deals (experiment seed 299, generation 1, purpose eval); seats alternate by deal parity in cross-play.",
+ "reproduction": {
+  "ids_matched": 90,
+  "n": 90,
+  "teacher_selfplay_replay": 16.7,
+  "teacher_selfplay_stored": 16.699999999999996,
+  "max_abs_deviation_from_stored_means": 0.0
+ },
+ "per_copy_noise": {
+  "median_se": 0.12090746708765593,
+  "max_se": 0.6032431549352358,
+  "min_se": 0.0
+ },
+ "definitions": {
+  "compatible": "|V(S',S') - V(S',T)| <= 1 point",
+  "d": "V(S',S') - V(S',T), mean over copies, percentile bootstrap (2,000) over copies",
+  "gap_G": "(V(S',S') + v_T)/2 - V(S',T): cross-play shortfall against the average of the two self-plays",
+  "clone": "rule list parsed from the copy's bot.py equals the teacher's: [[\"hail_mary\", {}], [\"play_safe_card\", {}], [\"play_probably_safe\", {\"threshold\": 0.6, \"require_extra_lives\": true}], [\"tell_anyone_useful_card\", {}], [\"tell_dispensable\", {\"min_information_tokens\": 3}], [\"osawa_discard\", {}], [\"discard_oldest_first\", {}], [\"tell_randomly\", {}], [\"discard_randomly\", {}]]",
+  "successful": "|V(S',S') - v_T| <= 1 point",
+  "contrasts": "paired by replicate seed (same feedback traces in the prompt)"
+ },
+ "summary": {
+  "v_T": 16.699999999999996,
+  "media": {
+   "code": {
+    "all": {
+     "n": 30,
+     "selfplay_mean": 15.038666666666666,
+     "selfplay_ci": [
+      13.551922222222219,
+      16.214008333333332
+     ],
+     "crossplay_mean": 15.659888888888885,
+     "crossplay_ci": [
+      14.764730555555554,
+      16.378608333333332
+     ],
+     "rho": 0.9377178975382569,
+     "rho_ci": [
+      0.8841156021290753,
+      0.9807549900199602
+     ],
+     "compatible": 24,
+     "compatible_frac": 0.8,
+     "compatible_wilson": [
+      0.6269430343619583,
+      0.9049489287811706
+     ],
+     "d_selfplay_minus_crossplay": -0.6212222222222221,
+     "d_ci": [
+      -1.1933416666666665,
+      -0.16444166666666662
+     ],
+     "gap_G": 0.2094444444444418,
+     "gap_G_ci": [
+      0.07271388888888651,
+      0.381779166666664
+     ],
+     "gap_G_median": -3.552713678800501e-15
+    },
+    "clone": {
+     "n": 12,
+     "selfplay_mean": 16.699999999999996,
+     "selfplay_ci": [
+      16.699999999999996,
+      16.699999999999996
+     ],
+     "crossplay_mean": 16.699999999999996,
+     "crossplay_ci": [
+      16.699999999999996,
+      16.699999999999996
+     ],
+     "rho": 1.0,
+     "rho_ci": [
+      1.0,
+      1.0
+     ],
+     "compatible": 12,
+     "compatible_frac": 1.0,
+     "compatible_wilson": [
+      0.7575059904469021,
+      1.0
+     ],
+     "d_selfplay_minus_crossplay": 0.0,
+     "d_ci": [
+      0.0,
+      0.0
+     ],
+     "gap_G": -3.552713678800501e-15,
+     "gap_G_ci": [
+      -3.552713678800501e-15,
+      -3.552713678800501e-15
+     ],
+     "gap_G_median": -3.552713678800501e-15
+    },
+    "nonclone": {
+     "n": 18,
+     "selfplay_mean": 13.931111111111111,
+     "selfplay_ci": [
+      11.827194444444446,
+      15.774828703703703
+     ],
+     "crossplay_mean": 14.96648148148148,
+     "crossplay_ci": [
+      13.657199074074073,
+      16.099407407407405
+     ],
+     "rho": 0.8961964958970948,
+     "rho_ci": [
+      0.8177963517409628,
+      0.9640363717010426
+     ],
+     "compatible": 12,
+     "compatible_frac": 0.6666666666666666,
+     "compatible_wilson": [
+      0.4374946712512044,
+      0.8372122534377007
+     ],
+     "d_selfplay_minus_crossplay": -1.0353703703703703,
+     "d_ci": [
+      -1.8235231481481475,
+      -0.33343981481481505
+     ],
+     "gap_G": 0.34907407407407204,
+     "gap_G_ci": [
+      0.13138888888888692,
+      0.6290856481481458
+     ],
+     "gap_G_median": 0.1783333333333328
+    },
+    "successful": {
+     "n": 19,
+     "selfplay_mean": 16.871228070175437,
+     "selfplay_ci": [
+      16.675087719298244,
+      17.067719298245613
+     ],
+     "crossplay_mean": 16.787017543859648,
+     "crossplay_ci": [
+      16.679298245614035,
+      16.896140350877193
+     ],
+     "rho": 1.0052106313688414,
+     "rho_ci": [
+      0.9987603739888646,
+      1.0117449311902513
+     ],
+     "compatible": 19,
+     "compatible_frac": 1.0,
+     "compatible_wilson": [
+      0.8318207737404363,
+      0.9999999999999999
+     ],
+     "d_selfplay_minus_crossplay": 0.08421052631578956,
+     "d_ci": [
+      -0.002807017543859714,
+      0.18017543859649154
+     ],
+     "gap_G": -0.0014035087719328487,
+     "gap_G_ci": [
+      -0.016052631578950344,
+      0.013596491228066972
+     ],
+     "gap_G_median": -3.552713678800501e-15
+    },
+    "successful_nonclone": {
+     "n": 7,
+     "selfplay_mean": 17.1647619047619,
+     "selfplay_ci": [
+      16.697142857142858,
+      17.531904761904762
+     ],
+     "crossplay_mean": 16.936190476190475,
+     "crossplay_ci": [
+      16.673333333333332,
+      17.135238095238094
+     ],
+     "rho": 1.014143142286855,
+     "rho_ci": [
+      0.9984031936127746,
+      1.0260621613915029
+     ],
+     "compatible": 7,
+     "compatible_frac": 1.0,
+     "compatible_wilson": [
+      0.6456695613241317,
+      1.0
+     ],
+     "d_selfplay_minus_crossplay": 0.2285714285714288,
+     "d_ci": [
+      0.02380952380952347,
+      0.3966666666666673
+     ],
+     "gap_G": -0.0038095238095259276,
+     "gap_G_ci": [
+      -0.042619047619049964,
+      0.036904761904759296
+     ],
+     "gap_G_median": -0.006666666666667709
+    },
+    "wrote_conventions": 3,
+    "copy_illegal_rate_mean": 0.0
+   },
+   "prose": {
+    "all": {
+     "n": 30,
+     "selfplay_mean": 14.880555555555556,
+     "selfplay_ci": [
+      13.925361111111112,
+      15.697211111111109
+     ],
+     "crossplay_mean": 15.653111111111112,
+     "crossplay_ci": [
+      15.006063888888889,
+      16.128013888888894
+     ],
+     "rho": 0.937312042581504,
+     "rho_ci": [
+      0.8985666999334666,
+      0.9657493346640058
+     ],
+     "compatible": 22,
+     "compatible_frac": 0.7333333333333333,
+     "compatible_wilson": [
+      0.5555203815871325,
+      0.8581733675241899
+     ],
+     "d_selfplay_minus_crossplay": -0.7725555555555556,
+     "d_ci": [
+      -1.151227777777778,
+      -0.4103888888888895
+     ],
+     "gap_G": 0.13716666666666455,
+     "gap_G_ci": [
+      -0.013750000000002382,
+      0.34052083333333155
+     ],
+     "gap_G_median": 0.06833333333333069
+    },
+    "clone": {
+     "n": 0
+    },
+    "nonclone": {
+     "n": 30,
+     "selfplay_mean": 14.880555555555556,
+     "selfplay_ci": [
+      13.925361111111112,
+      15.697211111111109
+     ],
+     "crossplay_mean": 15.653111111111112,
+     "crossplay_ci": [
+      15.006063888888889,
+      16.128013888888894
+     ],
+     "rho": 0.937312042581504,
+     "rho_ci": [
+      0.8985666999334666,
+      0.9657493346640058
+     ],
+     "compatible": 22,
+     "compatible_frac": 0.7333333333333333,
+     "compatible_wilson": [
+      0.5555203815871325,
+      0.8581733675241899
+     ],
+     "d_selfplay_minus_crossplay": -0.7725555555555556,
+     "d_ci": [
+      -1.151227777777778,
+      -0.4103888888888895
+     ],
+     "gap_G": 0.13716666666666455,
+     "gap_G_ci": [
+      -0.013750000000002382,
+      0.34052083333333155
+     ],
+     "gap_G_median": 0.06833333333333069
+    },
+    "successful": {
+     "n": 12,
+     "selfplay_mean": 16.641111111111112,
+     "selfplay_ci": [
+      16.350555555555555,
+      16.92083333333333
+     ],
+     "crossplay_mean": 16.583333333333332,
+     "crossplay_ci": [
+      16.438305555555555,
+      16.71975
+     ],
+     "rho": 0.9930139720558884,
+     "rho_ci": [
+      0.9843296739853628,
+      1.0011826347305393
+     ],
+     "compatible": 11,
+     "compatible_frac": 0.9166666666666666,
+     "compatible_wilson": [
+      0.6461200862787544,
+      0.9851349057603305
+     ],
+     "d_selfplay_minus_crossplay": 0.05777777777777704,
+     "d_ci": [
+      -0.1586319444444458,
+      0.3339027777777772
+     ],
+     "gap_G": 0.08722222222221958,
+     "gap_G_ci": [
+      -0.028906250000002465,
+      0.2501423611111089
+     ],
+     "gap_G_median": 0.024166666666666003
+    },
+    "successful_nonclone": {
+     "n": 12,
+     "selfplay_mean": 16.641111111111112,
+     "selfplay_ci": [
+      16.350555555555555,
+      16.92083333333333
+     ],
+     "crossplay_mean": 16.583333333333332,
+     "crossplay_ci": [
+      16.438305555555555,
+      16.71975
+     ],
+     "rho": 0.9930139720558884,
+     "rho_ci": [
+      0.9843296739853628,
+      1.0011826347305393
+     ],
+     "compatible": 11,
+     "compatible_frac": 0.9166666666666666,
+     "compatible_wilson": [
+      0.6461200862787544,
+      0.9851349057603305
+     ],
+     "d_selfplay_minus_crossplay": 0.05777777777777704,
+     "d_ci": [
+      -0.1586319444444458,
+      0.3339027777777772
+     ],
+     "gap_G": 0.08722222222221958,
+     "gap_G_ci": [
+      -0.028906250000002465,
+      0.2501423611111089
+     ],
+     "gap_G_median": 0.024166666666666003
+    },
+    "wrote_conventions": 25,
+    "copy_illegal_rate_mean": 0.05213764987788818
+   },
+   "both": {
+    "all": {
+     "n": 30,
+     "selfplay_mean": 15.506666666666668,
+     "selfplay_ci": [
+      14.44773611111111,
+      16.19487777777778
+     ],
+     "crossplay_mean": 15.953,
+     "crossplay_ci": [
+      15.298205555555553,
+      16.347941666666664
+     ],
+     "rho": 0.9552694610778445,
+     "rho_ci": [
+      0.9160602129075184,
+      0.9789186626746507
+     ],
+     "compatible": 24,
+     "compatible_frac": 0.8,
+     "compatible_wilson": [
+      0.6269430343619583,
+      0.9049489287811706
+     ],
+     "d_selfplay_minus_crossplay": -0.44633333333333325,
+     "d_ci": [
+      -0.8581916666666666,
+      -0.1309611111111115
+     ],
+     "gap_G": 0.15033333333333115,
+     "gap_G_ci": [
+      0.025876388888886662,
+      0.31528333333333136
+     ],
+     "gap_G_median": 0.12583333333333258
+    },
+    "clone": {
+     "n": 1,
+     "selfplay_mean": 16.7,
+     "selfplay_ci": [
+      NaN,
+      NaN
+     ],
+     "crossplay_mean": 16.7,
+     "crossplay_ci": [
+      NaN,
+      NaN
+     ],
+     "rho": 1.0000000000000002,
+     "rho_ci": [
+      null,
+      null
+     ],
+     "compatible": 1,
+     "compatible_frac": 1.0,
+     "compatible_wilson": [
+      0.2065493117918027,
+      1.0
+     ],
+     "d_selfplay_minus_crossplay": 0.0,
+     "d_ci": [
+      NaN,
+      NaN
+     ],
+     "gap_G": -3.552713678800501e-15,
+     "gap_G_ci": [
+      NaN,
+      NaN
+     ],
+     "gap_G_median": -3.552713678800501e-15
+    },
+    "nonclone": {
+     "n": 29,
+     "selfplay_mean": 15.465517241379313,
+     "selfplay_ci": [
+      14.427591954022992,
+      16.18644827586207
+     ],
+     "crossplay_mean": 15.927241379310344,
+     "crossplay_ci": [
+      15.260784482758622,
+      16.342537356321845
+     ],
+     "rho": 0.9537270287012184,
+     "rho_ci": [
+      0.913819430105307,
+      0.9785950512767574
+     ],
+     "compatible": 23,
+     "compatible_frac": 0.7931034482758621,
+     "compatible_wilson": [
+      0.6160990944322833,
+      0.9015392985954367
+     ],
+     "d_selfplay_minus_crossplay": -0.4617241379310344,
+     "d_ci": [
+      -0.8711666666666665,
+      -0.13239367816091976
+     ],
+     "gap_G": 0.15551724137930822,
+     "gap_G_ci": [
+      0.029997126436779327,
+      0.31988793103448054
+     ],
+     "gap_G_median": 0.12833333333333385
+    },
+    "successful": {
+     "n": 16,
+     "selfplay_mean": 16.557708333333334,
+     "selfplay_ci": [
+      16.333937499999998,
+      16.789177083333332
+     ],
+     "crossplay_mean": 16.506875,
+     "crossplay_ci": [
+      16.349364583333333,
+      16.664619791666667
+     ],
+     "rho": 0.9884356287425152,
+     "rho_ci": [
+      0.9790038672654693,
+      0.9978814246506988
+     ],
+     "compatible": 16,
+     "compatible_frac": 1.0,
+     "compatible_wilson": [
+      0.8063923170025951,
+      1.0
+     ],
+     "d_selfplay_minus_crossplay": 0.050833333333333175,
+     "d_ci": [
+      -0.09188020833333316,
+      0.21816666666666645
+     ],
+     "gap_G": 0.12197916666666397,
+     "gap_G_ci": [
+      0.03562239583333004,
+      0.24542447916666424
+     ],
+     "gap_G_median": 0.09583333333333144
+    },
+    "successful_nonclone": {
+     "n": 15,
+     "selfplay_mean": 16.548222222222222,
+     "selfplay_ci": [
+      16.31151666666667,
+      16.78511666666667
+     ],
+     "crossplay_mean": 16.494,
+     "crossplay_ci": [
+      16.329772222222218,
+      16.654894444444444
+     ],
+     "rho": 0.9876646706586829,
+     "rho_ci": [
+      0.9778306719893547,
+      0.9972990685296077
+     ],
+     "compatible": 15,
+     "compatible_frac": 1.0,
+     "compatible_wilson": [
+      0.7961166964035129,
+      1.0
+     ],
+     "d_selfplay_minus_crossplay": 0.054222222222222054,
+     "d_ci": [
+      -0.10268333333333315,
+      0.24001666666666624
+     ],
+     "gap_G": 0.13011111111110849,
+     "gap_G_ci": [
+      0.03877777777777565,
+      0.2685611111111088
+     ],
+     "gap_G_median": 0.1233333333333313
+    },
+    "wrote_conventions": 23,
+    "copy_illegal_rate_mean": 0.005600266751542157
+   }
+  },
+  "contrasts": {
+   "prose_minus_code": {
+    "n_pairs": 30,
+    "crossplay": {
+     "point": -0.0067777777777771496,
+     "ci": [
+      -1.0479277777777771,
+      1.0704833333333332
+     ]
+    },
+    "selfplay": {
+     "point": -0.1581111111111106,
+     "ci": [
+      -1.7511722222222217,
+      1.507583333333333
+     ]
+    },
+    "d": {
+     "point": -0.1513333333333335,
+     "ci": [
+      -0.7438500000000001,
+      0.49556944444444423
+     ]
+    },
+    "gap_G": {
+     "point": -0.07227777777777726,
+     "ci": [
+      -0.3403916666666664,
+      0.20916666666666686
+     ]
+    },
+    "compatible": {
+     "point": -0.06666666666666667,
+     "ci": [
+      -0.26666666666666666,
+      0.13333333333333333
+     ]
+    }
+   },
+   "both_minus_code": {
+    "n_pairs": 30,
+    "crossplay": {
+     "point": 0.29311111111111166,
+     "ci": [
+      -0.8020361111111105,
+      1.3822722222222188
+     ]
+    },
+    "selfplay": {
+     "point": 0.46800000000000075,
+     "ci": [
+      -1.2794083333333324,
+      2.288377777777777
+     ]
+    },
+    "d": {
+     "point": 0.17488888888888895,
+     "ci": [
+      -0.5024722222222221,
+      0.8918361111111106
+     ]
+    },
+    "gap_G": {
+     "point": -0.05911111111111064,
+     "ci": [
+      -0.2897236111111112,
+      0.17722638888888925
+     ]
+    },
+    "compatible": {
+     "point": 0.0,
+     "ci": [
+      -0.2,
+      0.23333333333333334
+     ]
+    }
+   },
+   "prose_minus_both": {
+    "n_pairs": 30,
+    "crossplay": {
+     "point": -0.2998888888888888,
+     "ci": [
+      -1.1220527777777782,
+      0.579558333333333
+     ]
+    },
+    "selfplay": {
+     "point": -0.6261111111111112,
+     "ci": [
+      -2.011841666666667,
+      0.8177833333333334
+     ]
+    },
+    "d": {
+     "point": -0.32622222222222247,
+     "ci": [
+      -0.9093138888888892,
+      0.28913055555555484
+     ]
+    },
+    "gap_G": {
+     "point": -0.013166666666666623,
+     "ci": [
+      -0.25472361111111125,
+      0.23790972222222231
+     ]
+    },
+    "compatible": {
+     "point": -0.06666666666666667,
+     "ci": [
+      -0.26666666666666666,
+      0.13333333333333333
+     ]
+    }
+   }
+  }
+ },
+ "copies": [
+  {
+   "replicate": 0,
+   "medium": "code",
+   "copy": "047ee1e8d51086e0",
+   "V_SS": 17.633333333333333,
+   "V_ST": 17.173333333333332,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 0,
+   "medium": "prose",
+   "copy": "1c9b444b4d3cbe39",
+   "V_SS": 14.306666666666667,
+   "V_ST": 15.79,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 0,
+   "medium": "both",
+   "copy": "1c2bc67abcdeac81",
+   "V_SS": 15.99,
+   "V_ST": 16.216666666666665,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 1,
+   "medium": "code",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 1,
+   "medium": "prose",
+   "copy": "d8b02cbd2b4ce3cb",
+   "V_SS": 16.72,
+   "V_ST": 16.69,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 1,
+   "medium": "both",
+   "copy": "8752e9d5dc4bf04d",
+   "V_SS": 15.593333333333334,
+   "V_ST": 15.913333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 2,
+   "medium": "code",
+   "copy": "07aad236b839ab56",
+   "V_SS": 16.923333333333332,
+   "V_ST": 16.906666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 2,
+   "medium": "prose",
+   "copy": "ba65ddf6ca2926e1",
+   "V_SS": 13.003333333333334,
+   "V_ST": 14.426666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 2,
+   "medium": "both",
+   "copy": "f880f368f09c616d",
+   "V_SS": 14.696666666666667,
+   "V_ST": 15.953333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 3,
+   "medium": "code",
+   "copy": "8326265006346d2e",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 3,
+   "medium": "prose",
+   "copy": "db169ca12df1f4f6",
+   "V_SS": 15.006666666666666,
+   "V_ST": 15.733333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 3,
+   "medium": "both",
+   "copy": "00ed44fbabf11d00",
+   "V_SS": 13.463333333333333,
+   "V_ST": 14.906666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 4,
+   "medium": "code",
+   "copy": "51d4628c2b61bf31",
+   "V_SS": 15.54,
+   "V_ST": 15.846666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 4,
+   "medium": "prose",
+   "copy": "c4ee1eaf434f3243",
+   "V_SS": 16.28,
+   "V_ST": 16.31,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 4,
+   "medium": "both",
+   "copy": "8eecc02924d46cc1",
+   "V_SS": 15.146666666666667,
+   "V_ST": 15.803333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 5,
+   "medium": "code",
+   "copy": "8c8d04ca8fcc712c",
+   "V_SS": 2.3333333333333335,
+   "V_ST": 8.063333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 5,
+   "medium": "prose",
+   "copy": "47db12b648ef8acd",
+   "V_SS": 16.723333333333333,
+   "V_ST": 16.69,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 5,
+   "medium": "both",
+   "copy": "3fe8957eb8f0d3dc",
+   "V_SS": 16.723333333333333,
+   "V_ST": 16.713333333333335,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 6,
+   "medium": "code",
+   "copy": "b95856f3f00cbdd7",
+   "V_SS": 15.303333333333333,
+   "V_ST": 15.826666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 6,
+   "medium": "prose",
+   "copy": "901836bb095fd9a9",
+   "V_SS": 15.01,
+   "V_ST": 15.726666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 6,
+   "medium": "both",
+   "copy": "04644e13327d0252",
+   "V_SS": 17.373333333333335,
+   "V_ST": 16.873333333333335,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 7,
+   "medium": "code",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 7,
+   "medium": "prose",
+   "copy": "674cf005739d7522",
+   "V_SS": 5.413333333333333,
+   "V_ST": 8.69,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 7,
+   "medium": "both",
+   "copy": "be7713a734741a9d",
+   "V_SS": 16.713333333333335,
+   "V_ST": 16.55666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.16800800254626472,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 8,
+   "medium": "code",
+   "copy": "16f0a6a7d16db8df",
+   "V_SS": 12.74,
+   "V_ST": 14.31,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 8,
+   "medium": "prose",
+   "copy": "0741a539b4a0ad2e",
+   "V_SS": 14.956666666666667,
+   "V_ST": 15.7,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 8,
+   "medium": "both",
+   "copy": "4ace032d7197b52c",
+   "V_SS": 17.22,
+   "V_ST": 17.14,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 9,
+   "medium": "code",
+   "copy": "a4ba0d09fbd474cd",
+   "V_SS": 11.62,
+   "V_ST": 13.763333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 9,
+   "medium": "prose",
+   "copy": "fad20c751c13de2b",
+   "V_SS": 11.48,
+   "V_ST": 14.556666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 9,
+   "medium": "both",
+   "copy": "7a89e7dc067b763b",
+   "V_SS": 16.093333333333334,
+   "V_ST": 16.366666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 10,
+   "medium": "code",
+   "copy": "8326265006346d2e",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 10,
+   "medium": "prose",
+   "copy": "bba27a0b65989475",
+   "V_SS": 15.883333333333333,
+   "V_ST": 16.07,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.1271067074651513,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 10,
+   "medium": "both",
+   "copy": "72f17e7da95e315c",
+   "V_SS": 16.126666666666665,
+   "V_ST": 16.29,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 11,
+   "medium": "code",
+   "copy": "91126048dfb58522",
+   "V_SS": 12.62,
+   "V_ST": 14.226666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 11,
+   "medium": "prose",
+   "copy": "d34a317e1f899454",
+   "V_SS": 15.04,
+   "V_ST": 15.933333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 11,
+   "medium": "both",
+   "copy": "95f69edef1f98179",
+   "V_SS": 16.93,
+   "V_ST": 16.803333333333335,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 12,
+   "medium": "code",
+   "copy": "cc2edba75b0d1a2d",
+   "V_SS": 15.13,
+   "V_ST": 15.733333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 12,
+   "medium": "prose",
+   "copy": "9dfac08e15c4731a",
+   "V_SS": 13.85,
+   "V_ST": 15.583333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 12,
+   "medium": "both",
+   "copy": "3e6a6739c2c6fa1b",
+   "V_SS": 15.65,
+   "V_ST": 16.073333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 13,
+   "medium": "code",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 13,
+   "medium": "prose",
+   "copy": "a61a2225737406ad",
+   "V_SS": 9.173333333333334,
+   "V_ST": 12.303333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.003892493049119555,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 13,
+   "medium": "both",
+   "copy": "72ce1982ebb98284",
+   "V_SS": 16.873333333333335,
+   "V_ST": 15.88,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 14,
+   "medium": "code",
+   "copy": "15fa3dadac0a92a3",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 14,
+   "medium": "prose",
+   "copy": "dbbc1c890896b15e",
+   "V_SS": 16.246666666666666,
+   "V_ST": 16.506666666666668,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 14,
+   "medium": "both",
+   "copy": "ba7ee2976ee2974d",
+   "V_SS": 16.413333333333334,
+   "V_ST": 16.333333333333332,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 15,
+   "medium": "code",
+   "copy": "8326265006346d2e",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 15,
+   "medium": "prose",
+   "copy": "6e430dd5ecfd677b",
+   "V_SS": 15.013333333333334,
+   "V_ST": 15.726666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 15,
+   "medium": "both",
+   "copy": "3de4260361a018fa",
+   "V_SS": 16.153333333333332,
+   "V_ST": 16.29,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 16,
+   "medium": "code",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 16,
+   "medium": "prose",
+   "copy": "e5a7a5bb91a47105",
+   "V_SS": 16.706666666666667,
+   "V_ST": 16.676666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 16,
+   "medium": "both",
+   "copy": "c86b1e33b357940d",
+   "V_SS": 14.53,
+   "V_ST": 15.813333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 17,
+   "medium": "code",
+   "copy": "9e99b5111425d001",
+   "V_SS": 17.633333333333333,
+   "V_ST": 17.173333333333332,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 17,
+   "medium": "prose",
+   "copy": "65dbf9490102e49d",
+   "V_SS": 15.96,
+   "V_ST": 16.55,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.18415328365807376,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 17,
+   "medium": "both",
+   "copy": "4490e64a09998fd7",
+   "V_SS": 15.66,
+   "V_ST": 15.963333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 18,
+   "medium": "code",
+   "copy": "8326265006346d2e",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 18,
+   "medium": "prose",
+   "copy": "48386060a3516541",
+   "V_SS": 15.006666666666666,
+   "V_ST": 15.713333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 18,
+   "medium": "both",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 19,
+   "medium": "code",
+   "copy": "67b235cbeaaef367",
+   "V_SS": 17.633333333333333,
+   "V_ST": 17.173333333333332,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 19,
+   "medium": "prose",
+   "copy": "ff661c9a8e5cdcda",
+   "V_SS": 15.57,
+   "V_ST": 15.913333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.28168053471559135,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 19,
+   "medium": "both",
+   "copy": "eb850895f8265d2d",
+   "V_SS": 14.113333333333333,
+   "V_ST": 15.453333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 20,
+   "medium": "code",
+   "copy": "95cf1858b484ebf3",
+   "V_SS": 15.996666666666666,
+   "V_ST": 16.253333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 20,
+   "medium": "prose",
+   "copy": "5b69d3d746795318",
+   "V_SS": 15.066666666666666,
+   "V_ST": 15.813333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.22618076330341763,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 20,
+   "medium": "both",
+   "copy": "ab282b1e3c6d237f",
+   "V_SS": 15.853333333333333,
+   "V_ST": 16.226666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 21,
+   "medium": "code",
+   "copy": "008d292b10f6dcd6",
+   "V_SS": 11.62,
+   "V_ST": 13.763333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 21,
+   "medium": "prose",
+   "copy": "505ec86012c0c4ac",
+   "V_SS": 17.226666666666667,
+   "V_ST": 16.89666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.176747572815534,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 21,
+   "medium": "both",
+   "copy": "1e092ba6630b62f4",
+   "V_SS": 17.82,
+   "V_ST": 17.106666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 22,
+   "medium": "code",
+   "copy": "63441b0860bfe05b",
+   "V_SS": 15.396666666666667,
+   "V_ST": 15.926666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 22,
+   "medium": "prose",
+   "copy": "c63ded3c50f6267d",
+   "V_SS": 17.633333333333333,
+   "V_ST": 16.316666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 22,
+   "medium": "both",
+   "copy": "93433584939e665f",
+   "V_SS": 14.403333333333334,
+   "V_ST": 16.106666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 23,
+   "medium": "code",
+   "copy": "e326f04e16a94c7c",
+   "V_SS": 3.3966666666666665,
+   "V_ST": 7.983333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 23,
+   "medium": "prose",
+   "copy": "2fe1aea30d891bc9",
+   "V_SS": 13.976666666666667,
+   "V_ST": 15.753333333333334,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 23,
+   "medium": "both",
+   "copy": "71fc7f6d6cc9e0fd",
+   "V_SS": 17.05,
+   "V_ST": 16.80666666666667,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 24,
+   "medium": "code",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 24,
+   "medium": "prose",
+   "copy": "ad7185f56a63aa65",
+   "V_SS": 17.36,
+   "V_ST": 16.98,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 24,
+   "medium": "both",
+   "copy": "088825cef78f23cf",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 25,
+   "medium": "code",
+   "copy": "8326265006346d2e",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 25,
+   "medium": "prose",
+   "copy": "1a42739840cb297a",
+   "V_SS": 14.843333333333334,
+   "V_ST": 15.553333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.33248868778280544,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 25,
+   "medium": "both",
+   "copy": "3897d2a9764c6498",
+   "V_SS": 15.41,
+   "V_ST": 15.81,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 26,
+   "medium": "code",
+   "copy": "03914c935c9ad0cb",
+   "V_SS": 14.906666666666666,
+   "V_ST": 15.4,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 26,
+   "medium": "prose",
+   "copy": "daa6284b18c8279d",
+   "V_SS": 15.4,
+   "V_ST": 16.27,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 26,
+   "medium": "both",
+   "copy": "ee0d3e79296e935c",
+   "V_SS": 15.51,
+   "V_ST": 15.973333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 27,
+   "medium": "code",
+   "copy": "7feff36c8fc9051e",
+   "V_SS": 17.633333333333333,
+   "V_ST": 17.173333333333332,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 27,
+   "medium": "prose",
+   "copy": "29611ade1340714b",
+   "V_SS": 16.246666666666666,
+   "V_ST": 16.533333333333335,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 27,
+   "medium": "both",
+   "copy": "0e8d04f0c2e34c15",
+   "V_SS": 2.9766666666666666,
+   "V_ST": 7.8,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 28,
+   "medium": "code",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 28,
+   "medium": "prose",
+   "copy": "a8d8112791b4a995",
+   "V_SS": 14.606666666666667,
+   "V_ST": 15.406666666666666,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.2318794535469523,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 28,
+   "medium": "both",
+   "copy": "476e084e9b31b150",
+   "V_SS": 15.303333333333333,
+   "V_ST": 15.803333333333333,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 29,
+   "medium": "code",
+   "copy": "215ddf33f458138b",
+   "V_SS": 16.7,
+   "V_ST": 16.7,
+   "same_rule_list_as_teacher": true,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": false
+  },
+  {
+   "replicate": 29,
+   "medium": "prose",
+   "copy": "963d54562b319794",
+   "V_SS": 16.706666666666667,
+   "V_ST": 16.78,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  },
+  {
+   "replicate": 29,
+   "medium": "both",
+   "copy": "462e8716c34c2e36",
+   "V_SS": 16.01,
+   "V_ST": 16.213333333333335,
+   "same_rule_list_as_teacher": false,
+   "copy_illegal_rate": 0.0,
+   "wrote_conventions": true
+  }
+ ]
+}
