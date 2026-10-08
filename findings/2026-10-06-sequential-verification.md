@@ -25,8 +25,9 @@ pair.
 | fixed 200, adopt if mean > 0 (the harness default) | 6.1% | 0% | 200 |
 
 ## What it changes
-The sequential test is the default verification rule. The harness's current "adopt if the mean is positive"
-rule leaks 6% of non-improvements, which is the leak rate a that enters the contagion threshold (idea 3).
+The sequential test should be the default verification rule; it is analysis-only so far (`analysis/sprt.py`)
+and not yet wired into the population harness as a verification option, a thirty-line build. The harness's
+current "adopt if the mean is positive" rule leaks 6% of non-improvements, which is the leak rate a that enters the contagion threshold (idea 3).
 Verification cost is also what makes "many small generations" affordable (idea 11).
 
 ## Caveats

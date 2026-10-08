@@ -1,0 +1,337 @@
+% The explainer. Every session reads this first; every design note and finding uses its terms by name.
+% Compile: cd notes && latexmk -pdf hanabi-and-swarms.tex
+\documentclass[11pt]{article}
+\usepackage{enrico}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\setlist{itemsep=1pt,topsep=3pt}
+\numberwithin{theorem}{section}
+\theoremstyle{definition}
+\newtheorem{example}[theorem]{Example}
+\definecolor{muted}{RGB}{105,112,122}
+\nc{\status}[1]{{\color{muted}[#1]}~}
+\nc{\Vh}{\hat V}
+
+\begin{document}
+\begin{center}
+{\LARGE Organized swarms on Hanabi}\\[5pt]
+{\large What the company does in Sandbox 1, and the words we use for it}\\[7pt]
+Enrico Yao-Bate\qquad October 8, 2026
+\end{center}
+
+\section{What the company is doing}
+
+Mill Street Labs builds long-running populations of agents that discover useful knowledge, share it, and build on it.
+The object of study is the population's organization, not its agents: who teaches whom, how a learner checks what
+it is taught, how credit and compute flow, how groups compete.
+
+The thesis is that such populations can improve collectively through two mechanisms, modelled on how human
+innovation builds on knowledge accumulated over generations. The first is \emph{adaptive social dynamics}: groups
+compete for finite resources, so helping one's group is rewarded even when it costs the individual, and agents revise
+how they cooperate and migrate between groups. The second is \emph{intelligence transfer}: agents are credited for the
+improvement of those they teach, teaching combines discoveries from separate lineages, and the population accrues a
+corpus of verified knowledge.
+
+A natural question is why not test this where it pays. The issue is that ``organization $A$ improves a population
+faster than $B$'' compares two noisy trajectories and is only as good as the evaluator that scores them. A
+\emph{sandbox} is a domain whose evaluator is cheap, exact and absolute, where the counterfactual ``what if this message
+had not been delivered'' can be replayed, and where fixed reference points exist. Sandbox~1 is strategy development in
+skillful games; this document is about Hanabi, the game on this branch (the main branch runs a predator-prey ecology
+and the Flag Game). Sandbox~2 is autonomous research in financial markets, market making on Kalshi, where the evaluator
+is noisy, nonstationary and expensive to replay.
+
+The two are tied by one constraint: everything in Section~\ref{sec:swarm} must carry over to Sandbox~2 with only the
+evaluator swapped, games of Hanabi here and a strategy's profit there. A finding that depends on Hanabi rather than on
+the organization does not count. The dials of Section~\ref{sec:dials} and the measurements of
+Section~\ref{sec:measure} are used by name in every design note and finding.
+
+\section{Hanabi}\label{sec:hanabi}
+
+Hanabi is a cooperative card game; we play it with two players, one team against the deck. The deck has $50$
+cards in five colours: three $1$s, two each of $2,3,4$, and one $5$ per colour. The team builds one stack per colour in
+the order $1,\dots,5$, and the score is the number of cards on the stacks, at most $25$. Each player holds five cards
+facing away, seeing the partner's hand and never their own. The table holds eight clue tokens and three lives. A turn
+is one of three moves. A \emph{clue} spends a token and names one colour or one rank, \emph{touching} every matching
+card in the partner's hand. A \emph{discard} throws away one's own card, regains a token, and draws. A \emph{play}
+puts one of one's cards on its stack: if it is the next rank it scores, otherwise it is a \emph{bomb} and costs a life.
+The game ends when the stacks are complete, when the third life is lost (our engine then scores $0$), or one round after
+the deck runs out.
+
+A count shows why clues are the heart of the game. After the deal $40$ cards remain, and each play or
+discard draws one, so a game that plays all $25$ cards discards at most $17$ (two plays can come after the deck is
+empty). A token comes back only with a discard or a finished stack, so the team can give at most $8+17+5=30$ clues in
+the whole game, about one per card it must play. Literally, a clue states one attribute of the cards it touches, and
+knowing that a card is safe to play takes in general two, its colour and its rank. A team that uses clues only for
+their literal content therefore cannot reach $25$; good teams agree in advance on rules that make a clue mean more than
+it says.
+
+\begin{definition}[Convention]
+A \emph{convention} is a rule, held by both players, that maps a clue in its context to a meaning beyond its literal
+content.
+\end{definition}
+
+\begin{example}[One clue, two meanings]\label{ex:clue}
+The red stack is empty and we clue ``red'', touching a single card. If the card is the red $1$ and we mean ``play it'',
+a partner holding ``a clue on one new card means play it'' plays it blind and scores, while a partner holding ``a
+colour clue means keep this card'' holds it, perhaps all game. If the card is the red $5$, the only one in the deck, and
+we mean ``keep it'', the second partner keeps it and the first plays it, bombs, and caps the red stack at $4$ forever.
+Neither convention is better alone; the outcome of the clue depends only on whether the rule is shared.
+\end{example}
+
+This is what makes Hanabi a laboratory for culture: a convention is worth something only when the partner holds it
+too, so it must be transmitted to have value, and whether two players share one is measurable by letting them play.
+
+\begin{definition}[Deal, bot, self-play, cross-play]
+A \emph{deal} is one shuffled deck, indexed by a seed. A \emph{bot} is a deterministic program $\pi$ from what one
+player sees (the partner's cards, stacks, discards, tokens, clues received, last moves) to a legal move, reset before
+every game. For bots $\pi,\pi'$ and a finite set of deals $\D$, with seats alternating across deals,
+\[
+\Vh_{\D}(\pi,\pi') := \frac{1}{|\D|}\sum_{d\in\D}\mathrm{score}(\pi,\pi';d).
+\]
+$\Vh_{\D}(\pi,\pi)$ is the \emph{self-play} score of $\pi$; $\Vh_{\D}(\pi,\pi')$ for $\pi\neq\pi'$ is their
+\emph{cross-play} score.
+\end{definition}
+
+\begin{remark}[Why cross-play measures shared culture]
+Self-play rewards internal consistency and says nothing about compatibility. Hu et al.\ (\emph{Other-Play}, 2020)
+report reinforcement-learning agents that each score about $24$ with themselves and about $2.5$ with an independently
+trained partner: each converged on private signalling rules the other reads differently, which is
+Example~\ref{ex:clue} at scale. This collapse between independent lineages is the null against which every claim of
+transfer is measured.
+\end{remark}
+
+\begin{definition}[Reference bots]
+A \emph{reference bot} (the code says \emph{anchor}) is a fixed bot with a known score. Ours are three rule bots from
+Canaan et al.\ (AIIDE 2020), each an ordered list of rules in which the first that applies decides the move. Over
+$1{,}000$ deals in our engine: \emph{Piers} $16.99$, the published number reproduced move for move; \emph{IGGI}
+$15.86$ (published $15.99$); \emph{Flawed} $0$, a deliberately bad list.
+Findings call them the $17$-, $16$- and $0$-point bots.
+\end{definition}
+
+Piers, for instance, plays a card known to be playable; else a card at least $60\%$ likely to be playable if it can
+spare a life; else clues a partner's playable card; else discards. Flawed is a similar list that plays any card at least
+$25\%$ likely to be playable and clues at random; it bombs out. Piers is our known-good teacher, Flawed our known-bad
+one. Human players on \texttt{hanab.live} maintain a written rulebook of
+conventions, organized in levels and revised by pull request, and expert pairs following it score about $23$ to $24$.
+
+A game is fast: a few milliseconds on one core, about a millisecond of wall clock with the development machine's twelve
+workers ($1{,}400$ games per second for Piers). A revision by our local model takes about a minute, the wall clock of
+order $10^5$ games. Evaluation is nearly free; model calls are the currency the population spends.
+
+\section{How a swarm works on it}\label{sec:swarm}
+
+Picture a population of programmers, each maintaining their own Hanabi bot, who can send one another their code and
+notes; the game is only the test bench. The \emph{harness} is our code around it: it runs games, verifies, signs
+evidence, enforces budgets, and records every model call.
+
+\begin{definition}[Artifact, agent, incumbent]
+An \emph{artifact} is a bot's code (at most $400$ lines of Python, run in a sandbox that cannot see its own cards or the
+file system) together with a \emph{conventions document}, a plain-language statement of the rules the code implements.
+An \emph{agent} is a process driven by a language model that owns exactly one current artifact, its \emph{incumbent}.
+\end{definition}
+
+The conventions document exists because code is a poor carrier of an idea: a reader must reverse-engineer which rule
+does the work, while ``a clue on one new card means play it'' says it.
+
+\begin{definition}[Revision, selection]
+A \emph{revision} is one model call whose prompt holds the incumbent's code and conventions, a summary of its scores,
+the traces of its three lowest-scoring games on this generation's feedback deals, what it received this generation,
+and up to three artifacts from its group's corpus. It returns new code and conventions, a \emph{candidate}; a
+\emph{selection} rule decides whether the candidate
+replaces the incumbent (default: if it scores at least as well on the same deals).
+\end{definition}
+
+\begin{definition}[Message, evidence]
+A \emph{message} from a \emph{teacher} to a \emph{student} carries an artifact, a note the teacher writes about it (one
+model call), and \emph{evidence}: the artifact's self-play and cross-play with the reference bots, measured and signed
+by the harness. An agent cannot fabricate evidence, only earn it; it can write a persuasive note about a bad bot.
+\end{definition}
+
+\begin{definition}[Verify, adopt, merge, reject]
+To \emph{verify} a received artifact, the received bot and the incumbent each play the same verification deals with
+copies of themselves; the received bot passes if its mean is higher and at most $1\%$ of its moves are illegal. The
+student then \emph{adopts} it (it becomes the incumbent), \emph{merges} it (one model call combining the two), or
+\emph{rejects} it.
+\end{definition}
+
+Verification decides what code the student runs, not what it reads: a rejected message's note and evidence can still
+sit in the next revision prompt. What a learner may read is a separate dial, the reaction rule
+(Section~\ref{sec:dials}), and Section~\ref{sec:known} shows the distinction matters.
+
+\begin{definition}[Corpus, touch log, lineage]
+A group's \emph{corpus} is a bounded store (twenty artifacts) of artifacts with evidence deposited by its members; a
+deposit without harness evidence is refused. Each revision retrieves up to three, and every retrieval is written to the
+\emph{touch log} as (reader, artifact, generation). Every artifact records its \emph{parents}, the incumbent it was
+revised from and anything adopted or merged into it; following parents gives the \emph{lineage graph}. Lineage says
+what a good bot descends from and the touch log what its authors read: together, whose idea it was.
+\end{definition}
+
+\begin{construction}[Generation]\label{con:gen}
+A \emph{generation} is one round in which every agent, in order:
+(1) \emph{receives} the messages routed and delivered to it;
+(2) \emph{verifies} each, and adopts, merges or rejects it;
+(3) \emph{revises} its incumbent and applies the selection rule;
+(4) \emph{evaluates} the incumbent: self-play on the evaluation deals, cross-play with its group and the reference bots;
+(5) \emph{teaches}: sends the incumbent, a note and its evidence to the agents the routing rule names.
+Around these steps the population keeps its books: before them the budget is divided among groups; after evaluation,
+credit is assigned and artifacts are deposited; after teaching, agents migrate.
+\end{construction}
+
+\begin{definition}[Group, group score, compatibility, migration]
+A \emph{group} is a set of agents whose messages are routed mostly among themselves and who share a corpus. Its
+\emph{group score} is the expected score of two distinct members drawn at random, the \emph{within-group cross-play}
+\[
+\mathrm{GS}(g) := \frac{1}{n_g(n_g-1)}\sum_{i\neq j\in g}\Vh(\pi_i,\pi_j).
+\]
+The \emph{compatibility} of groups $g,h$
+is the \emph{between-group cross-play} $\Vh(\pi^\ast_g,\pi^\ast_h)$ of their best bots. \emph{Migration} moves an agent,
+with its incumbent, to another group.
+\end{definition}
+
+This makes culture operational: individually strong but mutually incompatible bots give a low group score. Groups
+that never talk drift to different conventions and their compatibility falls toward the collapse of
+Section~\ref{sec:hanabi}; teaching across groups and migration keep them compatible, and the lineage graph records which
+did the work.
+
+\begin{definition}[Budget]
+Each group has a \emph{budget} of model calls per generation. Every call (revise, teach, merge) debits it; games do not.
+An allocation rule divides a fixed total across groups by their scores or credit, which is how groups compete.
+\end{definition}
+
+\begin{remark}[Two levels that never mix]
+Inside a game, two bots play about sixty turns alone, every move decided by their own code in milliseconds, with no
+model and no other agent involved. The population never plays a game and decides nothing by vote: each agent
+decides what to do with its own bot, and agents interact only through messages, verification, adoption, the corpus, the
+budget and group membership. The game gives an artifact its score; the population changes artifacts.
+\end{remark}
+
+\begin{remark}[The right analogy]
+The closest established frame is genetic programming: artifacts are individuals, the engine is the fitness function,
+the language model is the mutation operator (merging is recombination), verification and adoption are selection, and
+teaching is horizontal transfer, a trait passing sideways, not parent to child. What we vary is not the
+operator but the organization around it; a stronger model is a better operator, and our question is what organization
+adds at a fixed one.
+\end{remark}
+
+\section{The dials}\label{sec:dials}
+
+An experiment fixes everything above and turns some of these dials; the names are used verbatim in design notes.
+Options marked \emph{proposed} are not built.
+
+\begin{description}[leftmargin=0pt,itemsep=0pt]
+\item[Topology.] Which groups can reach which: isolated, full, ring, or islands (isolated plus migration).
+\item[Routing.] Who sends to whom: none, broadcast in the group, its best to all, or $k$ random receivers.
+\item[Delivery.] Whether a routed message arrives: always, or independently with known probability $p$.
+\item[Verification.] None; self-play on $N$ paired deals (default $200$, pass if the mean is higher); that plus
+cross-play with reference bots; adopt, then revert if worse; a sequential test (engine only so far).
+\item[Adoption.] A passed bot replaces the incumbent, is merged with it, or is ignored.
+\item[Credit.] How a student's gain is attributed to teachers: none, equal split among adopted messages, the same
+propagated up the lineage with decay, or regression on randomized delivery.
+\item[Allocation.] Splitting the budget across groups: uniform, proportional to credit, softmax of group score
+with a floor, or Nash averaging over groups' best bots compared deal by deal (so cloning a group buys no budget).
+\item[Selection.] Whether a candidate replaces the incumbent, and which artifact is revised next: hill climbing
+(default), score-weighted parents from the group's archive, or sampling over the archive's lineage tree.
+\item[Migration.] None, random swaps every $m$ generations, or each group's best to the next group.
+\item[Environment change.] Fixed rules, or a switch at a set generation to a variant (four colours; four cards and six
+tokens), to ask whether a population re-adapts.
+\item[Horizon and budget.] Generations, and calls per group per generation. Teaching costs one call per teacher, so
+sharing organizations spend more per generation than isolated ones.
+\item[Reaction rule.] What a revision may read of what was received: everything (default); only messages whose bot
+passed verification (\emph{quarantine}); only those whose evidence beats the learner's score (\emph{evidence-gated},
+proposed); an idea tried in a branch, shown if it wins (\emph{idea trial}, proposed).
+\end{description}
+
+\section{What we measure}\label{sec:measure}
+
+Every comparison is paired: all conditions play the same deals, so deal luck cancels in differences. A \emph{seed}
+fixes deals and model sampling; a \emph{replicate} is a change of seed. The \emph{stub} is a fake model that makes no
+calls; on it, each metric's spread is its \emph{null band}.
+
+\begin{description}[leftmargin=0pt,itemsep=0pt]
+\item[Self-play, cross-play] on held-out deals, within and between groups (Section~\ref{sec:swarm}).
+\item[Frozen ladder.] Every tenth generation each group's best is frozen; the current best plays every earlier frozen
+bot and the reference bots, so progress is measured against fixed partners.
+\item[Calls-to-threshold.] Cumulative model calls when population mean self-play first reaches $17$ or $20$ (censored if
+never); calls, not generations, because organizations differ in cost per generation.
+\item[Retained innovations.] Artifacts that beat their group archive's best when first evaluated and still have
+descendants ten generations later: discoveries that were kept and built on.
+\item[Innovation rate.] $\iota(s)$, the probability that one revision of a bot at level $s$ gains over $0.5$ on
+held-out deals.
+\item[Copy fidelity.] After one revision with a teacher's message in view, the teacher's self-play minus the copy's
+(\emph{copy loss}), and the fraction of copies that reach the teacher's level.
+\item[Leak rate.] $a$, the probability that verification passes a bot that is not better. With \emph{fan-out} $k$
+(receivers per teacher) a bad
+artifact makes about $ka$ new carriers per carrier per generation: to first order it dies out if $ka<1$.
+\item[Breakdown point.] Each delivered message is replaced with probability $\varepsilon$ by a bad bot with a persuasive
+note (\emph{sabotage}); $\varepsilon^\ast$ is the smallest $\varepsilon$ at which the group score falls below $70\%$ of
+its sabotage-free value.
+\end{description}
+
+\paragraph{Per-message credit.} Let a student receive $k$ messages, and let $Y(S)$ be its gain in self-play on the
+evaluation deals when the delivered set is $S\subseteq[k]$. The \emph{credit} of message $j$ is the effect of delivering
+it, averaged over the delivery of the others,
+\[
+\tau_j := \frac{1}{2^{k-1}}\sum_{S\subseteq[k]\setminus\{j\}}\big[\,Y(S\cup\{j\}) - Y(S)\,\big];
+\]
+whatever the student does with $j$ (adopt, reject, or merely read) is inside the effect. Our local model
+(Qwen3.6-35B-A3B, fixed seed, temperature $0$) returns identical text for an identical prompt, so the update is a
+deterministic function of $S$. Every one of the $2^k$ subsets can therefore be replayed, and the counterfactual is
+observed rather than estimated; this \emph{exact replay} is the truth. It costs $2^k$ revisions per student, which a
+population cannot afford, so the
+question is which cheap estimator from ordinary logs (leave-one-out, regression on randomized delivery) agrees with it.
+
+\paragraph{Three deal sets.} Every generation draws three disjoint sets of deals: \emph{feedback} deals, whose worst
+traces the model sees; \emph{verification} deals, on which received bots are judged; and \emph{evaluation} deals, on
+which every reported score is computed and which the model never sees. The reason is selection on noise. A revision
+can fit the feedback deals (a rule that rescues one unlucky hand), and scoring it there would count the fit as skill.
+Verification keeps the better of two bots on its deals, so the kept bot's score there is biased up, for two equally
+good bots by $\sigma_\Delta/\sqrt{2\pi N}$ in expectation ($\sigma_\Delta$ the per-deal standard deviation of their
+score difference, $N$ the number of deals). Small per decision, the bias compounds over generations of selection;
+deals that played no part in any choice remove it. Deals are independent draws, so a random split suffices.
+
+\section{What we know so far}\label{sec:known}
+
+All on the local model unless marked engine-only or stub. A finding is \emph{draft} until Enrico has read it,
+\emph{preliminary} at pilot size or on one model, \emph{solid} when powered or unambiguous, \emph{overturned} when later
+contradicted. Details in \texttt{findings/}; one line each in \texttt{RESULTS.md}.
+
+\begin{itemize}[leftmargin=1.2em]
+\item \status{solid, this model} The local model's ceiling is about $17$: it improved the $17$-point bot in $0$ of $30$
+revisions, the $16$-point bot in $1$ of $6$, a $3$-point bot in $2$ of $3$.
+\item \status{solid, engine-only} Verification leaks: the default rule passes $a=6\%$ of bots that are not better; a
+sequential test matches a $400$-deal check with $73\%$ fewer games.
+\item \status{preliminary} Verification gates code, not ideas: a message whose bot is rejected still lowers the
+student by
+about $2.4$ points through its prose, against a re-sent copy of the student's own bot.
+\item \status{preliminary} Quarantine removes it by construction; at temperature $0$ nothing is left to test.
+\item \status{preliminary} Only exact replay recovers who helped: with three messages per student, true credit
+varies across
+seeds by about $2$ points, a floor for any estimator that pools; pooled regression recovers the seed-averaged credit.
+\item \status{preliminary} Copying the $17$-point bot loses $1.2$ to $1.8$ points from code, prose or both alike;
+copies are
+bimodal, exact clones plus failures.
+\item \status{preliminary, stub} Without verification a group collapses at about $4\%$ sabotage; with it, flat to
+$50\%$. A
+test of the pipeline, not of models.
+\item \status{preliminary, stub} Population runs fit in a night; budgets differ while teaching costs calls.
+\item Organization versus isolation on a real model: nothing yet.
+\end{itemize}
+
+\section{The questions on the board}\label{sec:questions}
+
+\begin{enumerate}[leftmargin=1.5em]
+\item \emph{Does organization make a population accumulate faster than isolation?} The thesis itself; if the answer at
+matched calls is no, the rest is instrumentation.
+\item \emph{Can the swarm tell who helped?} Crediting agents for those they teach needs credit recoverable from logs;
+otherwise allocation by credit allocates noise.
+\item \emph{Do bad ideas spread, and what stops them?} A population that shares can be contaminated, and a persuasive
+wrong idea is the failure mode that grows with sharing.
+\item \emph{What transfers, and at what cost?} Fidelity and the price in calls and games decide whether sharing beats
+independent search, and both must survive the move to Sandbox~2.
+\item \emph{Where is the ceiling, the model or the game?} If the model cannot pass $17$, accumulation runs show only
+the climb to $17$, and an organization effect cannot be told apart from a limit of the operator.
+\end{enumerate}
+
+\end{document}
