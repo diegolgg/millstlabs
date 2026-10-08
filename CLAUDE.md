@@ -64,8 +64,11 @@ Diego's sandbox is on `main` (package `millstlabs`); ours is `src/culture/`. Nev
 - `.venv/bin/python -m pytest -q` (about 2 min). `python -m culture.run --config configs/<x>.yaml --out runs/<x>`.
 - Engine: HLE vendored at `third_party/hanabi-learning-environment` (commit 54e7959), built from source
   (`CMAKE_POLICY_VERSION_MINIMUM=3.5`). Anchors: Piers 16.99, IGGI 15.86, Flawed 0 over 1,000 games.
-- Backends: stub (debugging, CI) and `openai_compat` targeting the local MLX server (seed in the cache key). No paid
-  backend is wired; none should be without an explicit, capped instruction.
+- Backends: stub (debugging, CI) and `openai_compat`, which targets the local MLX server (seed in the cache key) and,
+  since 2026-10-07, any hosted OpenAI-compatible provider behind a sqlite spend guard (`llm/spend.py`: reserve before
+  send, cumulative cap across processes, no automatic paid retry; `api_key_env`, prices and `max_usd` must all be set,
+  default cap 0.0). No paid call has been made; none may be without Enrico's explicit cap. Check a provider with
+  `scripts/hosted_check.py` (refuses to run without `--max-usd`).
 - Fix round 1 (2026-10-06/07, commits 9fb78c6..737194b): the eight review defects are fixed with regression tests;
   disjoint feedback/verification/evaluation deals; null calibration (K=40); innovation base rate; C1 single-student
   driver with exact Shapley oracle; C1 pilot on MLX (5 seeds x 2 strata); B1 SPRT study; D1 pilot on the null stub.
