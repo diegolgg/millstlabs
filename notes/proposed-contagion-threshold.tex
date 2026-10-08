@@ -1,0 +1,85 @@
+% PROPOSED, unlabeled. Becomes notes/E##-contagion-threshold.tex when Enrico agrees. Compile: latexmk -pdf
+\documentclass[11pt]{article}
+\usepackage{enrico}
+\usepackage{booktabs}
+
+\title{Do bad ideas spread exactly when fan-out times verification leak exceeds one?}
+\author{Enrico Yao-Bate}
+\date{design written 2026-10-08; not yet agreed; no run started}
+
+\begin{document}
+\maketitle
+
+\section{Question}
+A persuasive but wrong artifact enters a group. Each agent that holds it teaches $k$ others per generation
+(the fan-out of the routing rule), and each receiver's verification lets a bad artifact through with
+probability $a$ (the leak). If adoption decisions are independent across receivers, the number of new carriers
+per carrier per generation is $k a$, and a branching process dies out when $k a<1$ and grows when $k a>1$.
+We have measured $a$ for three verification rules on reference-family bots
+(\texttt{findings/2026-10-06-sequential-verification.md}): $0.061$ for the current rule (adopt if the paired
+mean over 200 games is positive), $0.003$ for the sequential test, and $1$ with no check. The question is
+whether the threshold $k a = 1$ is where a swarm's safety actually turns, which would make ``safe iff
+$k a<1$'' a design rule rather than a hope. A second question rides along: rejected prose still lowers learners
+by about $2.4$ points (\texttt{findings/2026-10-07-rejected-prose-still-hurts.md}), a channel no verification
+touches. We should see harm without carriers, and that is the signature to look for.
+
+\section{Setting}
+One group of 8 agents, 20 generations, hosted model. Dials held fixed: topology one group; delivery
+deterministic; adoption replace-if-better; reaction rule read-everything; no migration; no credit; uniform
+budget. The two dials that vary are routing fan-out and verification. Sabotage: each delivered message is
+replaced, independently with probability $\varepsilon=0.2$, by the 0-point bot with persuasive prose and the
+harness's honest evidence (common random numbers across cells, so the sabotaged set is nested). This is the
+seeding rate; it is held fixed because the claim is about spread, not entry.
+
+\section{What we measure}
+Let $C_t$ be the fraction of agents at generation $t$ whose incumbent is the bad artifact or a descendant of it
+(the lineage graph records parents). The primary outcome is $C_{20}$ and the shape of $t\mapsto C_t$;
+secondary is the group's mean held-out self-play $\bar Y_t$, and the pair $(C_t,\bar Y_t)$ together is what
+separates the two channels: carriers falling to zero while $\bar Y_t$ still sits below the no-sabotage run is
+harm through prose. The quantity the design is built around is $R_0 = k a$ per cell, with $a$ taken from the
+engine-only measurement (so the prediction is parameter-free: nothing is fitted on this run).
+
+\section{Prediction (2026-10-08)}
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+verification & $a$ & $k=1$ & $k=7$ \\
+\midrule
+none & $1$ & $R_0=1$: carriers persist, $C_{20}\approx 0.5$ & $R_0=7$: everyone by generation 3 \\
+mean$>0$ on 200 games & $0.061$ & $0.06$: each seeding dies within 1--2 generations & $0.43$: dies within 3; $C_t<0.15$ \\
+sequential test & $0.003$ & $0.003$: no carriers beyond the seeded ones & $0.02$: same \\
+\bottomrule
+\end{tabular}
+\end{center}
+And in every verified cell, $\bar Y_{20}$ is $1$ to $3$ points below the $\varepsilon=0$ control although
+$C_{20}\approx 0$: the prose channel. What would make us drop the threshold claim: carriers persisting at
+$R_0=0.43$ (adoptions are not independent, e.g.\ a bad artifact that one agent adopts is then re-taught with
+new prose that passes more often), or no spread at $R_0=1$ without verification.
+
+\section{Design}
+Pilot: fan-out $k\in\{1,7\}$ $\times$ verification $\in\{\text{none},\ \text{mean}>0\}$, plus an
+$\varepsilon=0$ control at $k=7$ with verification, 2 seeds, 10 generations: 10 runs. Full: $k\in\{1,3,7\}$
+$\times$ verification $\in\{\text{none},\ \text{mean}>0,\ \text{sequential}\}$ $\times$ 3 seeds, 20
+generations, paired on seeds and deals across cells, plus the control: 30 runs. Null: the stub in null mode
+with the same sabotage, where $a$ for the verified rules is 0 by construction (the stub's bad bot always loses),
+giving the carrier curve with no model. Figure: $C_t$ against $t$, one panel per verification rule, lines by
+$k$, the predicted $R_0$ printed on each line; a second panel of $\bar Y_{20}$ against $R_0$. Decision rule,
+fixed now: the threshold claim holds if, in every seed, cells with $R_0<0.5$ reach $C_t=0$ within 5 generations
+of each seeding and cells with $R_0>2$ reach $C_t\ge 0.75$ by generation 10. The prose-channel claim holds if
+the verified cells' $\bar Y_{20}$ is below the control's with the paired interval excluding zero.
+Needs one small build: the sequential test as a verification policy (the analysis exists in
+\texttt{analysis/sprt.py}; the policy is thirty lines).
+
+\section{Cost}
+Pilot: 10 runs $\times$ 10 generations $\times$ (8 revise + up to 8 teach) $\approx 1{,}400$ calls, a few
+dollars, under an hour in parallel. Full: 31 runs $\times$ 20 $\times$ 16 $\approx 10{,}000$ calls, tens of
+dollars, one evening in parallel. Engine time: verification at 200 games per message dominates; the sequential
+arm is cheaper.
+
+\section{Nearest prior work}
+Byzantine-robust aggregation gives fraction thresholds for consensus under corrupted agents (Liu et al.\ 2026,
+arXiv 2604.17139; Lee et al.\ 2026, arXiv 2605.09076); memory-poisoning defenses report attack success rates
+(MAPLE-Guard, arXiv 2608.00426). A branching-process threshold for execution-verified adoption in a learning
+population, with the leak rate measured independently and the prose channel separated, was not found in the
+2026-10-06 search.
+\end{document}

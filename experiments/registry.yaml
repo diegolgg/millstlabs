@@ -1,0 +1,37 @@
+# Source of truth for the lab. Machine-facing. Enrico reads IDEAS.md / RESULTS.md / findings/ instead.
+# Every agreed idea has one entry. `python -m culture.lab check` validates this file against IDEAS.md, findings/,
+# notes/ and configs/ (every referenced path exists; every label in IDEAS.md's table is here; statuses agree).
+
+budget:
+  weekly_usd: 0.0            # Enrico sets this. 0 means stub and local only.
+  spent_this_week_usd: 0.0   # updated by the runner from the spend guard
+  week_starting: 2026-10-06
+
+diego:
+  main_hash_summarized: null # set by the subagent that builds docs/DIEGO.md; sessions compare with `git rev-parse main`
+
+labels: {}                   # label -> entry, filled when Enrico agrees an idea
+# Example of an entry (do not uncomment; the runner writes these):
+#  E01:
+#    title: when can the swarm tell who helped
+#    idea: IDEAS.md#proposed-1
+#    primitive: student
+#    config: configs/E01-credit-vs-messages.yaml
+#    note: notes/E01-credit-vs-messages.tex
+#    prediction_written: 2026-10-08
+#    runs:
+#      - {mode: smoke, dir: runs/E01/smoke, date: 2026-10-08, calls: 12, usd: 0.0, passed: true}
+#      - {mode: pilot, dir: runs/E01/pilot, date: 2026-10-08, calls: 400, usd: 0.0}
+#    finding: findings/E01-credit-vs-messages.md
+#    status: preliminary
+#    diego: orthogonal
+
+pre_notebook_findings:       # results that predate the label system; kept for the check script
+  - findings/2026-10-06-breakdown-on-stub.md
+  - findings/2026-10-06-sequential-verification.md
+  - findings/2026-10-07-credit-estimators.md
+  - findings/2026-10-07-rejected-prose-still-hurts.md
+  - findings/2026-10-07-quarantine-at-temperature-zero.md
+  - findings/2026-10-07-copy-fidelity-by-medium.md
+  - findings/2026-10-07-local-model-ceiling.md
+  - findings/2026-10-07-population-pilots-on-stub.md

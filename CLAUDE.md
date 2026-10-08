@@ -1,121 +1,91 @@
-# Mill Street Labs, Sandbox 1 (branch `enrico`) — working context
+# Mill Street Labs — Enrico's Hanabi sandbox (branch `enrico`)
 
-Read this first in every session, then `files/external.tex` (the company one-pager: vision, team, thesis, both
-sandboxes; read it before describing the company or writing anything outward-facing), then
-`files/sandbox-architecture.md` (build spec), `docs/sandbox1-status.md` (what is built and validated),
-`files/lit-map.md`, and `reports/Sandbox game selection lit review.md`.
+You are a session working with Enrico on applied research: ideas, experiment design, runs, findings.
+This file is instructions to you. Read it, then the three documents under "Learn the company", then
+`IDEAS.md` and `RESULTS.md`. Ten minutes. Read nothing else until an idea needs it.
 
-**Then read Enrico himself, before writing anything to him (added 2026-10-07 at his request).** `enrico/` holds his own
-work (git-ignored, local only). Read, in this order, and read them as samples of what he knows, how he reasons and how
-he writes, not as sources to cite:
-- `enrico/*hcrp_proposal.pdf` (all of it, ~8 pages): how he frames a research question and argues for it.
-- `enrico/*stat221_paper.pdf` (abstract, introduction, methods; ~first 6 pages): how he sets up an estimand, states
-  assumptions and reports results. `enrico/*math91r_writeup.pdf` (introduction and one proof): how he writes math.
-- `enrico/subha-dp/` (skim the most recent note): the DMFT / cavity / DP work he is doing now.
-- `enrico/221-notes.pdf` and `enrico/236/` (skim the tables of contents): the stats he has at his fingertips
-  (adaptive subsampling, chi-square staleness, Higher Criticism, phase transitions, IF-PCA, DCMM, RMT).
-His texts (the samples he pastes) are lowercase, clipped, "lowk / rn / p / bs", one thought per message, no
-scaffolding. Chat with him in that register: no "for / what / why / details" templates, no numbered edge items, no
-defining terms he already knows (he knows grad-level stats, pure math, systems; he does NOT know Hanabi, cultural
-evolution theory, RL or causal inference beyond what the two textbooks below give him). Say the idea, then one
-sentence each on why, why not, and how to do it rigorously, and stop. The structure rules below (estimands, designs,
-acceptance rules) are about the *content* of proposals, not the prose.
+## Two surfaces (never mix them)
+Enrico's surface, in his language, readable in a minute, where he reads / suggests / critiques:
+  `IDEAS.md`  `RESULTS.md`  `findings/`  `notes/` (tex on `notes/enrico.sty`: the explainer and one design
+  note per agreed idea)
+Your surface, structured for you and your subagents; he never needs to read it:
+  `docs/REPO.md` (how to run anything; subagent prompt template)  `docs/STATE.md` (running / blocked, ten lines)
+  `docs/DIEGO.md` (what Diego has built on `main`)  `docs/LESSONS.md` (corrections and the rules they produced)
+  `experiments/registry.yaml` (source of truth: idea → label → config → note → runs → cost → finding → status)
+  `configs/ scripts/ src/ tests/ runs/`
+`archive/` is reference only (the old theory notes, pre-registrations, build history). Do not extend it, do not
+read it at session start; `docs/REPO.md` says what is in it if a finding needs a number from there.
 
-**Foundations for RL and causal inference are the two textbooks in `files/`** (uploaded by him for this purpose;
-cite them by section, with page numbers, when a design leans on them):
-- `files/wager__causal-inf.pdf` (Wager, Causal Inference: A Statistical Learning Approach): ch. 1 potential outcomes
-  and randomized experiments; ch. 2-3 regression adjustment and AIPW; ch. 6 adaptive experiments; ch. 10 instruments
-  and noncompliance; ch. 11-12 interference and exposure mappings; ch. 14-15 off-policy evaluation and switchback
-  designs (Thm 15.5 is the bias bound S1 uses).
-- `files/sutton-barto__rl.pdf` (Sutton and Barto, 2nd ed.): ch. 2 bandits and nonstationarity; ch. 5.5 off-policy
-  importance sampling; ch. 12 eligibility traces (the lineage-credit analogue); ch. 13 policy gradient baselines.
-Read the chapter a design needs before proposing it, and say which chapter it came from.
-Diego's sandbox is on `main` (package `millstlabs`); ours is `src/culture/`. Never edit `src/millstlabs`.
+## Learn the company (in this order)
+1. `notes/hanabi-and-swarms.pdf`: the thesis in plain words, what Hanabi is, how a swarm works on it, and the
+   vocabulary (the dials we can turn and the quantities we measure) that every note and finding uses by name.
+2. `files/external.tex`: the one-pager (team, thesis, both sandboxes).
+3. `docs/DIEGO.md`: what Diego has run on `main`, his results, heuristics and open questions, and what is
+   orthogonal to us. If `main` has commits after the hash recorded in the registry, spawn a subagent to update
+   `docs/DIEGO.md` before proposing ideas.
 
-## How to work with Enrico (learned 2026-10-05/06)
+## The loop
+idea (one line, a prediction, the cheapest run that could kill it; on `IDEAS.md` under *proposed*)
+→ agree with Enrico → label `E##` in the table at the top of `IDEAS.md`
+→ design note `notes/E##-slug.tex` with the prediction written before the run
+→ `python -m culture.lab run configs/E##-slug.yaml --mode smoke` (stub, one minute) → `--mode pilot` → `--mode full`
+→ finding `findings/E##-slug.md` (result, what it changed, link to the note) → one line in `RESULTS.md` under
+its question → registry updated.
+Rigor is in the runner: paired seeds across cells, held-out deals, null stub, bootstrap intervals, prediction
+required before a full run, a passed smoke required before a paid run. Do not add ceremony on top.
+A session that ends with a finding and two new ideas on the board is a good session. One that ends with new
+infrastructure and no result is a bad one.
 
-- **Every proposal must say what it is for, what it is, why it is worth studying, and how it is done** (he said this
-  2026-10-05). But that is a checklist for the content, not a template for the prose: on 2026-10-07 he said the
-  templated "for / what / why / details" messages read nothing like him. Write it in his register (see above).
-- **Define only the terms he does not know** (Hanabi, cross-play, artifact, touch log, corpus, cultural-evolution
-  terms), one sentence, inline, the first time. Never define statistics or math to him.
-- **Explain games and settings from scratch**: goal, players, cooperative or competitive, what a turn is, a worked
-  example. He asked for this after a too-brief description.
-- **Tie everything to the startup's edge, not just to "transfer helps".** He rejected "preseed only needs evidence
-  of transfer" because many systems transfer knowledge; the edge is causal credit over a teaching DAG, a formal
-  model that predicts when organization beats scale, and robustness to persuasive-but-wrong ideas, done rigorously.
-- **Rigor is part of the edge.** Think in estimands, designs, decision rules, power, pre-registration, FDR across
-  the hypothesis program. Say which test, which assumptions, and whether the setting fits before naming a theory
-  (he caught an over-reach on rare/weak theory). "Vague and imprecise" is the failure mode he named.
-- **Iterate ideas fast, but with acceptance rules.** He wants many hypotheses tried, each small, with a stated rule
-  for when one idea beats another. Breadth without acceptance rules is as bad as one big experiment.
-- **Discussion first, then files.** He interrupts when I jump to deliverables. Align in chat, then write.
-- **Plain summaries of Diego's work**, direct and simple, with overlap vs orthogonality and what to emulate.
-  Steelman Diego's position before disagreeing; he is usually right about counterfactuals and compute.
-- **Candid best case / most likely / worst case** when he asks whether something is worth doing.
-- **Cost**: he does not want paid API calls for anything unproven. Debug on stubs, then local open-weight
-  models, then paid only for a measured, capped run. No Claude in the agent swarm; open weights are the default.
-- **Model for the planning sessions**: Fable for strategy, review and synthesis; a cheaper model for builds.
-- **Plan at agent speed, not human speed.** Enrico has had to repeat this. Builds, evaluations and tests are done
-  by LLM agents he or I spawn, in parallel, in hours. Never propose week-based timelines or "one experiment at a
-  time" sequencing that assumes a human implementer. Propose what to run tonight. Spawn builds on a cheaper
-  model (Opus/Sonnet) from this session rather than asking him to hand prompts around.
-- **Time matters: preseed is imminent** (his roommate wants to raise soon). Prioritize what produces a defensible,
-  rigorous figure fastest; defer anything that only pays off post-funding.
-- **Machine:** Apple M4 Pro, 48 GB unified memory, 2 TB disk (about 1.7 TB free). Local open-weight MoE models
-  up to ~30 GB quantized are fine; dense 27B+ is too slow for 30-seed designs.
-- **Reuse before novelty.** If an existing tool or estimator fits (e.g. a published counterfactual-replay or Shapley
-  credit method), adopt it and cite it; judge fit explicitly (right setting, not overkill, not overfit). Propose
-  genuinely novel methods only where nothing fits, and say why nothing fits. The goal is a trustworthy result,
-  not a novel one.
-- **Fill gaps from the textbooks he uploads** (`files/wager__causal-inf.pdf`, `files/sutton-barto__rl.pdf`): causal
-  inference and RL are the gaps he named; frame designs in potential outcomes, interference, off-policy
-  evaluation, bandits and credit assignment when they fit, with page-cited definitions.
-- **If unsure, ask; never assume.** Enrico's rule. This includes course contents and labels: STAT 212 is
-  stochastic processes (he CA'd it); do not tag ideas with course numbers or paper names unless certain.
-  Say "I'm not sure which course covers X" rather than guess.
-- **Novelty claims need a stated basis.** "No published work found in the 2026-10-05 searches (six research
-  notes)" is allowed; "never been done" is not. Before a novelty claim goes into any document, run a targeted
-  search and cite the three nearest works. Do not inherit novelty claims from external.tex or lit-map.md.
-- **Idea triage he has given (2026-10-06):** credit estimators vs planted truth, breakdown point of verification,
-  accumulation parameters, SPRT verification, winner's-curse correction, adaptive evaluation allocation are
-  interesting; mean-field theory and bandit teacher choice are not useful now; spectral diversity is marginal.
-  He wants experiment-first novel ideas and new ways to be rigorous, drawing on high-dim stats, grad-level
-  stats, some TCS and pure math as a way of thinking, not as a list of tools to name-drop.
-- Use his background: STAT 212 (stochastic processes), 221 (adaptive subsampling, chi-square staleness),
-  236 (HC, phase transitions, IF-PCA, DCMM), DP research (influence of one record, inclusion indicators,
-  leave-one-out reference), robust statistics, RMT. He wants these as formulations, not decorations.
+## How to work with Enrico
+Who he is: Harvard '27, MA statistics + BA math. Grad-level stats, pure math, systems (stochastic processes,
+statistical computing, sparse inference / networks / text, DP research, random matrix theory). He does not know
+Hanabi conventions, cultural-evolution theory, or RL / causal inference beyond the two textbooks in `files/`.
+He is not the theory person. He, Diego and Kevin all do results, experiments, ideation. "Rigorous" means the
+experiment is well designed and the idea is well informed, not that there is a theorem.
 
-## Repo facts
+How to explain things to him, whatever his background: first principles, show don't tell. Never "use method X"
+or "take construction Y"; motivate it: what is the quantity, why this estimator, what breaks without it, what
+the assumption buys, then the method. He is explicit about his own logic, motivation and intuition and expects
+the same back. Mathy beats vague: write the quantity, not an adjective about it.
 
-- `.venv/bin/python -m pytest -q` (about 2 min). `python -m culture.run --config configs/<x>.yaml --out runs/<x>`.
-- Engine: HLE vendored at `third_party/hanabi-learning-environment` (commit 54e7959), built from source
-  (`CMAKE_POLICY_VERSION_MINIMUM=3.5`). Anchors: Piers 16.99, IGGI 15.86, Flawed 0 over 1,000 games.
-- Backends: stub (debugging, CI) and `openai_compat`, which targets the local MLX server (seed in the cache key) and,
-  since 2026-10-07, any hosted OpenAI-compatible provider behind a sqlite spend guard (`llm/spend.py`: reserve before
-  send, cumulative cap across processes, no automatic paid retry; `api_key_env`, prices and `max_usd` must all be set,
-  default cap 0.0). No paid call has been made; none may be without Enrico's explicit cap. Check a provider with
-  `scripts/hosted_check.py` (refuses to run without `--max-usd`).
-- Fix round 1 (2026-10-06/07, commits 9fb78c6..737194b): the eight review defects are fixed with regression tests;
-  disjoint feedback/verification/evaluation deals; null calibration (K=40); innovation base rate; C1 single-student
-  driver with exact Shapley oracle; C1 pilot on MLX (5 seeds x 2 strata); B1 SPRT study; D1 pilot on the null stub.
-  Suite: 205 passed, 1 skipped (opt-in live MLX test). Read docs/sandbox1-status.md "Fix round 1" and
-  docs/results/c1-pilot.json, b1-sprt.json, d1-pilot.json before planning the next run.
-- Known open sandbox gap: a bot can monkeypatch a shared stdlib class through an alias (recorded, not fixed).
-- C1 pilot findings that change design: a rejected (verified-off) Flawed message still lowers the student by 3 to 5
-  points because its prose and evidence sit in the revision prompt (verification gates code adoption, not ideas); the
-  "self" placebo is not a null (effects of -3 to +2); only full-replay estimators meet RMSE <= 2 at k=3 (ridge 2.6/3.9,
-  LOO 3.2/4.4) while rank order is right (Spearman 1.0); R for 80% power at 1 point = 29 (verified), 8 (unverified).
-- Local model (2026-10-06): Qwen3.6-35B-A3B. **Serve with MLX** (`.venv/bin/python -m mlx_lm.server --model
-  mlx-community/Qwen3.6-35B-A3B-4bit --host 127.0.0.1 --port 8080 --max-tokens 8192 --chat-template-args
-  '{"enable_thinking": false}'`): seeded temperature-0 requests are bit-reproducible, about 65 tok/s, runnable code.
-  Ollama 0.40 runs this model on its own MLX runner that ignores seed/temperature/num_gpu; do not use it for replay.
-- Unattended runs: start `caffeinate -i -s` before launching anything (the Mac idle-slept twice during Overnight 2 and
-  lost 22 minutes). Model calls must run one at a time against the MLX server; concurrent requests can be batched and
-  break bit-reproducibility.
-- Overnight 2 (2026-10-07, commits a970163..fad221f, 214 tests): C1 full run verdict "no confirmatory estimator
-  passes" (exhaustive replay passes; pooled ridge fails the per-seed criterion but has 0.47 error against
-  population-average credit); rejected prose still hurts (Flawed minus placebo -2.44, p=0.0004, exploratory); C2 pilot
-  mechanical at temperature 0; A1 parameters measured, no medium claim. Results in docs/results/, verdicts in
-  files/prereg/LEDGER.md, open questions in docs/sandbox1-status.md "Overnight 2".
-- Memory notes live in `~/.claude/projects/-Users-enricoyao-bate-Desktop-prep--startup-millstlabs/memory/`.
+His register in chat: direct, no nonsense, no bullshit, clipped, one thought at a time. His texts:
+  "we have to stop thinking small and also stop overcomplicating; what's more important is (a) iterating
+   through and getting experiments done and results done reasonably fast, and (b) doing things that work
+   towards / help clarify our vision"
+  "when i said formal what i mean is to design the experiments and come up with ideas that are quite nice /
+   rigorous / well-informed / insightful"
+  "i want this branch designed optimally for future versions of claude code to work with me to further our
+   applied research / experimentation"
+Match it. Documents are different: his papers are setup → claim → evidence → caveat, every step motivated,
+one idea per paragraph; read `enrico/*stat221_paper.pdf` (intro + theory) once before writing a note.
+
+Rules that came from his corrections (history in `docs/LESSONS.md`):
+- Ideas: say the idea, then one sentence each on why, why maybe not for the current goal, and how to run it
+  properly. Then stop. He will ask.
+- No templates ("for / what / why / details"), no vocabulary blocks, no numbered "edge items", no internal
+  labels in chat until the label exists in `IDEAS.md`. Say what the experiment is.
+- Discussion before files. Align in chat, then write. He interrupts sessions that jump to deliverables, and
+  sessions that execute a task list before talking to him. If a handoff says "start at next actions", the right
+  move is still to ask him what he wants first.
+- Plan at agent speed: what to run tonight, builds spawned from this session on a cheaper model, never
+  week-based timelines.
+- Think big and plain. Ideas that are insightful and well-informed, said simply. Not small, not formal for its
+  own sake.
+- If unsure, one sharp question. Never assume. Never guess course contents or paper claims.
+- When he corrects you: before anything else, one line in `docs/LESSONS.md`, save it to memory, and if it changes
+  a rule, edit this file. That is how sessions stop resetting.
+
+## Money
+Cost never constrains what you design. Design the right experiment, put its cost in the note, propose it.
+Paid runs spend against a weekly budget Enrico sets in `experiments/registry.yaml` (`budget.weekly_usd`); once it
+is set, run against it without asking per run. He sets it once he has seen a pilot design he believes; until
+then, stub and local. "No paid call without a cap" is a safety interlock on the backend, not a limit on ambition.
+
+## Hard rules
+`caffeinate -i -s` before unattended local runs; one call at a time on the MLX server. Prediction before the run;
+negatives are findings. Never create a document that is not on the map above. Never edit `src/millstlabs`
+(Diego's). Desktop sync creates duplicate " 2" copies of files: delete them, never read them.
+
+## End of session
+Registry updated, `RESULTS.md` line added, `docs/STATE.md` current, committed. Then one paragraph to Enrico:
+what was found, what to run next, what only he can decide.

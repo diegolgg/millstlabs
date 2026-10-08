@@ -1,0 +1,39 @@
+% Design note template. Copy to notes/E##-slug.tex. Written BEFORE the run; the prediction is dated.
+% Compile: cd notes && latexmk -pdf E##-slug.tex
+\documentclass[11pt]{article}
+\usepackage{enrico}
+
+\title{E\#\#: title in plain words}
+\author{Enrico Yao-Bate}
+\date{design written \today; run not yet started}
+
+\begin{document}
+\maketitle
+
+\section{Question}
+One or two sentences. What we want to know and why it matters for the thesis (one line on that).
+
+\section{Setting}
+The population or student, the reference bots involved, the dials that are held fixed (by name, from the
+explainer), the model and backend. Three to six lines.
+
+\section{What we measure}
+The quantity in words, then as a formula. Say what is random (seeds, deals, the model), what is paired across
+cells, and what the unit of replication is. If there is a planted truth, say what it is and how we know it.
+
+\section{Prediction}
+Dated. A number or a shape, with the reasoning that produced it (the measured rates it comes from). State what
+result would make us abandon the idea.
+
+\section{Design}
+Factors and levels; seeds (pilot, then by power from the pilot's spread at the minimum effect we care about);
+the null (stub) run; the figure that will be made. Decision rule: the condition under which we will say the
+prediction held, fixed here.
+
+\section{Cost}
+Calls, wall clock, dollars (hosted price per call $\times$ calls), engine time.
+
+\section{Nearest prior work}
+Three works, one line each, and what this design adds. Phrase novelty as ``not found in a search on <date>''.
+
+\end{document}

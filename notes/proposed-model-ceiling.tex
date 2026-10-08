@@ -1,0 +1,56 @@
+% PROPOSED, unlabeled. Becomes notes/E##-model-ceiling.tex when Enrico agrees. Compile: latexmk -pdf
+\documentclass[11pt]{article}
+\usepackage{enrico}
+\usepackage{booktabs}
+
+\title{Is the ceiling the model's or the game's?}
+\author{Enrico Yao-Bate}
+\date{design written 2026-10-08; not yet agreed; no run started}
+
+\begin{document}
+\maketitle
+
+\section{Question}
+The local model cannot improve the 17-point reference bot: 0 of 30 single revisions, and two 40-generation
+chains never left its behaviour (\texttt{findings/2026-10-07-local-model-ceiling.md}). Every accumulation
+experiment is bounded above by the innovation rate at the level the population has reached, so before any
+population run on a new model we need its rate at three levels. This is a measurement, not a hypothesis test,
+but it has a decision attached: whether to run populations on this model at all, and whether the revise prompt
+is the bottleneck.
+
+\section{Setting}
+Three incumbents: the weak student (held-out $2.75$), the 16-point bot (IGGI, $15.8$), the 17-point bot
+(Piers, $17.0$). One revision each, nothing delivered, feedback traces varying across 30 replicates (experiment
+seeds $400$--$429$, as in the local probe), verification off and no adoption, held-out paired evaluation on 300
+deals and a common 300-deal set so levels are comparable. Hosted model, temperature 0, seed fixed (providers may
+not honour it; replicates are seeds, not replays).
+
+\section{What we measure}
+For incumbent level $\ell$, the innovation rate $\epsilon(\ell)=\P(\Delta>0.5)$ with $\Delta$ the paired
+held-out improvement, Beta(1,1) posterior and 95\% interval; the gain distribution given a gain; the no-op
+rate (candidate byte-identical to the parent); the inadmissible rate (fails the sandbox or the smoke game).
+The no-op rate is the diagnostic for ``the prompt tells the model to leave good code alone'' versus ``the model
+cannot find an improvement''.
+
+\section{Prediction (2026-10-08)}
+For a flash-class open-weight model: $\epsilon(2.75)\ge 0.6$ with gains around $8$; $\epsilon(15.8)\in[0.1,0.3]$;
+$\epsilon(17.0)\in[0.05,0.2]$ with gains of $0.5$ to $2$; no-op rate below $0.3$. If $\epsilon(17.0)$ is again
+$0/30$ and the no-op rate is above $0.5$, the ceiling is in the prompt (it asks for a rewrite of the worst games'
+causes and the 17-point bot has few), and the next step is a prompt variant, not a bigger model.
+
+\section{Design}
+Three levels $\times$ 30 replicates, 90 calls, paired on experiment seeds with the local probe so the two
+models are compared on the same traces. Decision rule, fixed now: populations run on this model only if the
+lower 95\% bound of $\epsilon(17.0)$ exceeds $0.03$; otherwise the prompt is revised and the probe re-run before
+any population spend. Figure: $\epsilon$ against level for the two models, with intervals; gain histograms.
+
+\section{Cost}
+90 calls, about one dollar at flash-class prices, twenty minutes in parallel. This is also the first paid
+probe of the provider: it reports price per call, latency and whether the provider is deterministic at
+temperature 0 with a seed.
+
+\section{Nearest prior work}
+Innovation-rate ladders for program-writing agents were not found; the closest are self-improvement
+curves in evolutionary code search (AlphaEvolve-style systems report best-so-far against iterations, not a rate
+by level). Phrase accordingly.
+\end{document}

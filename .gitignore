@@ -6,3 +6,18 @@ __pycache__/
 runs/
 .ipynb_checkpoints/
 .DS_Store
+
+# tex byproducts in notes/
+notes/*.aux
+notes/*.log
+notes/*.fls
+notes/*.fdb_latexmk
+notes/*.out
+notes/*.toc
+notes/*.synctex.gz
+files/*.aux
+files/*.log
+files/*.fls
+files/*.fdb_latexmk
+files/*.out
+files/*.synctex.gz

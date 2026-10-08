@@ -1,0 +1,89 @@
+% PROPOSED, unlabeled. Becomes notes/E##-credit-vs-messages.tex when Enrico agrees. Compile: latexmk -pdf
+\documentclass[11pt]{article}
+\usepackage{enrico}
+\usepackage{booktabs}
+
+\title{When can the swarm tell who helped?}
+\author{Enrico Yao-Bate}
+\date{design written 2026-10-08; not yet agreed; no run started}
+
+\begin{document}
+\maketitle
+
+\section{Question}
+A learner receives $m$ messages in one generation. The organization wants, for each message $j$, its causal
+effect on the learner, because that number is what pays teachers and decides who talks to whom. With $m=3$ no
+cheap estimator recovered the planted effects and only full counterfactual replay did
+(\texttt{findings/2026-10-07-credit-estimators.md}). The question here is \emph{why}, and therefore at what $m$,
+and under what kind of messages, credit from one or two replays is recoverable. The answer decides whether
+``credit agents for their students' improvement'' is a mechanism we can build or a slogan.
+
+\section{Setting}
+One student with a weak incumbent (self-play $\approx 3$), verification on (self-play on 200 deals, adopt if
+better), the local model at temperature 0 with a fixed sampling seed, so that the student's update is a
+deterministic function of which messages were delivered. Reaction rule: read everything (the baseline).
+
+The $m$ messages are the 17-point reference bot with plain prose (the good message), plus $m-1$ others of one
+of two kinds, which is the factor that matters:
+\begin{itemize}
+  \item \textbf{neutral}: the student's own bot re-sent with a neutral note (``here is my current strategy'');
+  \item \textbf{one persuasive bad}: the 0-point bot with persuasive prose and honest low evidence, and the
+  rest neutral.
+\end{itemize}
+
+\section{What we measure}
+Write $Y(S)$ for the student's held-out paired improvement when exactly the subset $S\subseteq[m]$ is delivered,
+on evaluation deals the model never sees. The truth for message $j$ is its average effect over the delivery of
+the others,
+\[
+\tau_j \;=\; \frac{1}{2^{m-1}}\sum_{S\subseteq[m]\setminus\{j\}}\bigl(Y(S\cup\{j\})-Y(S)\bigr),
+\]
+observable exactly by replaying all $2^m$ subsets under the same seed. The cheap estimator is one marginal,
+leave-one-out, $\hat\tau_j^{\mathrm{LOO}} = Y([m]) - Y([m]\setminus\{j\})$, which costs $m+1$ replays, and its
+mirror, leave-one-in, $Y(\{j\})-Y(\emptyset)$. Both equal $\tau_j$ when the messages do not interact; otherwise
+each is one of the $2^{m-1}$ marginals that $\tau_j$ averages, and its error is the interaction it does not see.
+That is the whole mechanism, and it is what the factor above tests: a neutral message should not interact with
+the good one; a persuasive bad message did (its interaction with the good message was $+3.8$ points with
+$m=3$). Per seed we report RMSE over the $m$ messages for each estimator, and the ratio of the mean $|\tau_j|$
+to the between-seed standard deviation of $\tau_j$, which is what any pooled estimator is up against.
+
+\section{Prediction (2026-10-08)}
+\begin{enumerate}
+  \item At $m=1$ one replay is the truth: leave-one-out RMSE is evaluation noise only ($\approx 0.3$, from
+  300 paired deals with per-deal SD about 4).
+  \item In the neutral arm, leave-one-out stays within $1$ point of the truth at $m=2$ and $m=3$: re-sent own
+  bots barely interact with the good message (the re-sent bot's effect was $+0.7\,[-0.5,1.6]$ and its
+  interaction small).
+  \item In the persuasive arm, leave-one-out fails already at $m=2$: its error on the good message is half the
+  good--bad interaction, about $1.9$ points, and it does not improve with $m$. The cause of the earlier failure
+  was not three messages; it was one persuasive message.
+  \item The between-seed spread of $\tau$ for the good message stays near $2$ points in both arms, so pooling
+  across seeds cannot rescue per-seed credit in either.
+\end{enumerate}
+What would make us drop the idea: leave-one-out error above $1$ point in the neutral arm at $m=2$. Then
+messages interact even when they say nothing, credit needs full replay at any $m>1$, and the organization must
+be designed around one message per learner per generation.
+
+\section{Design}
+Factors: $m\in\{1,2,3\}$ $\times$ arm $\in\{\text{neutral},\text{persuasive}\}$, full factorial, paired on
+seeds (the same 10 experiment seeds in every cell; a seed fixes the feedback traces the model sees and the
+evaluation deals). Truth by exhaustive replay: $2+4+8=14$ replays per seed per arm, 280 local calls in all,
+one night, \$0. The null is the stub in null mode (revisions keep the rule list, no text effect), where
+leave-one-out is exact; it gives the band that evaluation noise alone produces. Figure: RMSE of leave-one-out
+and leave-one-in against $m$, one line per arm, seed points, IQM with a bootstrap interval, the null band
+shaded. Decision rule, fixed now: prediction 2 holds if the neutral-arm IQM of leave-one-out RMSE at $m=3$ is
+$\le 1$ with interval upper bound $\le 1.5$; prediction 3 holds if the persuasive-arm IQM at $m=2$ is $\ge 1.5$
+with lower bound $\ge 1$. A follow-up at $m=5$ (singles-and-pairs replay as the truth proxy, 16 replays) runs on
+a hosted model if both hold.
+
+\section{Cost}
+280 local calls at about 70\,s each: 5.5 hours, serial, \$0. Engine time negligible. Hosted follow-up at
+$m=5$: 10 seeds $\times$ 2 arms $\times$ 16 replays = 320 calls, a few dollars.
+
+\section{Nearest prior work}
+Counterfactual-replay credit for multi-agent language-model systems masks one agent and replays (SHARP,
+arXiv 2602.08335); singles-and-pairs search for failure localization (Li et al.\ 2026, arXiv 2608.29228);
+Shapley credit with process rewards (Yang et al.\ 2025, arXiv 2511.10687). None asks when a one-replay
+estimator is adequate as a function of how many messages a learner sees and whether they interact; not found in
+the 2026-10-06 search.
+\end{document}
