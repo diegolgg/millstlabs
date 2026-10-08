@@ -4203,5 +4203,5 @@
   "mean_of_5_seeds_interval": "same for the mean of 5 populations (disjoint blocks of runs), the quantity G1 reports",
   "trajectory lo/hi": "pointwise 2.5% and 97.5% quantiles over runs (one population)"
  },
- "seconds": 4.07
+ "seconds": 5.43
 }

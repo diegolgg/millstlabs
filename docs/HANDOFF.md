@@ -47,7 +47,10 @@ Read in this order, then start at "Next actions". Everything is on branch `enric
    revisions in the 17 to 18 bin improved by > 0.5, and the incumbent's behaviour on common deals never left
    Piers' 16.7. So the local model does not innovate above about 17: the draft model's saturation at the 25-point
    cap (flat-epsilon extrapolation) is not real for this model, and a 20-point threshold is probably unreachable
-   here. The hosted model's ladder must be measured separately before predicting G1.
+   here. The hosted model's ladder must be measured separately before predicting G1. With the measured ladder, the
+   prediction hinges on the copy model: symmetric copy noise ratchets full/organized to the cap; "copies never exceed
+   teacher" or exact adoption gives full/organized about 21 to 22 and isolated about 17.3 at generation 100 (see
+   `docs/p1-notes.md`, "Update after the local epsilon ladder").
 4. **Drafts awaiting sign-off:** `files/prereg/G1-accumulation.md` (six decisions in section 0, including matched
    budget and the primary outcome's horizon), `files/prereg/S1-switchback.md` (five decisions: first-difference
    outcome, counterbalanced schedule, burn-in, lever set, minimum effect 0.05/generation).

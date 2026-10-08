@@ -73,3 +73,20 @@ isolated agents also reach the ceiling, a 2-point rule at generation 100 fails e
 accelerates accumulation. The model puts the gap below 2 after generation 57. *Details:* this bears on G1's draft
 pre-registration, whose primary is at generation 100. Migration as swaps or as cross-group copying changes nothing
 here (peak 6.0 vs 6.2), so that question can wait.
+
+## Update after the local epsilon ladder (2026-10-07 22:10)
+
+The probe ran (140 local calls, $0; `docs/results/p1-eps-ladder.json`). At margin 0.5 the innovation rate is 0 of 30 at
+the Piers level (95% upper bound 0.11), 5 of 30 at the IGGI level, and 1 of 58 in the 17-to-18 bin of the two
+40-generation chains, whose incumbents never left Piers' behaviour on common deals. So the local model does not
+innovate above about 17, and the earlier saturation at 25 was an artifact of extrapolating the weak-level rate.
+
+With the measured ladder (`docs/results/p1-prediction-ladder.json`) the prediction splits on one modelling choice:
+- Copy model with symmetric within-cluster noise (the default): full and organized still climb to the 25 cap, because
+  a copy can come out slightly better than its teacher and verification keeps it, generation after generation. That
+  ratchet is a property of the model, not something measured; A1 saw copies above Piers, but rarely.
+- Copies never exceed the teacher, or exact adoption as the harness does: full and organized reach about 21 to 22 at
+  generation 100, isolated about 17.3, gap about 4 points, still growing at generation 100.
+Both readings agree on the order (full >= organized > isolated) and on isolated plateauing near the Piers level.
+Decision 1 above (how a copy is modelled) therefore decides the headline prediction and must be settled, with the
+hosted model's own ladder measured, before the P1 prediction is pre-registered.
