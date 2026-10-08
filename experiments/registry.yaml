@@ -8,7 +8,7 @@ budget:
   week_starting: 2026-10-06
 
 diego:
-  main_hash_summarized: null # set by the subagent that builds docs/DIEGO.md; sessions compare with `git rev-parse main`
+  main_hash_summarized: d0fe393ba925197b9057308d15e8f252899df5a3 # set by the subagent that builds docs/DIEGO.md; sessions compare with `git rev-parse main`
 
 labels: {}                   # label -> entry, filled when Enrico agrees an idea
 # Example of an entry (do not uncomment; the runner writes these):
