@@ -16,6 +16,7 @@ Scope: engineering validation, three pilots, and Overnight 2 (2026-10-07): the f
 | fix round 1, steps 13 to 16 | `e3bd512` to `673178b` | C1 single-student driver with exact Shapley oracle; C1 pilot on stub and MLX (80 replays); B1 SPRT vs fixed N (SPRT passes the 30% rule); D1 pilot on the null stub; **205 passed, 1 skipped** |
 | Overnight 2 | `a970163` to `f374fb8` | quarantine policy (C2 stratum); C1 full on MLX: **no confirmatory credit estimator passes** (only exhaustive replay does); C2 pilot: primary mechanical at temperature 0; A1 parameters: medium-ordering rule not met; 322 model calls, $0; **214 passed, 1 skipped** |
 | hosted backend | `7282089` to the docs commit | `openai_compat` targets hosted OpenAI-compatible providers behind a sqlite spend guard (reserve before send, cumulative cap across runs and processes, no automatic paid retry); `scripts/hosted_check.py`; no paid call made; **247 passed, 1 skipped** |
+| G1/S1 prep (stub) | `6300055` to `c561368` | G1 and S1 specs; lever schedule (`org.schedule`) with resume; canonical warm starts; accumulation analysis; stub pilot (S1 partial, G1 and null still running at the time of writing); zero model calls; **229 passed, 1 skipped** |
 
 How to reproduce: `scripts/setup_env.sh`, then `.venv/bin/python -m pytest -q`. Runs: `python -m culture.run --config configs/<x>.yaml --out runs/<x>`, `scripts/run_experiment.py`, `scripts/kill_resume_check.py`, `scripts/phase4_dryruns.py`, `scripts/bench_engine.py`, `scripts/build_notebooks.py probe|transfer|analysis_p5`. Run outputs live in `runs/` (git-ignored).
 
@@ -766,6 +767,162 @@ llm:
   pins the default digest value.
 
 Test suite at the end: **247 passed, 1 skipped** (214 before, plus 33 in `tests/test_hosted_backend.py`).
+## G1/S1 preparation (stub)
+
+Scope: the $0 part of handoff action 2. Configs for G1 (accumulation under organization) and S1 (switchback
+perturbation of levers), a lever-schedule mechanism, the analysis module, and stub pilots. Zero model calls (stub
+backend only; the MLX server was not used). Every stub number is a perturbed copy of an anchor rule list; the pilot
+proves the pipeline and sizes the wall clock, nothing else.
+
+Commits on branch `worktree-agent-a6009eb90bd8de5ec` (on top of `enrico` 2cb0596, not merged; prefix "G1/S1 prep"): `6300055` step 1, `84c0e29` step 2, `d4d515f` step 3, `f9343d5` step 4,
+`c561368` step 5, and this section.
+
+### What was built
+
+- **`configs/g1.yaml`**, plus `g1_null.yaml` (null stub, K = 10) and `g1_pilot.yaml` (3 seeds, 30 generations),
+  which inherit from it through a new `extends:` key in experiment specs.
+  - Conditions: `isolated` (8 groups of 1, routing none), `full` (1 group of 8, broadcast_group, selfplay(200), no
+    migration), `organized` (2 islands of 4, migration 0.25 every 5, broadcast_group, selfplay(200), corpus on).
+    Credit none; 100 generations; 5 seeds; evaluation 200 / 50 / 50 / 50, ladder every 10.
+  - **Matched budget.** Teach calls are charged to the sender's group pool, one call per sending agent per
+    generation, whatever its number of receivers. The worst case per generation is 8 revise + 8 repair + 8 teach =
+    24 calls. Every condition gets the same cap of 24, split uniformly over its groups: 8 x 3, 1 x 24, 2 x 12.
+  - The cap never binds: no refusals in any pilot run. **Spend is not matched**, though. The communicating conditions
+    spend about 16.2 calls per generation, isolated about 8.2. The matched-budget comparisons are therefore the
+    calls-axis ones (calls to threshold, mean self-play against cumulative calls). A generation-100 comparison sets
+    about 1,600 calls against about 800.
+  - **Isolated is 8 groups of 1.** The between-group cross-play matrix needs at least two groups; with singletons
+    it is the population's mean pairwise cross-play, the comparator in G1's decision rule. Corpus and selection
+    archive are per group, so in one group of 8 the corpus would be a communication channel. Consequences: `full`
+    has no between-group number (it has one group), and `isolated` has no within-group number.
+- **`population.warm_start_canonical`** (new; off by default and left out of the digest while off).
+  - Generation 0 is authored once for a one-group population of N agents and handed out by position. The
+    artifacts are relabelled with each run's own author and group; their content hashes do not change.
+  - Without it, G1's three layouts would have different warm-start keys and agent ids, and so different starting
+    populations. With it, the conditions are paired on warm starts as well as on deals.
+  - The default config digest (`f875065a1af48815`) and the default warm-start key are unchanged; checked against
+    the previous code.
+- **`org.schedule`, lever switches inside one run** (`org/schedule.py`).
+  - Format: `[{at: g, set: {lever: value}}, ...]`, where a lever is any org policy field or
+    `quarantine_unverified`. `at` must be >= 1 and strictly increasing.
+  - Storage: kept in the config as a list of mappings; left out of the digest while empty.
+  - Where it applies: `ctx.apply_schedule(g)` runs at the top of `run_generation`, before allocation. It rebuilds
+    only the policies whose value changed, through `registry.make`, and passes the old policy's state to the new
+    one, so the selection archive carries across switches.
+  - Migration: it is re-derived with `registry.effective_migration`, because islands with migration `none` means
+    "use the islands' rate".
+  - Resume needs no extra state, because the values at generation g are a pure function of g and the config.
+    `RunContext.load_state_dict` re-applies the schedule at the checkpointed generation before it loads the
+    policies' state.
+  - Each generation record has a `levers` field (only when a schedule is set), and `ctx.quarantine` replaces
+    direct reads of the config flag in the generation loop.
+- **`configs/s1.yaml`**: base = G1 `organized`; one condition per lever; ON for generations 1-30, OFF 31-60, and so
+  on to 300 (switches at 31, 61, ..., 271). ON and OFF are documented per lever in the YAML.
+  - The migration lever toggles the islands rate (0.25 against 0) rather than the `migration` policy.
+  - "Selection" is keep_best_k (ON) against shinka_weighted (OFF). research.tex calls this lever "shrinkage
+    selection"; no shrinkage rule is built.
+- **`analysis/accumulation.py`**: `trajectories`, `calls_to_threshold`, `condition_contrast`, `null_band`,
+  `switchback_contrasts`, `g1_figure`, the reports and a summary.
+  - `calls_to_threshold` uses held-out self-play on each generation's evaluation deals, because the ladder is logged
+    every 10 generations and only for the population best.
+  - `switchback_contrasts`:
+    - the contrast is the mean over switches of the adjacent-block ON-minus-OFF differences, after a 5-generation
+      burn-in; it cancels a linear drift;
+    - the mixing time t0 is the first lag at which the autocorrelation drops below 1/e, computed on the residual of
+      (1, lever, generation);
+    - the bound is `4 M lam (1 + t0)`, with M the largest change between consecutive generations, as specified. A
+      second bound uses M = max |Y|, as in Wager's Theorem 15.5.
+    - The docstring says why the theorem's assumptions do not hold here: fixed windows rather than memoryless
+      random switching, difference in means with burn-in rather than Horvitz-Thompson, and total-variation mixing.
+      The bound is a heuristic scale.
+- Tests: `test_schedule.py` (4), `test_accumulation.py` (9), and 2 new tests in `test_warmstart.py` (canonical
+  pairing, `extends`). **Suite: 229 passed, 1 skipped.**
+
+### Stub pilot (`scripts/g1_pilot.py`, running)
+
+The pilot was launched at G1 50 generations x 5 seeds x 3 conditions, the null spec at K = 10 seeds x 3 conditions,
+and S1 at 90 generations x 3 seeds x 5 levers: 60 runs in a pool of 10 processes, longest first.
+- **G1 is at 50 generations, not 100.** A single 100-generation stub run takes about 75 minutes alone, against the
+  10-minute rule.
+- **G1 and the null phase are still running.** The pilot runs under `caffeinate` and writes
+  `docs/results/g1-stub-pilot.json`, `g1-stub-pilot.png` and the final `s1-stub-pilot.json` when it ends.
+- If it is stopped, rerun the same command; finished runs are skipped:
+  `PYTHONPATH=$PWD/src .venv/bin/python scripts/g1_pilot.py --out runs/g1s1-stub --generations 50 --seeds 5 --null-seeds 10 --s1-generations 90 --s1-seeds 3 --processes 10`.
+- To analyse whatever has finished: add `--skip-run`.
+- The G1 table goes here when the pilot finishes.
+
+**Wall clock (stub, per run).** Measured in this pilot, with 10 runs sharing the machine and the MLX server plus
+VS Code helpers using 2 to 4 cores:
+- 89 s per generation for G1-organized-shaped S1 runs;
+- 6,750 s mean (7,457 s max) for a 90-generation run.
+
+Alone, a run of the same shape takes about 45 s per generation (measured before the pilot). The cost is engine
+games, about 5,500 per generation:
+- each agent verifies up to 3 messages on 200 deals, and the incumbent's 200 verification games are memoized;
+- 16 artifacts are evaluated on 200 + 150 + 100 games each;
+- plus feedback and generalization games.
+
+Hosted-run sizing: the engine alone puts a 300-generation S1 run at about 7.4 h at 10-way concurrency on this
+machine (300 x 89 s), or about 3.75 h alone (300 x 45 s), before model latency. Verification dominates; the B1
+sequential test would cut it.
+
+**S1, partial.** Computed from the S1 runs while the pilot was still running; the results are in
+`docs/results/s1-stub-pilot.json`, which has a `partial` block. The final file replaces it.
+- Runs: 1 complete and 10 at generation 77 to 90 at that point. The selection lever and migration seeds 1 and 2
+  had not started; migration p1 was at generation 1, so migration has one usable seed.
+- So each run gives 2 switches (blocks 1-30 ON, 31-60 OFF, 61-end ON) and a 5-generation burn-in.
+- Outcome: population mean self-play. Interval: seed bootstrap of the mean, 3 seeds.
+
+| lever | seeds | ON minus OFF (mean over seeds) | 95% seed interval | t0 per seed | bias bound 4 M lam (1+t0) | with M = max abs(Y) |
+|---|---|---|---|---|---|---|
+| teaching | 3 | -0.07 | [-0.13, -0.02] | 2, 4, 4 | 0.26, 0.42, 0.94 | 7.4 to 12.3 |
+| verification | 3 | -0.09 | [-0.21, -0.02] | 1, 4, 4 | 0.14, 0.42, 0.94 | 4.9 to 12.3 |
+| quarantine | 3 | -0.06 | [-0.08, -0.05] | 2, 4, 3 | 0.18, 0.62, 0.50 | 7.4 to 12.3 |
+| migration | 1 | -0.01 | n/a | 2 | 0.19 | 7.4 |
+| selection | 0 | not started | | | | |
+
+Reading:
+- On the stub the population saturates near 18 by generation 5 to 10. Block means are 17.7 to 18.3 and the
+  contrasts are a tenth of a point.
+- The negative signs are a residual of the early rise inside the first ON block. With only two switches, the
+  adjacent-block average cancels a linear drift but not that rise. They are not lever effects.
+- Every contrast is smaller than its own bias bound. The theorem-M version (5 to 12 points) is uninformative at
+  any effect size of interest.
+- The S1 decision rule's 1-point minimum effect is above the M-step bounds (0.1 to 0.9) at period 30.
+- Pairing check: all levers share generations 1 to 30 by construction, and seed 0's first-block mean is 18.011 in
+  the teaching, verification and migration runs.
+
+**Pipeline behaviour.**
+- No budget refusals in any run.
+- Calls per generation are 16.2 with teaching ON and 13.2 averaged over a teaching run's ON and OFF blocks, so
+  about 8 fewer calls while teaching is off (no teach calls).
+- `levers` is logged every generation, and the switches took effect at 31 and 61.
+- No failed resumes: no resume was needed in the pilot; resume across a switch is covered by the tests.
+- A first launch was stopped after 2 minutes, before any run had finished, to give the null spec G1's name, so
+  that null seeds 0 to 4 share G1's warm starts. Its outputs were deleted.
+- Housekeeping: three empty directories, `runs/g1s1-stub/g1 2`, `g1_null 2` and `s1 2`, appeared during the
+  pilot. They are Desktop file-sync artifacts (see the fix round 1 housekeeping note), harmless and ignored by the
+  analysis glob (`*/p*/generations.jsonl`).
+
+### Deviations
+
+- G1 pilot at 50 generations (10-minute rule).
+- calls_to_threshold uses held-out self-play rather than the frozen ladder.
+- Spend is not matched between isolated and the communicating conditions (see above).
+- The S1 numbers are partial.
+
+### Open questions
+
+1. **Matched spend.** Keep the matched cap and compare on the calls axis, or match spend, for example by running
+   isolated for about 200 generations? Giving isolated agents a second revision per generation would need code.
+2. **Selection lever.** "Shrinkage selection" in research.tex has no implementation. Keep keep_best_k against
+   shinka_weighted, or build a winner's-curse-shrunk acceptance rule?
+3. **S1 period and burn-in on a real model.** At period 30, with t0 of 1 to 4, the M-step bound is below 1 point. A
+   real model's slower drift could make the first-block rise dominate, as it did on the stub. Should the first
+   block be dropped from the contrast, or the period lengthened?
+4. **Teaching OFF still receives the last ON generation's messages in its first generation** (and ON receives
+   nothing in its first). The burn-in covers this. Should it instead be explicit, by dropping the outbox at a
+   teaching switch?
 
 ## Deviations from the spec
 

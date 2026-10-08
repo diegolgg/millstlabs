@@ -1,0 +1,85 @@
+# G1: accumulation under organization (tex/research.tex, Experiment G1). Run with
+#   python scripts/run_experiment.py configs/g1.yaml runs/g1 [processes]      (or scripts/g1_pilot.py for the stub pilot)
+# Three organizations, 8 agents, 100 generations after the warm start, 5 population seeds, one experiment seed (the
+# same deals in every condition and seed). Credit is `none`: G1 is about accumulation, not credit.
+#
+# Pairing. All conditions of a population seed start from the same 8 artifacts: `warm_start_canonical` authors
+# generation 0 once for a one-group population of 8 and hands the artifacts out by position, whatever the condition's
+# group layout (8 x 1, 1 x 8, 2 x 4). Without it the warm-start key and the agent ids differ by layout, and each
+# condition would start from a different population.
+#
+# Matched language-model budget (calls). What one generation can spend, from run/generation.py and agents/agent.py:
+#   revise  8   one per agent (keep_best_k always revises)
+#   repair <= 8   at most one per revise (llm.repair_attempts = 1); the stub breaks about 3% of responses
+#   teach   8   one call per SENDING agent per generation, whatever its number of receivers (_teach -> A.teach), and
+#               teach calls are charged to the sender's group pool like any other call. broadcast_group: in `full`
+#               8 senders x 7 receivers = 56 messages, in `organized` 8 x 3 = 24 messages, all from 8 teach calls.
+#               `isolated` sends nothing, so it makes no teach calls.
+#   merge   0   replace_if_better never merges
+# Worst case 8 + 8 + 8 = 24 calls per generation for the population. Every condition gets the same total cap of 24,
+# split uniformly over its groups (allocation `uniform`, total = per_group_per_generation x groups):
+#   isolated  8 groups x 3  = 24   (a group needs at most revise + repair = 2)
+#   full      1 group  x 24 = 24   (needs at most 24)
+#   organized 2 groups x 12 = 24   (each needs at most 4 + 4 + 4 = 12)
+# So the cap is matched and never binds; no call is refused by design. The SPEND is not matched: the communicating
+# conditions spend about 16 calls per generation (8 revise + 8 teach + repairs), isolated about 8. A comparison at
+# generation 100 compares about 1,600 calls with about 800. The matched-budget comparisons are therefore the ones on
+# the calls axis: calls_to_threshold and the mean-vs-cumulative-calls figure (src/culture/analysis/accumulation.py).
+# Generation 0 (warm start) is unbudgeted; its 8 teach calls in full and organized are in the run's ledger; the 8
+# authoring calls are in the shared warm-start set's ledger and identical across conditions.
+#
+# Isolated shape: 8 groups of 1 (not 1 group of 8). Reasons: (1) the between-group cross-play matrix needs >= 2 groups;
+# with 8 singletons it is the 8 x 8 cross-play of all agents, so between_offdiag is the population's mean pairwise
+# cross-play of independently evolved agents, the comparator in G1's decision rule; (2) the corpus and the selection
+# archive are per group, so in 1 group of 8 the corpus would be a communication channel; with singletons each agent's
+# corpus holds only its own past deposits (private memory, the same mechanism as in the other conditions).
+# Consequence: `full` (one group) has no between-group matrix (between_group null); its within-group cross-play is the
+# population's mean pairwise cross-play, and `isolated` has no within-group cross-play.
+base:
+  name: g1
+  experiment_seed: 400
+  population: {warm_start: author, warm_start_canonical: true}
+  evaluation:
+    selfplay_games: 200
+    crossplay_games: 50
+    anchor_games: 50
+    anchors: [piers, iggi]
+    between_group_games: 50
+    ladder_every: 10
+    workers: 0
+  # Hosted block goes here (added by another build): backend, model, base_url, temperature, cache mode. Until then the
+  # stub keeps every pilot at zero model calls.
+  llm: {backend: stub}
+  corpus: {enabled: true}
+  budget: {unit: calls}
+  org:
+    verification: {name: selfplay, n: 200}
+    adoption: replace_if_better
+    credit: none
+    allocation: uniform
+    selection: {name: keep_best_k, k: 5}
+  runner: {generations: 101}   # generation 0 is the warm start, then 100 generations
+  thresholds: {min_effect_population_mean: 2.0}
+conditions:
+  # no messages at all; 8 singleton groups (see above)
+  isolated:
+    population: {groups: 8, agents_per_group: 1}
+    org: {topology: isolated, routing: none, migration: none}
+    budget: {per_group_per_generation: 3}
+  # one group of 8, everyone teaches everyone, verified adoption, no migration
+  full:
+    population: {groups: 1, agents_per_group: 8}
+    org: {topology: full, routing: broadcast_group, migration: none}
+    budget: {per_group_per_generation: 24}
+  # two islands of 4: teaching and verification inside an island, random migration (swaps) between islands.
+  # islands carries its own migration rule (migration left at `none`, see run/context.py and
+  # org/registry.effective_migration): every 5 generations round(0.25 x 8) = 2 agents each swap with an agent of the
+  # other island.
+  organized:
+    population: {groups: 2, agents_per_group: 4}
+    org:
+      topology: {name: islands, migration_rate: 0.25, interval: 5}
+      routing: broadcast_group
+      migration: none
+    budget: {per_group_per_generation: 12}
+population_seeds: [0, 1, 2, 3, 4]

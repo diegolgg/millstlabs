@@ -23,7 +23,7 @@ from ..evaluate.selfplay import selfplay
 from ..game.hanabi import HanabiParams
 from ..org.credit import Offer, Window
 from .context import RunContext
-from .warmstart import author_initial, load_warm_start
+from .warmstart import assign, author_initial, load_warm_start
 
 
 def maybe_kill(ctx: RunContext, g: int, step: str) -> None:
@@ -158,7 +158,7 @@ def warm_start(ctx: RunContext) -> dict[str, Any]:
     shared = None
     if ctx.cfg.population.warm_start_set:  # forked from a shared set: no backend call for generation 0
         shared = load_warm_start(ctx.cfg.population.warm_start_set, ctx.cfg)
-        arts = shared["artifacts"]
+        arts = assign(ctx, shared)
     else:
         arts = author_initial(ctx)
     for aid in sorted(ctx.agents):
@@ -183,6 +183,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
         return warm_start(ctx)
     cfg, P = ctx.cfg, ctx.pol
     t0 = time.perf_counter()
+    ctx.apply_schedule(g)  # S1 lever switches take effect from the top of their generation
     _apply_environment(ctx, g)
     illegal_max = cfg.evaluation.illegal_rate_max
     vpol = P["verification"]
@@ -275,7 +276,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
                 continue
             parent_id = P["selection"].choose_parent(ag, rng) or ag.incumbent
             parent = ctx.store.get(parent_id)
-            adopted_text, withheld = A.received_text(read[a], adopted[a], cfg.org.quarantine_unverified)
+            adopted_text, withheld = A.received_text(read[a], adopted[a], ctx.quarantine)
             shown = [m for m in read[a] if m.id not in withheld]
             corpus_text, entries = "", []
             if cfg.corpus.enabled:
@@ -286,7 +287,7 @@ def run_generation(ctx: RunContext, g: int) -> dict[str, Any]:
             user = A.revise_prompt(ctx, ag, parent, ctx.evals.get(parent_id), adopted_text, corpus_text, g)
             revise_context[a] = {"traces": bool(A.feedback_seeds(ctx, g)), "received": len(read[a]),
                                  "adopted": len(adopted[a]), "corpus": len(entries)}
-            if cfg.org.quarantine_unverified:
+            if ctx.quarantine:
                 revise_context[a]["withheld"] = len(withheld)
             art = A.produce(ctx, ag, "revise", user, g, parent, [parent_id], [m.id for m in shown], "revise")
             if art is not None:
@@ -493,6 +494,7 @@ def _finish(ctx: RunContext, g: int, t0: float, extra: dict[str, Any], candidate
                                                        "spend_usd": v["spend_usd"]} for k, v in sorted(by_tag.items())}},
         "counters": {a: dict(sorted(ag.counters.items())) for a, ag in sorted(ctx.agents.items())},
         **extra,
+        **({"levers": ctx.schedule.describe(g)} if ctx.schedule else {}),
         "volatile": {"wall_seconds": round(time.perf_counter() - t0, 3), "games_played": ctx.evaluator.games_played},
     }
     ctx.log("generations", rec)

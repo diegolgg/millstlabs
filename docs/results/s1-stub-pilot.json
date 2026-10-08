@@ -1,0 +1,1178 @@
+{
+ "bias_bound_note": "bias_bound = 4 M lam (1 + t0), M = max per-generation change, lam = 1/period, t0 = autocorrelation mixing time of the outcome's residual on (1, lever, generation). Same form as Wager Thm 15.5, whose assumptions (memoryless random switching, HT estimator, M = sup |Y|, TV mixing) do not hold here: a heuristic scale, not a guarantee.",
+ "burn_in": 5,
+ "levers": {
+  "migration": {
+   "calls_final": {
+    "0": 1326.0,
+    "1": 24.0
+   },
+   "lever": "topology",
+   "outcomes": {
+    "population_best": {
+     "ci_seed_bootstrap": [
+      null,
+      null
+     ],
+     "contrast_mean_over_seeds": -0.038,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.495,
+       "bias_bound": 0.132,
+       "bias_bound_theorem_M": 4.933,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.048,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.112,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 16,
+         "last_generation": 81,
+         "length": 21,
+         "mean": 18.099,
+         "on": true
+        }
+       ],
+       "contrast": -0.038,
+       "mixing_time": 1,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 2,
+       "n_switches": 2,
+       "pooled": -0.044,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.064,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.012,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": null,
+       "bias_bound": null,
+       "bias_bound_theorem_M": 2.299,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 0,
+         "last_generation": 1,
+         "length": 1,
+         "mean": null,
+         "on": true
+        }
+       ],
+       "contrast": null,
+       "mixing_time": 0,
+       "mixing_time_censored": true,
+       "mixing_time_raw": 0,
+       "n_switches": 0,
+       "pooled": null,
+       "switches": []
+      }
+     }
+    },
+    "population_mean": {
+     "ci_seed_bootstrap": [
+      null,
+      null
+     ],
+     "contrast_mean_over_seeds": -0.013,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.469,
+       "bias_bound": 0.188,
+       "bias_bound_theorem_M": 7.386,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.011,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.046,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 16,
+         "last_generation": 81,
+         "length": 21,
+         "mean": 18.055,
+         "on": true
+        }
+       ],
+       "contrast": -0.013,
+       "mixing_time": 2,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 2,
+       "n_switches": 2,
+       "pooled": -0.018,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.035,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.009,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": null,
+       "bias_bound": null,
+       "bias_bound_theorem_M": 2.181,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 0,
+         "last_generation": 1,
+         "length": 1,
+         "mean": null,
+         "on": true
+        }
+       ],
+       "contrast": null,
+       "mixing_time": 0,
+       "mixing_time_censored": true,
+       "mixing_time_raw": 0,
+       "n_switches": 0,
+       "pooled": null,
+       "switches": []
+      }
+     }
+    }
+   },
+   "refusals": 0.0
+  },
+  "quarantine": {
+   "calls_final": {
+    "0": 1259.0,
+    "1": 1422.0,
+    "2": 1358.0
+   },
+   "lever": "quarantine_unverified",
+   "outcomes": {
+    "population_best": {
+     "ci_seed_bootstrap": [
+      -0.085,
+      -0.008
+     ],
+     "contrast_mean_over_seeds": -0.047,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.475,
+       "bias_bound": 0.127,
+       "bias_bound_theorem_M": 4.935,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.98,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.142,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 12,
+         "last_generation": 77,
+         "length": 17,
+         "mean": 18.135,
+         "on": true
+        }
+       ],
+       "contrast": -0.085,
+       "mixing_time": 1,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 4,
+       "n_switches": 2,
+       "pooled": -0.112,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.163,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.007,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": 0.46,
+       "bias_bound": 0.184,
+       "bias_bound_theorem_M": 7.382,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.044,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.174,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 22,
+         "last_generation": 87,
+         "length": 27,
+         "mean": 18.287,
+         "on": true
+        }
+       ],
+       "contrast": -0.008,
+       "mixing_time": 2,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 4,
+       "n_switches": 2,
+       "pooled": -0.016,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.13,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.113,
+         "to": "on"
+        }
+       ]
+      },
+      "2": {
+       "M_max_step": 0.56,
+       "bias_bound": 0.224,
+       "bias_bound_theorem_M": 7.384,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.025,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.119,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 18,
+         "last_generation": 83,
+         "length": 23,
+         "mean": 18.117,
+         "on": true
+        }
+       ],
+       "contrast": -0.048,
+       "mixing_time": 2,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 2,
+       "n_switches": 2,
+       "pooled": -0.055,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.093,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.002,
+         "to": "on"
+        }
+       ]
+      }
+     }
+    },
+    "population_mean": {
+     "ci_seed_bootstrap": [
+      -0.084,
+      -0.05
+     ],
+     "contrast_mean_over_seeds": -0.064,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.445,
+       "bias_bound": 0.178,
+       "bias_bound_theorem_M": 7.357,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.946,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.109,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 12,
+         "last_generation": 77,
+         "length": 17,
+         "mean": 18.106,
+         "on": true
+        }
+       ],
+       "contrast": -0.084,
+       "mixing_time": 2,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 5,
+       "n_switches": 2,
+       "pooled": -0.112,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.164,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.004,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": 0.926,
+       "bias_bound": 0.617,
+       "bias_bound_theorem_M": 12.303,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.924,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.141,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 22,
+         "last_generation": 87,
+         "length": 27,
+         "mean": 18.257,
+         "on": true
+        }
+       ],
+       "contrast": -0.05,
+       "mixing_time": 4,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 5,
+       "n_switches": 2,
+       "pooled": -0.061,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.216,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.116,
+         "to": "on"
+        }
+       ]
+      },
+      "2": {
+       "M_max_step": 0.938,
+       "bias_bound": 0.5,
+       "bias_bound_theorem_M": 9.834,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.953,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.077,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 18,
+         "last_generation": 83,
+         "length": 23,
+         "mean": 18.087,
+         "on": true
+        }
+       ],
+       "contrast": -0.057,
+       "mixing_time": 3,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 3,
+       "n_switches": 2,
+       "pooled": -0.068,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.124,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.01,
+         "to": "on"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "refusals": 0.0
+  },
+  "teaching": {
+   "calls_final": {
+    "0": 1045.0,
+    "1": 1022.0,
+    "2": 1118.0
+   },
+   "lever": "routing",
+   "outcomes": {
+    "population_best": {
+     "ci_seed_bootstrap": [
+      -0.191,
+      -0.095
+     ],
+     "contrast_mean_over_seeds": -0.134,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.655,
+       "bias_bound": 0.175,
+       "bias_bound_theorem_M": 4.94,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.048,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.137,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 14,
+         "last_generation": 79,
+         "length": 19,
+         "mean": 17.994,
+         "on": true
+        }
+       ],
+       "contrast": -0.116,
+       "mixing_time": 1,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 2,
+       "n_switches": 2,
+       "pooled": -0.108,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.089,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.143,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": 0.63,
+       "bias_bound": 0.168,
+       "bias_bound_theorem_M": 4.977,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.746,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.131,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 12,
+         "last_generation": 77,
+         "length": 17,
+         "mean": 18.135,
+         "on": true
+        }
+       ],
+       "contrast": -0.191,
+       "mixing_time": 1,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 10,
+       "n_switches": 2,
+       "pooled": -0.259,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.385,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.004,
+         "to": "on"
+        }
+       ]
+      },
+      "2": {
+       "M_max_step": 0.805,
+       "bias_bound": 0.537,
+       "bias_bound_theorem_M": 12.37,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.977,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.153,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 18,
+         "last_generation": 83,
+         "length": 23,
+         "mean": 18.139,
+         "on": true
+        }
+       ],
+       "contrast": -0.095,
+       "mixing_time": 4,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 4,
+       "n_switches": 2,
+       "pooled": -0.109,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.176,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.015,
+         "to": "on"
+        }
+       ]
+      }
+     }
+    },
+    "population_mean": {
+     "ci_seed_bootstrap": [
+      -0.129,
+      -0.023
+     ],
+     "contrast_mean_over_seeds": -0.072,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.657,
+       "bias_bound": 0.263,
+       "bias_bound_theorem_M": 7.392,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.011,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.057,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 14,
+         "last_generation": 79,
+         "length": 19,
+         "mean": 17.974,
+         "on": true
+        }
+       ],
+       "contrast": -0.064,
+       "mixing_time": 2,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 2,
+       "n_switches": 2,
+       "pooled": -0.059,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.046,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.082,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": 0.636,
+       "bias_bound": 0.424,
+       "bias_bound_theorem_M": 12.325,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.671,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.023,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 12,
+         "last_generation": 77,
+         "length": 17,
+         "mean": 18.118,
+         "on": true
+        }
+       ],
+       "contrast": -0.129,
+       "mixing_time": 4,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 6,
+       "n_switches": 2,
+       "pooled": -0.207,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.352,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.095,
+         "to": "on"
+        }
+       ]
+      },
+      "2": {
+       "M_max_step": 1.402,
+       "bias_bound": 0.935,
+       "bias_bound_theorem_M": 12.231,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.871,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.016,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 18,
+         "last_generation": 83,
+         "length": 23,
+         "mean": 18.115,
+         "on": true
+        }
+       ],
+       "contrast": -0.023,
+       "mixing_time": 4,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 4,
+       "n_switches": 2,
+       "pooled": -0.043,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.146,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.099,
+         "to": "on"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "refusals": 0.0
+  },
+  "verification": {
+   "calls_final": {
+    "0": 1465.0,
+    "1": 1334.0,
+    "2": 1470.0
+   },
+   "lever": "verification",
+   "outcomes": {
+    "population_best": {
+     "ci_seed_bootstrap": [
+      -0.24,
+      -0.037
+     ],
+     "contrast_mean_over_seeds": -0.112,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.495,
+       "bias_bound": 0.132,
+       "bias_bound_theorem_M": 4.952,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.048,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.122,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 25,
+         "last_generation": 90,
+         "length": 30,
+         "mean": 18.122,
+         "on": true
+        }
+       ],
+       "contrast": -0.037,
+       "mixing_time": 1,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 2,
+       "n_switches": 2,
+       "pooled": -0.037,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.074,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.0,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": 0.61,
+       "bias_bound": 0.163,
+       "bias_bound_theorem_M": 4.977,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.746,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.17,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 17,
+         "last_generation": 82,
+         "length": 22,
+         "mean": 18.114,
+         "on": true
+        }
+       ],
+       "contrast": -0.24,
+       "mixing_time": 1,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 10,
+       "n_switches": 2,
+       "pooled": -0.275,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.424,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.055,
+         "to": "on"
+        }
+       ]
+      },
+      "2": {
+       "M_max_step": 0.805,
+       "bias_bound": 0.537,
+       "bias_bound_theorem_M": 12.31,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.977,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.108,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 25,
+         "last_generation": 90,
+         "length": 30,
+         "mean": 18.123,
+         "on": true
+        }
+       ],
+       "contrast": -0.059,
+       "mixing_time": 4,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 4,
+       "n_switches": 2,
+       "pooled": -0.059,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.131,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.014,
+         "to": "on"
+        }
+       ]
+      }
+     }
+    },
+    "population_mean": {
+     "ci_seed_bootstrap": [
+      -0.206,
+      -0.017
+     ],
+     "contrast_mean_over_seeds": -0.089,
+     "per_seed": {
+      "0": {
+       "M_max_step": 0.533,
+       "bias_bound": 0.142,
+       "bias_bound_theorem_M": 4.943,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 18.011,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.045,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 25,
+         "last_generation": 90,
+         "length": 30,
+         "mean": 18.044,
+         "on": true
+        }
+       ],
+       "contrast": -0.017,
+       "mixing_time": 1,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 2,
+       "n_switches": 2,
+       "pooled": -0.017,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.034,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.001,
+         "to": "on"
+        }
+       ]
+      },
+      "1": {
+       "M_max_step": 0.636,
+       "bias_bound": 0.424,
+       "bias_bound_theorem_M": 12.324,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.671,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.08,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 17,
+         "last_generation": 82,
+         "length": 22,
+         "mean": 18.078,
+         "on": true
+        }
+       ],
+       "contrast": -0.206,
+       "mixing_time": 4,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 6,
+       "n_switches": 2,
+       "pooled": -0.244,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.409,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": -0.002,
+         "to": "on"
+        }
+       ]
+      },
+      "2": {
+       "M_max_step": 1.402,
+       "bias_bound": 0.935,
+       "bias_bound_theorem_M": 12.207,
+       "blocks": [
+        {
+         "first_generation": 1,
+         "kept": 25,
+         "last_generation": 30,
+         "length": 30,
+         "mean": 17.871,
+         "on": true
+        },
+        {
+         "first_generation": 31,
+         "kept": 25,
+         "last_generation": 60,
+         "length": 30,
+         "mean": 18.017,
+         "on": false
+        },
+        {
+         "first_generation": 61,
+         "kept": 25,
+         "last_generation": 90,
+         "length": 30,
+         "mean": 18.072,
+         "on": true
+        }
+       ],
+       "contrast": -0.045,
+       "mixing_time": 4,
+       "mixing_time_censored": false,
+       "mixing_time_raw": 4,
+       "n_switches": 2,
+       "pooled": -0.045,
+       "switches": [
+        {
+         "at": 31,
+         "on_minus_off": -0.146,
+         "to": "off"
+        },
+        {
+         "at": 61,
+         "on_minus_off": 0.056,
+         "to": "on"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "refusals": 0.0
+  }
+ },
+ "partial": {
+  "generations_completed": {
+   "migration/p0": 81,
+   "migration/p1": 1,
+   "quarantine/p0": 77,
+   "quarantine/p1": 87,
+   "quarantine/p2": 83,
+   "teaching/p0": 79,
+   "teaching/p1": 77,
+   "teaching/p2": 83,
+   "verification/p0": 90,
+   "verification/p1": 82,
+   "verification/p2": 90
+  },
+  "note": "computed while the pilot was still running; generations completed after the warm start per run below (target 90). Blocks: ON 1-30, OFF 31-60, ON 61-90, burn-in 5."
+ },
+ "period": 30,
+ "scope": "S1 stub pilot: pipeline check and wall-clock sizing only (stub backend, zero model calls); the contrasts are those of perturbed anchor rule lists, not evidence about any lever.",
+ "wall_clock": {
+  "pilot": {},
+  "s1": {
+   "note": "generation wall time inside the run (volatile.wall_seconds), excluding generation 0; runs shared the machine with the other pilot processes",
+   "seconds_per_generation_by_condition": {
+    "migration": 91.27,
+    "quarantine": 89.93,
+    "teaching": 92.51,
+    "verification": 84.28
+   },
+   "seconds_per_generation_mean": 89.02,
+   "seconds_per_run_max": 7457.0,
+   "seconds_per_run_mean": 6748.5
+  }
+ }
+}

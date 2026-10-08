@@ -35,3 +35,14 @@ def check(kind: str, spec) -> None:
         make(kind, spec)
     except (TypeError, ValueError) as e:
         raise ConfigError(f"org.{kind}: {e}") from e
+
+
+def effective_migration(topology, migration):
+    """The migration policy a run actually uses: islands(G, migration_rate, interval) carries its own migration rule,
+    used when the configured migration is `none` (an explicit migration policy wins)."""
+    if isinstance(topology, population.Islands) and isinstance(migration, migration_mod.NoMigration):
+        return migration_mod.RandomMigration(topology.migration_rate, topology.interval)
+    return migration
+
+
+migration_mod = migration

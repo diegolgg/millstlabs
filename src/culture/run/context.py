@@ -29,6 +29,7 @@ from ..llm.stub_backend import StubBackend, StubConfig
 from ..org import registry
 from ..org.base import AgentState
 from ..org.population import Population
+from ..org.schedule import LeverSchedule
 from .config import ExperimentConfig
 
 LOGS = ("generations", "artifacts", "messages", "ledger", "touch", "provenance")
@@ -84,12 +85,11 @@ class RunContext:
         self.agents = {a: AgentState(a, self.pop.group_of(a)) for a in self.pop.agents}
         self.corpora = {g: Corpus(g, cfg.corpus.capacity) for g in self.pop.groups}
         self.pol = {f: registry.make(f, getattr(cfg.org, f)) for f in registry.REGISTRIES}
-        from ..org.migration import NoMigration, RandomMigration
-        from ..org.population import Islands
-
-        if isinstance(self.pol["topology"], Islands) and isinstance(self.pol["migration"], NoMigration):
-            t = self.pol["topology"]  # islands(G, migration_rate, interval) carries its own migration rule
-            self.pol["migration"] = RandomMigration(t.migration_rate, t.interval)
+        # islands(G, migration_rate, interval) carries its own migration rule when migration is left at `none`
+        self.pol["migration"] = registry.effective_migration(self.pol["topology"], self.pol["migration"])
+        # S1 lever schedule: policies switched at fixed generations (org/schedule.py); empty for most runs
+        self.schedule = LeverSchedule(cfg.org)
+        self.quarantine = cfg.org.quarantine_unverified  # the value in effect this generation (a schedulable lever)
         self.outbox: list[TeachingMessage] = []
         self.group_budget: dict[str, float] = {g: float("inf") for g in self.pop.groups}
         self.evals: dict[str, Evaluation] = {}
@@ -294,6 +294,9 @@ class RunContext:
         self.pop.load_state_dict(s["population"])
         self.corpora = {g: Corpus.from_state(c) for g, c in s["corpora"].items()}
         self.registry.load_state_dict(s["registry"])
+        # the policies in the checkpoint are those in effect at its generation: re-apply the schedule first, so each
+        # state is loaded into the policy class that wrote it
+        self.apply_schedule(self.generation)
         for k, st in s["policies"].items():
             self.pol[k].load_state_dict(st)
         self.outbox = []
@@ -306,6 +309,15 @@ class RunContext:
         self.budget_bonus = s["budget_bonus"]
         self.backend.load_state_dict(s["backend"])
         self.set_game_params(HanabiParams(**s["game_params"]), s.get("variant_note", ""))
+
+    def apply_schedule(self, generation: int) -> dict[str, Any] | None:
+        """Bring the policies to the lever values in effect at `generation` (S1); returns them, or None without a
+        schedule."""
+        if not self.schedule:
+            return None
+        self.schedule.apply(self.pol, generation)
+        self.quarantine = self.schedule.quarantine(generation)
+        return self.schedule.describe(generation)
 
     def close(self) -> None:
         self.evaluator.close()
